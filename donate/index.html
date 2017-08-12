@@ -1,0 +1,95 @@
+<!DOCTYPE>
+<html>
+<head>
+  <title>Donate | LonamiWebs</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat|Ubuntu"
+        rel="stylesheet">
+
+  <style>
+  body {
+    background: linear-gradient(0deg, #293b5f, #f59e39, #7fc7e8);
+    background-size: 600% 600%;
+    animation: BgGradient 120s ease infinite;
+  }
+
+  /* Thanks https://www.gradient-animator.com */
+  @keyframes BgGradient {
+      0%{background-position:50% 0%}
+      50%{background-position:50% 100%}
+      100%{background-position:50% 0%}
+  }
+
+  #main {
+    max-width: 600px;
+    margin: 100px auto;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 20px;
+    box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  input {
+    width: 100%;
+    padding: 2px;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  p, input, button {
+    font-family: 'Ubuntu', sans-serif;
+  }
+
+  a {
+    text-decoration: none;
+    color: #00f;
+    transition: color 300ms;
+  }
+
+  a:hover {
+    color: #07f;
+  }
+  </style>
+</head>
+<body>
+<div id="main">
+  <h1>Donate to LonamiWebs</h1>
+  <p>First, thank you for liking my work! If you have no money to spend,
+  feel free to
+  <a href="https://t.me/Lonami" target="_blank">Telegram me</a>, I also
+  appreciate when someone tells me they like what I do!</p>
+
+  <h3><a href="https://www.paypal.me/lonamiwebs" target="_blank">PayPal.me</a>
+  or Bitcoin:</h3>
+
+  <p>Bitcoin address (<a href="bitcoin-qr.png">QR</a>):</p>
+  <table><tr><td style="width:100%;">
+  <input id="bitcoinAddr" value="1NkR36TrP1TK9qDr3FAAvYoQsksQtebcNg" readonly>
+  </td><td>
+  <button id="copyBtcAddr" onclick="copyBitcoinAddr()">Copy</button>
+  </td></tr></table>
+  <p>One dollar is around 400&#181;BTC
+  (<a href="http://preev.com" target="_blank">info</a>).</p>
+</div>
+<script>
+bitcoinAddr = document.getElementById('bitcoinAddr');
+copyBtcAddr = document.getElementById('copyBtcAddr');
+
+function copyBitcoinAddr() {
+  bitcoinAddr.select();
+
+  try {
+    var ok = document.execCommand('copy');
+    copyBtcAddr.innerHTML = ok ? 'Copied!' : 'Copying failed :(';
+  } catch (err) {
+    copyBtcAddr.innerHTML = 'Not supported :(';
+  }
+
+  setTimeout(function() {
+    copyBtcAddr.innerHTML = 'Copy';
+  }, 2000);
+}
+</script>
+</body>
+</html>

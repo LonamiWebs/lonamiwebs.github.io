@@ -1,0 +1,13 @@
+﻿/* TEAM */
+	Chef, UI Developer, Illustrator, Standart Man & Web Designer: Lonami Exo
+	Contact: https://lonamiwebs.github.io/contact
+	From: Cáceres, Cáceres, Spain
+	
+	
+/* SITE */
+	Last update: 2017/01/09
+	Language: English
+	Doctype: HTML5
+	Standards: HTML5, CSS3
+	IDE: xed, git, Inkscape
+	Software: xed, git, Inkscape
