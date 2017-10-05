@@ -1,0 +1,55 @@
+==================================================================
+https://keybase.io/lonami
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of https://lonamiwebs.github.io
+  * I am lonami (https://keybase.io/lonami) on keybase.
+  * I have a public key ASAhEYrBx6mMp-YFdm4JmZ4jMboLlFkHJxqgzRQRniHZfAo
+
+To do so, I am signing this object:
+
+{
+  "body": {
+    "key": {
+      "eldest_kid": "012021118ac1c7a98ca7e605766e09999e2331ba0b945907271aa0cd14119e21d97c0a",
+      "host": "keybase.io",
+      "kid": "012021118ac1c7a98ca7e605766e09999e2331ba0b945907271aa0cd14119e21d97c0a",
+      "uid": "15c9efa5730081a74aa068919df4fa19",
+      "username": "lonami"
+    },
+    "merkle_root": {
+      "ctime": 1507223938,
+      "hash": "638f5ea0859660eef02bce93101768ab234ba4b03a65d16d39f5b65867d02e0f55c05dee45fb1c0fb6f5dfc49903461862aa3cf841844256b699e1082ef95680",
+      "hash_meta": "1c6d467c2156feac2d8bef7b8f085c6a010eb9c34887953592d8766eb5e0f10b",
+      "seqno": 1516320
+    },
+    "service": {
+      "hostname": "lonamiwebs.github.io",
+      "protocol": "https:"
+    },
+    "type": "web_service_binding",
+    "version": 1
+  },
+  "client": {
+    "name": "keybase.io go client",
+    "version": "1.0.33"
+  },
+  "ctime": 1507223950,
+  "expire_in": 504576000,
+  "prev": "b30d3b3c44593e1030c622ce21fca9888ddbbbb71ce5e2576921a0abcebd1a8d",
+  "seqno": 5,
+  "tag": "signature"
+}
+
+which yields the signature:
+
+hKRib2R5hqhkZXRhY2hlZMOpaGFzaF90eXBlCqNrZXnEIwEgIRGKwcepjKfmBXZuCZmeIzG6C5RZBycaoM0UEZ4h2XwKp3BheWxvYWTFA0p7ImJvZHkiOnsia2V5Ijp7ImVsZGVzdF9raWQiOiIwMTIwMjExMThhYzFjN2E5OGNhN2U2MDU3NjZlMDk5OTllMjMzMWJhMGI5NDU5MDcyNzFhYTBjZDE0MTE5ZTIxZDk3YzBhIiwiaG9zdCI6ImtleWJhc2UuaW8iLCJraWQiOiIwMTIwMjExMThhYzFjN2E5OGNhN2U2MDU3NjZlMDk5OTllMjMzMWJhMGI5NDU5MDcyNzFhYTBjZDE0MTE5ZTIxZDk3YzBhIiwidWlkIjoiMTVjOWVmYTU3MzAwODFhNzRhYTA2ODkxOWRmNGZhMTkiLCJ1c2VybmFtZSI6ImxvbmFtaSJ9LCJtZXJrbGVfcm9vdCI6eyJjdGltZSI6MTUwNzIyMzkzOCwiaGFzaCI6IjYzOGY1ZWEwODU5NjYwZWVmMDJiY2U5MzEwMTc2OGFiMjM0YmE0YjAzYTY1ZDE2ZDM5ZjViNjU4NjdkMDJlMGY1NWMwNWRlZTQ1ZmIxYzBmYjZmNWRmYzQ5OTAzNDYxODYyYWEzY2Y4NDE4NDQyNTZiNjk5ZTEwODJlZjk1NjgwIiwiaGFzaF9tZXRhIjoiMWM2ZDQ2N2MyMTU2ZmVhYzJkOGJlZjdiOGYwODVjNmEwMTBlYjljMzQ4ODc5NTM1OTJkODc2NmViNWUwZjEwYiIsInNlcW5vIjoxNTE2MzIwfSwic2VydmljZSI6eyJob3N0bmFtZSI6ImxvbmFtaXdlYnMuZ2l0aHViLmlvIiwicHJvdG9jb2wiOiJodHRwczoifSwidHlwZSI6IndlYl9zZXJ2aWNlX2JpbmRpbmciLCJ2ZXJzaW9uIjoxfSwiY2xpZW50Ijp7Im5hbWUiOiJrZXliYXNlLmlvIGdvIGNsaWVudCIsInZlcnNpb24iOiIxLjAuMzMifSwiY3RpbWUiOjE1MDcyMjM5NTAsImV4cGlyZV9pbiI6NTA0NTc2MDAwLCJwcmV2IjoiYjMwZDNiM2M0NDU5M2UxMDMwYzYyMmNlMjFmY2E5ODg4ZGRiYmJiNzFjZTVlMjU3NjkyMWEwYWJjZWJkMWE4ZCIsInNlcW5vIjo1LCJ0YWciOiJzaWduYXR1cmUifaNzaWfEQMoKL0hQUo8Tu4mJ4Mbkbvexg/AOsDm/opDj3vaEHMhDxZsVapzs+YY24g1gSzSOYOZAgJ0APN+LeXfhmGlGKgGoc2lnX3R5cGUgpGhhc2iCpHR5cGUIpXZhbHVlxCDQrwaZg8Gxc5Wt3yC+IlGv1fHMh0s+TX3B6SadzUXlb6N0YWfNAgKndmVyc2lvbgE=
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/lonami
+
+==================================================================
