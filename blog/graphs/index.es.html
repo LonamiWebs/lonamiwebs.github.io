@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat|Ubuntu"
+        rel="stylesheet">
+  <link href="css/graphs.css" rel="stylesheet">
+</head>
+<body>
+<main>
+  <noscript>Hay cosas que no se van a ver a menos que actives JavaScript.
+  No <i>tracking</i>, ¡lo prometo!</noscript>
+
+  <h1>Grafos</h1>
+  <p class="right"><em>Escrito por
+    <a href="https://lonamiwebs.github.io" >Imanol H.</a><br />
+    el 02-06-2017. Última revisión el 02-06-2017
+  </em></p>
+
+  <p>Imaginemos 5 estaciones de autobús, que denotaremos por <mark>s_i</mark>:</p>
+  <div class="csv math addBorder">
+    ;s_1 ;s_2 ;s_3 ;s_4 ;s_5
+s_1 ;    ; V  ;    ;    ;
+s_2 ; V  ;    ;    ;    ; V
+s_3 ;    ;    ;    ; V  ;
+s_4 ;    ; V  ; V  ;    ;
+s_5 ; V  ;    ;    ; V  ;
+  </div>
+  <p>Esto se conoce como <i>"cuadro de interconexiones directas"</i>.</p>
+  <p>Las <mark>V</mark> representan caminos conectados. Por ejemplo, en la
+  primera fila partiendo de <mark>s_1</mark>, llegando hasta la <mark>V</mark>,
+  se nos permite girar hacia arriba para llegar a <mark>s_2</mark>.</p>
+
+  <p>Podemos ver esta misma tabla representada de una manera más gráfica:</p>
+  <img src="img/example1.svg" />
+  <p>Este tipo de gráfica es un grafo, y además dirigido (o <i>digrafo</i>),
+  ya que el sentido en el que van las flechas sí importa. Está compuesto
+  por vértices, unidos entre si por ejes (también llamados aristas o
+  <b>arcos</b> dirigidos).</p>
+
+  <p>Se puede ir de un nodo otro mediante distintos <b>caminos</b> o
+  <i>tours</i>. Por ejemplo, <mark>s_4 → s_2 → s_5</mark> es un camino
+  indirecto de <b>orden</b> dos, porque debemos usar dos aristas para ir
+  de <mark>s_4</mark> a <mark>s_5</mark>.</p>
+
+  <p>Pasemos ahora a representar la matriz de <b>adyacencia</b> llamada A, que
+  representa el mismo cuadro, pero usa <mark>1</mark> en vez de </mark>V</mark>
+  para representar una conexión:</p>
+
+  <div class="csv math matrix">
+0 ; 1 ; 0 ; 0 ; 0
+1 ; 0 ; 0 ; 0 ; 1
+0 ; 0 ; 0 ; 1 ; 0
+0 ; 1 ; 1 ; 0 ; 0
+1 ; 0 ; 0 ; 1 ; 0
+  </div>
+
+  <p>Así podemos ver como el elemento <mark>a_21</mark> representa la
+  conexión <mark>s_2 → s_1</mark>, y el <mark>a_51</mark> la
+  <mark>s_5 → s_1</mark>, etc.</p>
+
+  <p>En general, <mark>a_ij</mark> representa una conexión de
+  <mark>s_i → s_j</mark> siempre que <mark>a_ij ≥ 1</mark>.</p>
+
+  <p>Trabajar con matrices nos permite tener una representación computable
+  de un grafo cualquiera, lo cual es realmente útil.</p>
+
+  <hr />
+
+  <p>Los grafos tienen muchas más propiedades interesantes a parte de ser
+  representables computacionalmente. ¿Qué ocurre si, por ejemplo, hallamos
+  <mark>A^2</mark>? Resulta la siguiente matriz:</p>
+
+  <div class="csv math matrix">
+1 ; 0 ; 0 ; 0 ; 1
+1 ; 1 ; 0 ; 1 ; 0
+0 ; 1 ; 1 ; 0 ; 0
+1 ; 0 ; 0 ; 1 ; 1
+0 ; 2 ; 1 ; 0 ; 0
+  </div>
+
+  <p>Podemos interpretar esta matriz como los caminos de orden <b>dos</b>.</p>
+  <p>¿Pero qué representa el elemento <mark>a_52 = 2</mark>? Indica que hay
+  dos posibles caminos para ir de <mark>s_5 → s_i → s_2</mark></p>
+
+  <p>Es posible realizar la multiplicación de la fila y columna implicadas
+  para ver qué elemento es el que hay que atravesar, así se tiene la fila
+  <mark>(1, 0, 0, 1, 0)</mark> y la columna <mark>(1, 0, 0, 1, 0)</mark> (en
+  vertical). Los elementos <mark>s_1 ≥ 1</mark> son <mark>s_1</mark> y
+  <mark>s_4</mark>. Es decir, se puede ir de <mark>s_5</mark> a
+  <mark>s_2</mark> o bien mediante <mark>s_5 → s_1 → s_2</mark> ó bien
+  <mark>s_5 → s_4 → s_2</mark>:</p>
+  <img src="img/example2.svg" />
+
+  <p>Es importante notar que en los gráfos no se consideran lazos, es decir,
+  <mark>s_i → s_i</mark> no está permitido; ni tampoco se trabaja con
+  multigrafos (que permiten muchas conexiones, por ejemplo, de un número
+  arbitrario <mark>n</mark> de veces.</p>
+
+  <p>Terminemos con <mark>A^3</mark>:</p>
+  <div class="csv math matrix">
+1 ; 1 ;   0    ; 1 ; 0
+1 ; 2 ;<b>1</b>; 0 ; 1
+1 ; 0 ;   0    ; 1 ; 1
+1 ; 2 ;   1    ; 1 ; 0
+2 ; 0 ;   0    ; 1 ; 2
+  </div>
+
+  <p>Podemos ver como ha aparecido el primer <mark>1</mark> en
+  <mark>a_23</mark>, lo que representa que el camino más corto es de al menos
+  de orden tres.</mark>
+
+  <hr />
+
+  <p>Un grafo es <b>fuertemente conexo</b> siempre que se pueda encontrar una
+  conexión para <i>todos</i> los elementos.</p>
+
+  <p>Para ver todos los caminos posibles hasta ahora, basta con sumar las
+  formas directas más las formas indirectas, por lo que hasta ahora podemos
+  sumar <mark>A + A^2 + A^3</mark> tal que:</p>
+
+  <div class="csv math matrix">
+2 ; 2 ; 0 ; 1 ; 1
+3 ; 3 ; 1 ; 1 ; 3
+1 ; 1 ; 1 ; 2 ; 1
+2 ; 3 ; 2 ; 2 ; 1
+3 ; 2 ; 1 ; 2 ; 2
+  </div>
+
+  <p>Sigue sin haber una conexión entre <mark>s_1</mark> y <mark>s_3</mark>.
+  Calculando <mark>A^4</mark>:</p>
+
+  <div class="csv math matrix">
+1 ; 2 ;<b>1</b>;;
+;;;;
+;;;;
+;;;;
+;;;;
+  </div>
+
+  <p>No hace falta seguir calculando, ya tenemos un grafo totalmente conexo.
+  </p>
+
+  <hr />
+
+  <p>¡Felicidades! Has completado esta pequeña introducción a los gráficos.
+  Ahora puedes jugar tú y diseñar tus propias conexiones.</p>
+
+  <p>Mantén pulsado el botón izquierdo del ratón en el área de arriba y
+  arrastra hacia abajo para crear un nuevo nodo, o arrastra un nodo a este
+  área para eliminarlo.</p>
+
+  <p>Para crear nuevas conexiones, mantén pulsado el botón derecho del ratón
+  en el nodo del que quiera partir, y arrástralo hasta el nodo con el que
+  lo quieras conectar.</p>
+
+  <p>Para eliminar las conexiones que salen de un nodo en concreto, haz clic
+  con el botón central del ratón en el nodo que quieras.</p>
+
+  <table><tr><td style="width:100%;">
+    <button onclick="resetConnections()">Reiniciar conexiones</button>
+    <button onclick="clearNodes()">Limpiar todos los nodos</button>
+    <br />
+    <br />
+    <label for="matrixOrder">Mostrar matriz de orden:</label>
+    <input id="matrixOrder" type="number" min="1" max="5"
+                            value="1" oninput="updateOrder()">
+    <br />
+    <label for="matrixAccum">Mostrar matriz acumulada</label>
+    <input id="matrixAccum" type="checkbox" onchange="updateOrder()">
+    <br />
+    <br />
+    <div class="matrix">
+      <table id="matrixTable"></table>
+    </div>
+  </td><td>
+    <canvas id="canvas" width="400" height="400" oncontextmenu="return false;">
+    Parece que tu navegador no vas a poder probar el ejemplo en tu navegador :(
+    </canvas>
+    <br />
+  </td></tr></table>
+</main>
+
+<script src="js/tinyparser.js"></script>
+<script src="js/enhancements.js"></script>
+<script src="js/graphs.js"></script>
+</body>
+</html>

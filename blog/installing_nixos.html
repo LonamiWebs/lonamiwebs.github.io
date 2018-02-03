@@ -1,0 +1,121 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Installing NixOS</title>
+    <link rel="stylesheet" type="text/css" href="styles/main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <div class="minMargin">
+    <div class="card">
+        <h1>Installing NixOS</h1>
+        <p class="right"><em>Written by
+        <a href="https://lonamiwebs.github.io">Imanol H.</a><br />
+        the 13-05-2017. Last revision the 13-05-2017</em></p>
+        <hr />
+        <p>Today I decided to install
+        <a href="http://nixos.org/" target="_blank">NixOS</a> as a
+        recommendation, a purely functional Linux distribution, since
+        <a href="https://xubuntu.org/" target="_blank">Xubuntu</a> kept
+        crashing. Here's my journey, and how I managed to install it from
+        a terminal for the first time in my life. Steps aren't hard, but
+        they may not seem obvious at first.</p>
+
+        <ol>
+        <li>Grab the Live CD, burn it on a USB stick and boot. I recommend
+        using <a href="https://etcher.io/" target="_blank">Etcher</a>.</li>
+
+        <li>Type <code>systemctl start display-manager</code> and wait.
+        <sup><a href="#note1">[1]</a></sup></li>
+
+        <li>Open both the manual and the <code>konsole</code>.</li>
+
+        <li>Connect to the network using the GUI.</li>
+
+        <li>Create the disk partitions by using <code>fdisk</code>.
+        <br />
+        You can list them with <code>fdisk -l</code>, modify a certain drive
+        with <code>fdisk /dev/sdX</code> (for instance, <code>/dev/sda</code>)
+        and follow the instructions.
+        <br />
+        To create the file system, use
+        <code>mkfs.ext4 -L &lt;label&gt; /dev/sdXY</code> and swap with
+        <code>mkswap -L <label> /dev/sdXY</code>.
+        <br>
+        The EFI partition should be done with <code>mkfs.vfat</code>.
+        </li>
+
+        <li>Mount the target to <code>/mnt</code> e.g. if the label was
+        <code>nixos</code>, <code>mount /dev/disk/by-label/nixos /mnt</code>
+        </li>
+
+        <li><code>mkdir /mnt/boot</code> and then mount your EFI partition to
+        it.</li>
+
+        <li>Generate a configuration template with
+        <code>nixos-generate-config --root /mnt`</code>, and modify it with
+        <code>nano /etc/nixos/configuration.nix</code>.</li>
+
+        <li>While modifying the configuration, make sure to add
+        <code>boot.loader.grub.device = "/dev/sda"</code></li>
+
+        <li>More useful configuration things are:
+            <ul>
+            <li>Uncomment the whole <code>i18n</code> block.</li>
+            <li>Add some essential packages like
+            <code>environment.systemPackages = with pkgs; [
+                wget git firefox pulseaudio networkmanagerapplet
+            ];</code>.</li>
+            <li>If you want to use XFCE, add
+            <code>services.xserver.desktopManager.xfce.enable = true;</code>,
+            otherwise, you don't need <code>networkmanagerapplet</code>
+            either. Make sure to add
+            <code>networking.networkmanager.enable = true;</code> too.</li>
+            <li>Define some user for yourself (modify <code>guest</code> name)
+            and use a UID greater than 1000. Also, add yourself to
+            <code>extraGroups = ["wheel" "networkmanager"];</code> (the first
+            to be able to <code>sudo</code>, the second to use network related
+            things).</li>
+            </ul>
+        </li>
+
+        <li>Run <code>nixos-install</code>. If you ever modify that file again,
+        to add more packages for instance (this is how they're installed), run
+        <code>nixos-rebuild switch</code> (or use <code>test</code> to test
+        but don't boot to it, or <code>boot</code> not to switch but to use
+        on next boot.</li>
+
+        <li><code>reboot</code>.</li>
+
+        <li>Login as <code>root</code>, and set a password for your user
+        with <code>passwd &lt;user&gt;</code>. Done!</li>
+        </ol>
+
+        <p>I enjoyed the process of installing it, and it's really cool that
+        it has versioning and is so clean to keep track of which packages you
+        install. But not being able to run arbitrary binaries by default is
+        something very limitting in my opinion, though they've done a good job.
+        </p>
+        <p>I'm now back to Xubuntu, with a fresh install.</p>
+        <h2>Notes</h2>
+        <ul>
+        <li id="note1">The keyboard mapping is a bit strange. On my Spanish
+        keyboard, the keys were as follows:
+        <table>
+        <tr><th>Keyboard</th><th>Maps to</th><th>Shift</th></tr>
+        <tr><td>'</td>       <td>-</td>      <td>_</td></tr>
+        <tr><td>´</td>       <td>'</td>      <td>"</td></tr>
+        <tr><td>`</td>       <td>[</td>      <td> </td></tr>
+        <tr><td>+</td>       <td>]</td>      <td> </td></tr>
+        <tr><td>¡</td>       <td>=</td>      <td> </td></tr>
+        <tr><td>-</td>       <td>/</td>      <td> </td></tr>
+        <tr><td>ñ</td>       <td>;</td>      <td> </td></tr>
+        </table>
+        </li>
+        </ul>
+		<hr />
+		<p><a href="index">Back to the index</a></p>
+    </div>
+    </div>
+</body>
+</html>

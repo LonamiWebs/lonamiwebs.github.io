@@ -1,0 +1,79 @@
+body {
+  background-color: #eee;
+}
+
+main {
+  background-color: #fff;
+  max-width: 832px;
+  margin: 32px auto;
+  padding: 16px;
+  border-radius: 2px;
+}
+
+canvas {
+  border: 2px solid black;
+  text-align: center;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+.addBorder table, .addBorder tr, .addBorder td {
+  border: 1px solid black;
+}
+
+td, th {
+  width: 20px;
+  height: 20px;
+  text-align: center;
+  vertical-align: top;
+}
+
+h1, h2 {
+  font-family: 'Montserrat', sans-serif;
+}
+
+p, input, button {
+  font-family: 'Ubuntu', sans-serif;
+}
+
+a {
+  text-decoration: none;
+  color: #00f;
+  transition: color 300ms;
+}
+
+a:hover {
+  color: #07f;
+}
+
+/* Use <mark> for math formulas because there's no <math> */
+mark, .math {
+  color: #222;
+  font-size: 120%;
+  font-style: italic;
+  font-family: serif;
+  background-color: rgba(255, 255, 255, 0);
+}
+
+.matrix table, .matrix td, .matrix th {
+  border: 0;
+}
+
+.matrix table {
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+}
+
+.matrix tr:first-child>td:first-child, tr:first-child>td:last-child {
+  border-top: 1px solid black;
+}
+
+.matrix tr:last-child>td:first-child, tr:last-child>td:last-child {
+  border-bottom: 1px solid black;
+}
+
+.right {
+  text-align: right;
+}

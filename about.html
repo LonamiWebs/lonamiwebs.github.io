@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LonamiWebs | About</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <meta name="description" content="Official Lonami's website">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+</head>
+<body>
+    <div class="menu">
+        <ul>
+            <li><a href="index">Welcome</a></li>
+            <li><a href="projects">Projects</a></li>
+            <li><a href="contact">Contact</a></li>
+            <li><a href="about" class="selected">About</a></li>
+        </ul>
+    </div>
+    <div class="body">
+        <h1>About</h1>
+        <p>I'm a
+        <span id="age"><noscript>boy born in the year 1998</noscript></span>
+        from Spain. I absolutely love programming, and so I've been programming
+        <span id="programming"><noscript>since 2012 or so</noscript></span>
+        now, although I also love designing my own logotypes and taking
+        photographies. I'm fascinated about the <i>Artificial Intelligence</i>
+        field and am currently studying a Software Engineering Degree.
+        <br /><br />
+        I can perfectly talk Spanish and also write and read in English,
+        although my English speech is far from perfect. I can also talk
+        C#, Java, Python, HTML, CSS, and also some C, C++, JavaScript, 
+        SQL and Haskell.
+        <br /><br />
+        On the Internet, I'm often known as <i>Lonami</i>, although my real
+        name is simply my nick name, put the other way round.</p>
+    </div>
+    <div class="social">
+        <ul>
+            <li><a href="https://t.me/Lonami" target="_blank"><img src="img/telegram.svg" alt="telegram contact" title="Contact me via Telegram" /></a></li>
+            <li><a href="https://lonamiwebs.github.io/blog/index" target="_blank"><img src="img/blog.svg" alt="spanish blog" title="¡Mi blog en español!" /></a></li>
+            <li><a href="humans.txt" target="_blank"><img src="img/humans.svg" alt="humans.txt" title="humans.txt" /></a></li>
+            <li><a href="http://linkedin.com/in/imanol-hernandez" target="_blank"><img src="img/linkedin.svg" alt="linked in" title="Check out my LinkedIn" /></a></li>
+            <li><a href="/utils" target="_blank"><img src="img/utils.svg" alt="utilities" title="Several utilities" /></a></li>
+            <li><a href="https://github.com/LonamiWebs" target="_blank"><img src="img/github.svg" alt="github" title="Take a look at my projects" /></a></li>
+            <li><a href="donate" target="_blank"><img src="img/bitcoin.svg" alt="donate" title="All donations are appreciated!" /></a></li>
+        </ul>
+    </div>
+<script type="text/javascript">
+now = (new Date()).getFullYear();
+
+document.getElementById("age").innerHTML =
+    (now - 1999) + " year-old-boy";
+
+document.getElementById("programming").innerHTML =
+    "for around " + (now - 2012) + " years or so";
+</script>
+</body>
+</html>

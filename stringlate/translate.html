@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Translate with Stringlate</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link href="https://fonts.googleapis.com/css?family=Crimson+Text|Droid+Serif" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  </head>
+  <body>
+    <main>
+      <h1>Translate with Stringlate</h1>
+      <p>
+        This is a special link that you can open from your phone to translate
+        someone's application via Stringlate. You should have clicked
+        "Open with Stringlate" instead!
+      </p>
+      <noscript><p>
+        If you had JavaScript enabled, I could tell you which repository you
+        were trying to translate. But it's fine!
+      </p></noscript>
+      <p id="whichAppP" style="display:none">
+        You were probably trying to translate <a id="whichAppA"></a>.
+      </p>
+      <hr />
+      <p>
+        Don't have Stringlate installed?
+        <a href="https://f-droid.org/app/io.github.lonamiwebs.stringlate">Get
+        it from F-Droid!</a> or
+        <a href="https://github.com/LonamiWebs/Stringlate/releases">grab the
+        latest release</a>!
+      </p>
+      <p>
+        Want to integrate Stringlate with your application too? Check out the
+        <a href="https://lonamiwebs.github.io/stringlate/index">main page</a>!
+      </p>
+    </main>
+
+    <script>
+      // https://stackoverflow.com/a/1404100/4759433
+      function getURLParameter(name) {
+        var r = RegExp(name+'='+'(.+?)(&|$)').exec(location.search)||[,null];
+        if (r[1]) return decodeURIComponent(r[1]);
+      }
+
+      var git = getURLParameter('git');
+      if (git) {
+        var whichAppP = document.getElementById('whichAppP');
+        var whichAppA = document.getElementById('whichAppA');
+
+        whichAppP.style.display = '';
+        whichAppA.href = git;
+
+        var slash = git.lastIndexOf('/');
+        if (slash == -1) {
+          whichAppA.innerHTML = git;
+        } else {
+          var name = git.substring(slash + 1);
+          if (/.git$/.test(name)) {
+            name = name.substring(0, name.length - 4);
+          }
+          whichAppA.innerHTML = name;
+        }
+      }
+    </script>
+  </body>
+</html>
