@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Integrating Apache Tika into our Crawler</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<main>
+<p><a href="/blog/ribw/upgrading-our-baby-crawler/">In our last crawler post</a>, we detailed how our crawler worked, and although it did a fine job, it’s time for some extra upgrading.</p>
+<div class="date-created-modified">Created 2020-03-18<br>
+Modified 2020-03-25</div>
+<h2 class="title" id="what_kind_of_upgrades_"><a class="anchor" href="#what_kind_of_upgrades_">¶</a>What kind of upgrades?</h2>
+<p>A small but useful one. We are adding support for file types that contain text but cannot be processed by normal text editors because they are structured and not just plain text (such as PDF files, Excel, Word documents…).</p>
+<p>And for this task, we will make use of the help offered by <a href="https://tika.apache.org/">Tika</a>, our friendly Apache tool.</p>
+<h2 id="what_is_tika_"><a class="anchor" href="#what_is_tika_">¶</a>What is Tika?</h2>
+<p><a href="https://tika.apache.org/">Tika</a> is a set of libraries offered by <a href="https://en.wikipedia.org/wiki/The_Apache_Software_Foundation">The Apache Software Foundation</a> that we can include in our project in order to extract the text and metadata of files from a <a href="https://tika.apache.org/1.24/formats.html">long list of supported formats</a>.</p>
+<h2 id="changes_in_the_code"><a class="anchor" href="#changes_in_the_code">¶</a>Changes in the code</h2>
+<p>Not much has changed in the structure of the crawler, we simply have added a new method in <code>Utils</code> that uses the class <code>Tika</code> from the previously mentioned library so as to process and extract the text of more filetypes.</p>
+<p>Then, we use this text just like we would for our standard text file (checking the thesaurus and adding it to the word map) and voilà! We have just added support for a big range of file types.</p>
+<h2 id="incorporating_gradle"><a class="anchor" href="#incorporating_gradle">¶</a>Incorporating Gradle</h2>
+<p>In order for the previous code to work, we need to make use of external libraries. To make this process easier and because the project is growing, we decided to use <a href="https://gradle.org/">Gradle</a>, a build system that can be used for projects in various programming languages, such as Java.</p>
+<p>We followed their <a href="https://guides.gradle.org/building-java-applications/">guide to Building Java Applications</a>, and in a few steps added the required <code>.gradle</code> files. Now we can compile and run the code without having to worry about juggling with Java and external dependencies in a single command:</p>
+<pre><code>./gradlew run
+</code></pre>
+<h2 id="download"><a class="anchor" href="#download">¶</a>Download</h2>
+<p>And here you can download the final result:</p>
+<p><em>download removed</em></p>
+</main>
+</body>
+</html>
+ 

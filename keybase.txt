@@ -1,0 +1,56 @@
+==================================================================
+https://keybase.io/lonami
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of https://lonami.dev
+  * I am lonami (https://keybase.io/lonami) on keybase.
+  * I have a public key ASCoYKcU4x-Wl1k9AbYqLywxX2OUiE5XxHIfGn7Z17QheAo
+
+To do so, I am signing this object:
+
+{
+  "body": {
+    "key": {
+      "eldest_kid": "0120a860a714e31f9697593d01b62a2f2c315f6394884e57c4721f1a7ed9d7b421780a",
+      "host": "keybase.io",
+      "kid": "0120a860a714e31f9697593d01b62a2f2c315f6394884e57c4721f1a7ed9d7b421780a",
+      "uid": "15c9efa5730081a74aa068919df4fa19",
+      "username": "lonami"
+    },
+    "merkle_root": {
+      "ctime": 1560621172,
+      "hash": "e2f543034ee1d2b87c9aa74b056b2ce2e22f31c09b69f9eabb5f82aba8b71b2ba81768eda18b3fc26313b612fd21068a4af9cecbd433ed4f6444aa0597e571a3",
+      "hash_meta": "60bb690f4585484269e45d86d61670dbb53261b7aad9172342b6f4d940241c34",
+      "seqno": 5576906
+    },
+    "service": {
+      "entropy": "4YjcZ530ruXweakqancRWRoE",
+      "hostname": "lonami.dev",
+      "protocol": "https:"
+    },
+    "type": "web_service_binding",
+    "version": 2
+  },
+  "client": {
+    "name": "keybase.io go client",
+    "version": "4.1.0"
+  },
+  "ctime": 1560621178,
+  "expire_in": 504576000,
+  "prev": "7932ef5dd721a6b02c2bea3ba68d0e910b8ee41e4b37ac915deddc7e4888e8c9",
+  "seqno": 19,
+  "tag": "signature"
+}
+
+which yields the signature:
+
+hKRib2R5hqhkZXRhY2hlZMOpaGFzaF90eXBlCqNrZXnEIwEgqGCnFOMflpdZPQG2Ki8sMV9jlIhOV8RyHxp+2de0IXgKp3BheWxvYWTESpcCE8QgeTLvXdchprAsK+o7po0OkQuO5B5LN6yRXe3cfkiI6MnEIG0Tokn/VknUDnw80CKpdH9TIrVT5rJzcq5JJiv7TZz1AgHCo3NpZ8RAdBlhtMIzOfWS8Yhop+sQAGzIAW1qYhHanGkjAbN+9LxEVhwd2knyd0J9dAaLE/xlydqtZRb1qV1sRmMMWXBRC6hzaWdfdHlwZSCkaGFzaIKkdHlwZQildmFsdWXEIHGReKp8ETAF8wxr4VSUBHsS5DJ8Pz3hFFL4iLt5U/WJo3RhZ80CAqd2ZXJzaW9uAQ==
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/lonami
+
+==================================================================

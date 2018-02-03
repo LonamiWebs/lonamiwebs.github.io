@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>An Introduction to Asyncio</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<main>
+<h1 class="title" id="an_introduction_to_asyncio"><a class="anchor" href="#an_introduction_to_asyncio">¶</a>An Introduction to Asyncio</h1>
+<div class="date-created-modified">Created 2018-06-13<br>
+Modified 2018-06-15</div>
+<h2 id="index"><a class="anchor" href="#index">¶</a>Index</h2>
+<ul>
+<li><a href="#background">Background</a></li>
+<li><a href="#inputoutput">Input / Output</a></li>
+<li><a href="#divingin">Diving In</a></li>
+<li><a href="#toyexample">A Toy Example</a></li>
+<li><a href="#example">A Real Example</a></li>
+<li><a href="#extra">Extra Material</a></li>
+</ul>
+<h2 id="background"><a class="anchor" href="#background">¶</a>Background</h2>
+<p>After seeing some friends struggle with <code>asyncio</code> I decided that it could be a good idea to write a blog post using my own words to explain how I understand the world of asynchronous IO. I will focus on Python's <code>asyncio</code> module but this post should apply to any other language easily.</p>
+<p>So what is <code>asyncio</code> and what makes it good? Why don't we just use the old and known threads to run several parts of the code concurrently, at the same time?</p>
+<p>The first reason is that <code>asyncio</code> makes your code easier to reason about, as opposed to using threads, because the amount of ways in which your code can run grows exponentially. Let's see that with an example. Imagine you have this code:</p>
+<pre><code class="language-python">def method():
+	line 1
+	line 2
+	line 3
+	line 4
+	line 5
+</code></pre>
+<p>And you start two threads to run the method at the same time. What is the order in which the lines of code get executed? The answer is that you can't know! The first thread can run the entire method before the second thread even starts. Or it could be the first thread that runs after the second thread. Perhaps both run the &quot;line 1&quot;, and then the line 2. Maybe the first thread runs lines 1 and 2, and then the second thread only runs the line 1 before the first thread finishes.</p>
+<p>As you can see, any combination of the order in which the lines run is possible. If the lines modify some global shared state, that will get messy quickly.</p>
+<p>Second, in Python, threads <em>won't</em> make your code faster. It will only increase the concurrency of your program, allowing you to run several things at the same time, so using threads for speed isn't a real advantage. Indeed, your code will probably run slower under the most common Python implementation, CPython, which makes use of a Global Interpreter Lock (GIL) that only lets a thread run at once.</p>
+<h2 id="input_output"><a class="anchor" href="#input_output">¶</a>Input / Output</h2>
+<p>Before we go any further, let's first stop to talk about input and output, commonly known as &quot;IO&quot;. There are two main ways to perform IO operations, such as reading or writing from a file or a network socket.</p>
+<p>The first one is known as &quot;blocking IO&quot;. What this means is that, when you try performing IO, the current application thread is going to <em>block</em> until the Operative System can tell you it's done. Normally, this is not a problem, since disks are pretty fast anyway, but it can soon become a performance bottleneck. And network IO will be much slower than disk IO!</p>
+<pre><code class="language-python"># &quot;open&quot; will block until the OS creates a new file in the disk.
+#        this can be really slow if the disk is under heavy load!
+with open('hello.txt', 'w') as fd:
+    fd.write('hello!\n')
+
+    # &quot;flush&quot; will block until the OS has written all data to disk*
+    fd.flush()
+
+# * the reality is a bit more complicated, since writes to disk are
+#   quite expensive, the OS will normally keep the data in RAM until
+#   it has more stuff to write to disk, and then it will `sync`
+#   everything after a few seconds
+</code></pre>
+<p>Blocking IO offers timeouts, so that you can get control back in your code if the operation doesn't finish. Imagine that the remote host doesn't want to reply, your code would be stuck for as long as the connection remains alive!</p>
+<p>But wait, what if we make the timeout small? Very, very small? If we do that, we will never block waiting for an answer. That's how asynchronous IO works, and it's the opposite of blocking IO (you can also call it non-blocking IO if you want to).</p>
+<p>How does non-blocking IO work if the IO device needs a while to answer with the data? In that case, the operative system responds with &quot;not ready&quot;, and your application gets control back so it can do other stuff while the IO device completes your request. It works a bit like this:</p>
+<pre><code class="language-python">&amp;lt;app&amp;gt; Hey, I would like to read 16 bytes from this file
+&amp;lt;OS&amp;gt; Okay, but the disk hasn't sent me the data yet
+&amp;lt;app&amp;gt; Alright, I will do something else then
+(a lot of computer time passes)
+&amp;lt;app&amp;gt; Do you have my 16 bytes now?
+&amp;lt;OS&amp;gt; Yes, here they are! &quot;Hello, world !!\n&quot;
+</code></pre>
+<p>In reality, you can tell the OS to notify you when the data is ready, as opposed to polling (constantly asking the OS whether the data is ready yet or not), which is more efficient.</p>
+<p>But either way, that's the difference between blocking and non-blocking IO, and what matters is that your application gets to run more without ever needing to wait for data to arrive, because the data will be there immediately when you ask, and if it's not yet, your app can do more things meanwhile.</p>
+<h2 id="diving_in"><a class="anchor" href="#diving_in">¶</a>Diving In</h2>
+<p>Now we've seen what blocking and non-blocking IO is, and how threads make your code harder to reason about, but they give concurrency (yet not more speed). Is there any other way to achieve this concurrency that doesn't involve threads? Yes! The answer is <code>asyncio</code>.</p>
+<p>So how does <code>asyncio</code> help? First we need to understand a very crucial concept before we can dive any deeper, and I'm talking about the <em>event loop</em>. What is it and why do we need it?</p>
+<p>You can think of the event loop as a <em>loop</em> that will be responsible for calling your <code>async</code> functions:</p>
+<div class="image-container">
+<img src="eventloop.svg" alt="The Event Loop" />
+<div class="image-caption"></div>
+</div>
+<p>
+<p>That's silly you may think. Now not only we run our code but we also have to run some &quot;event loop&quot;. It doesn't sound beneficial at all. What are these events? Well, they are the IO events we talked about before!</p>
+<p><code>asyncio</code>'s event loop is responsible for handling those IO events, such as file is ready, data arrived, flushing is done, and so on. As we saw before, we can make these events non-blocking by setting their timeout to 0.</p>
+<p>Let's say you want to read from 10 files at the same time. You will ask the OS to read data from 10 files, and at first none of the reads will be ready. But the event loop will be constantly asking the OS to know which are done, and when they are done, you will get your data.</p>
+<p>This has some nice advantages. It means that, instead of waiting for a network request to send you a response or some file, instead of blocking there, the event loop can decide to run other code meanwhile. Whenever the contents are ready, they can be read, and your code can continue. Waiting for the contents to be received is done with the <code>await</code> keyword, and it tells the loop that it can run other code meanwhile:</p>
+<div class="image-container">
+<img src="awaitkwd1.svg" alt="Step 1, await keyword" />
+<div class="image-caption"></div>
+</div>
+<p>
+<div class="image-container">
+<img src="awaitkwd2.svg" alt="Step 2, await keyword" />
+<div class="image-caption"></div>
+</div>
+<p>
+<p>Start reading the code of the event loop and follow the arrows. You can see that, in the beginning, there are no events yet, so the loop calls one of your functions. The code runs until it has to <code>await</code> for some IO operation to complete, such as sending a request over the network. The method is &quot;paused&quot; until an event occurs (for example, an &quot;event&quot; occurs when the request has been sent completely).</p>
+<p>While the first method is busy, the event loop can enter the second method, and run its code until the first <code>await</code>. But it can happen that the event of the second query occurs before the request on the first method, so the event loop can re-enter the second method because it has already sent the query, but the first method isn't done sending the request yet.</p>
+<p>Then, the second method <code>await</code>'s for an answer, and an event occurs telling the event loop that the request from the first method was sent. The code can be resumed again, until it has to <code>await</code> for a response, and so on.</p>
+<p>There are some important things to note here. The first is that we only need one thread to be running! The event loop decides when and which methods should run. The second is that we know when it may run other methods. Those are the <code>await</code> keywords! Whenever there is one of those, we know that the loop is able to run other things until the resource (again, like network) becomes ready.</p>
+<p>So far, we already have two advantages. We are only using a single thread so the cost for switching between methods is low, and we can easily reason about where our program may interleave operations.</p>
+<p>Another advantage is that, with the event loop, you can easily schedule when a piece of code should run, such as using the method <a href="https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.call_at"><code>loop.call_at</code></a>, without the need for spawning another thread at all.</p>
+<p>To tell the <code>asyncio</code> to run the two methods shown above, we can use <a href="https://docs.python.org/3/library/asyncio-future.html#asyncio.ensure_future"><code>asyncio.ensure_future</code></a>, which is a way of saying &quot;I want the future of my method to be ensured&quot;. That is, you want to run your method in the future, whenever the loop is free to do so. This method returns a <code>Future</code> object, so if your method returns a value, you can <code>await</code> this future to retrieve its result.</p>
+<p>What is a <code>Future</code>? This object represents the value of something that will be there in the future, but might not be there yet. Just like you can <code>await</code> your own <code>async def</code> functions, you can <code>await</code> these <code>Future</code>'s.</p>
+<p>The <code>async def</code> functions are also called &quot;coroutines&quot;, and Python does some magic behind the scenes to turn them into such. The coroutines can be <code>await</code>'ed, and this is what you normally do.</p>
+<h2 id="a_toy_example"><a class="anchor" href="#a_toy_example">¶</a>A Toy Example</h2>
+<p>That's all about <code>asyncio</code>! Let's wrap up with some example code. We will create a server that replies with the text a client sends, but reversed. First, we will show what you could write with normal synchronous code, and then we will port it.</p>
+<p>Here is the <strong>synchronous version</strong>:</p>
+<pre><code class="language-python"># server.py
+import socket
+
+
+def server_method():
+	# create a new server socket to listen for connections
+	server = socket.socket()
+
+	# bind to localhost:6789 for new connections
+	server.bind(('localhost', 6789))
+
+	# we will listen for one client at most
+	server.listen(1)
+
+	# *block* waiting for a new client
+	client, _ = server.accept()
+
+	# *block* waiting for some data
+	data = client.recv(1024)
+
+	# reverse the data
+	data = data[::-1]
+
+	# *block* sending the data
+	client.sendall(data)
+
+	# close client and server
+	server.close()
+	client.close()
+
+
+if __name__ == '__main__':
+	# block running the server
+	server_method()
+</code></pre>
+<pre><code class="language-python"># client.py
+import socket
+
+
+def client_method():
+	message = b'Hello Server!\n'
+	client = socket.socket()
+
+	# *block* trying to stabilish a connection
+	client.connect(('localhost', 6789))
+
+	# *block* trying to send the message
+	print('Sending', message)
+	client.sendall(message)
+
+	# *block* until we receive a response
+	response = client.recv(1024)
+	print('Server replied', response)
+
+	client.close()
+
+
+if __name__ == '__main__':
+	client_method()
+</code></pre>
+<p>From what we've seen, this code will block on all the lines with a comment above them saying that they will block. This means that for running more than one client or server, or both in the same file, you will need threads. But we can do better, we can rewrite it into <code>asyncio</code>!</p>
+<p>The first step is to mark all your <code>def</code>initions that may block with <code>async</code>. This marks them as coroutines, which can be <code>await</code>ed on.</p>
+<p>Second, since we're using low-level sockets, we need to make use of the methods that <code>asyncio</code> provides directly. If this was a third-party library, this would be just like using their <code>async def</code>initions.</p>
+<p>Here is the <strong>asynchronous version</strong>:</p>
+<pre><code class="language-python"># server.py
+import asyncio
+import socket
+
+# get the default &quot;event loop&quot; that we will run
+loop = asyncio.get_event_loop()
+
+
+# notice our new &quot;async&quot; before the definition
+async def server_method():
+	server = socket.socket()
+	server.bind(('localhost', 6789))
+	server.listen(1)
+
+	# await for a new client
+	# the event loop can run other code while we wait here!
+	client, _ = await loop.sock_accept(server)
+
+	# await for some data
+	data = await loop.sock_recv(client, 1024)
+	data = data[::-1]
+
+	# await for sending the data
+	await loop.sock_sendall(client, data)
+
+	server.close()
+	client.close()
+
+
+if __name__ == '__main__':
+	# run the loop until &quot;server method&quot; is complete
+	loop.run_until_complete(server_method())
+</code></pre>
+<pre><code class="language-python"># client.py
+import asyncio
+import socket
+
+loop = asyncio.get_event_loop()
+
+
+async def client_method():
+	message = b'Hello Server!\n'
+	client = socket.socket()
+
+	# await to stabilish a connection
+	await loop.sock_connect(client, ('localhost', 6789))
+
+	# await to send the message
+	print('Sending', message)
+	await loop.sock_sendall(client, message)
+
+	# await to receive a response
+	response = await loop.sock_recv(client, 1024)
+	print('Server replied', response)
+
+	client.close()
+
+
+if __name__ == '__main__':
+	loop.run_until_complete(client_method())
+</code></pre>
+<p>That's it! You can place these two files separately and run, first the server, then the client. You should see output in the client.</p>
+<p>The big difference here is that you can easily modify the code to run more than one server or clients at the same time. Whenever you <code>await</code> the event loop will run other of your code. It seems to &quot;block&quot; on the <code>await</code> parts, but remember it's actually jumping to run more code, and the event loop will get back to you whenever it can.</p>
+<p>In short, you need an <code>async def</code> to <code>await</code> things, and you run them with the event loop instead of calling them directly. So this…</p>
+<pre><code class="language-python">def main():
+	...  # some code
+
+
+if __name__ == '__main__':
+	main()
+</code></pre>
+<p>…becomes this:</p>
+<pre><code class="language-python">import asyncio
+
+
+async def main():
+	...  # some code
+
+
+if __name__ == '__main__':
+	asyncio.get_event_loop().run_until_complete(main)
+</code></pre>
+<p>This is pretty much how most of your <code>async</code> scripts will start, running the main method until its completion.</p>
+<h2 id="a_real_example"><a class="anchor" href="#a_real_example">¶</a>A Real Example</h2>
+<p>Let's have some fun with a real library. We'll be using <a href="https://github.com/LonamiWebs/Telethon">Telethon</a> to broadcast a message to our three best friends, all at the same time, thanks to the magic of <code>asyncio</code>. We'll dive right into the code, and then I'll explain our new friend <code>asyncio.wait(...)</code>:</p>
+<pre><code class="language-python"># broadcast.py
+import asyncio
+import sys
+
+from telethon import TelegramClient
+
+# (you need your own values here, check Telethon's documentation)
+api_id = 123
+api_hash = '123abc'
+friends = [
+	'@friend1__username',
+	'@friend2__username',
+	'@bestie__username'
+]
+
+# we will have to await things, so we need an async def
+async def main(message):
+	# start is a coroutine, so we need to await it to run it
+	client = await TelegramClient('me', api_id, api_hash).start()
+
+	# wait for all three client.send_message to complete
+	await asyncio.wait([
+		client.send_message(friend, message)
+		for friend in friends
+	])
+
+	# and close our client
+	await client.disconnect()
+
+
+if __name__ == '__main__':
+	if len(sys.argv) != 2:
+		print('You must pass the message to broadcast!')
+		quit()
+
+	message = sys.argv[1]
+	asyncio.get_event_loop().run_until_complete(main(message))
+</code></pre>
+<p>Wait… how did that send a message to all three of
+my friends? The magic is done here:</p>
+<pre><code class="language-python">[
+	client.send_message(friend, message)
+	for friend in friends
+]
+</code></pre>
+<p>This list comprehension creates another list with three
+coroutines, the three <code>client.send_message(...)</code>.
+Then we just pass that list to <code>asyncio.wait</code>:</p>
+<pre><code class="language-python">await asyncio.wait([...])
+</code></pre>
+<p>This method, by default, waits for the list of coroutines to run until they've all finished. You can read more on the Python <a href="https://docs.python.org/3/library/asyncio-task.html#asyncio.wait">documentation</a>. Truly a good function to know about!</p>
+<p>Now whenever you have some important news for your friends, you can simply <code>python3 broadcast.py 'I bought a car!'</code> to tell all your friends about your new car! All you need to remember is that you need to <code>await</code> on coroutines, and you will be good. <code>asyncio</code> will warn you when you forget to do so.</p>
+<h2 id="extra_material"><a class="anchor" href="#extra_material">¶</a>Extra Material</h2>
+<p>If you want to understand how <code>asyncio</code> works under the hood, I recommend you to watch this hour-long talk <a href="https://youtu.be/M-UcUs7IMIM">Get to grips with asyncio in Python 3</a> by Robert Smallshire. In the video, they will explain the differences between concurrency and parallelism, along with others concepts, and how to implement your own <code>asyncio</code> &quot;scheduler&quot; from scratch.</p>
+</main>
+</body>
+</html>
+ 

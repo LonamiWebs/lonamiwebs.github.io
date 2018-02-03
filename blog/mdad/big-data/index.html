@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Big Data</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<main>
+<p>Big Data sounds like a buzzword you may be hearing everywhere, but it’s actually here to stay!</p>
+<div class="date-created-modified">Created 2020-02-25<br>
+Modified 2020-03-18</div>
+<h2 class="title" id="what_is_big_data_"><a class="anchor" href="#what_is_big_data_">¶</a>What is Big Data?</h2>
+<p>And why is it so important? We use this term to refer to the large amount of data available, rapidly growing every day, that cannot be processed in conventional ways. It’s not only about the amount, it’s also about the variety and rate of growth.</p>
+<p>Thanks to technological advancements, there are new ways to process this insane amount of data, which would otherwise be too costly for processing in traditional database systems.</p>
+<h2 id="where_does_data_come_from_"><a class="anchor" href="#where_does_data_come_from_">¶</a>Where does data come from?</h2>
+<p>It can be pictures in your phone, industry transactions, messages in social networks, a sensor in the mountains. It can come from anywhere, which makes the data very varied.</p>
+<p>Just to give some numbers, over 12TB of data is generated on Twitter <em>daily</em>. If you purchase a laptop today (as of March 2020), the disk will be roughly 1TB, maybe 2TB. Twitter would fill 6 of those drives every day!</p>
+<p>What about Facebook? It is estimated they store around 100PB of photos and videos. That would be 50000 laptop disks. Not a small number. And let’s not talk about worldwide network traffic…</p>
+<h2 id="what_data_can_be_exploited_"><a class="anchor" href="#what_data_can_be_exploited_">¶</a>What data can be exploited?</h2>
+<p>So, we have a lot of data. Should we attempt and process everything? We can distinguish several categories.</p>
+<ul>
+<li><strong>Web and Social Media</strong>: Clickstream Data, Twitter Feeds, Facebook Postings, Web content… Stuff coming from social networks.</li>
+<li><strong>Biometrics</strong>: Facial Recognion, Genetics… Any kind of personal recognition.</li>
+<li><strong>Machine-to-Machine</strong>: Utility Smart Meter Readings, RFID Readings, Oil Rig Sensor Readings, GPS Signals… Any sensor shared with other machines.</li>
+<li><strong>Human Generated</strong>: Call Center Voice Recordings, Email, Electronic Medical Records… Even the voice notes one sends over WhatsApp count.</li>
+<li><strong>Big Transaction Data</strong>: Healthcare Claims, Telecommunications Call Detail Records, Utility Billing Records… Financial transactions.</li>
+</ul>
+<p>But asking what to process is asking the wrong question. Instead, one should think about «What problem am I trying to solve?».</p>
+<h2 id="how_to_exploit_this_data_"><a class="anchor" href="#how_to_exploit_this_data_">¶</a>How to exploit this data?</h2>
+<p>What are some of the ways to deal with this data? If the problem fits the Map-Reduce paradigm then Hadoop is a great option! Hadoop is inspired by Google File System (GFS), and achieves great parallelism across the nodes of a cluster, and has the following components:</p>
+<ul>
+<li><strong>Hadoop Distributed File System</strong>. Data is divided into smaller «blocks» and distributed across the cluster, which makes it possible to execute the mapping and reduction in smaller subsets, and makes it possible to scale horizontally.</li>
+<li><strong>Hadoop MapReduce</strong>. First, a data set is «mapped» into a different set, and data becomes a list of tuples (key, value). The «reduce» step works on these tuples and combines them into a smaller subset.</li>
+<li><strong>Hadoop Common</strong>. These are a set of libraries that ease working with Hadoop.</li>
+</ul>
+<h2 id="key_insights"><a class="anchor" href="#key_insights">¶</a>Key insights</h2>
+<p>Big Data is a field whose goal is to extract information from very large sets of data, and find ways to do so. To summarize its different dimensions, we can refer to what’s known as «the Four V’s of Big Data»:</p>
+<ul>
+<li><strong>Volume</strong>. Really large quantities.</li>
+<li><strong>Velocity</strong>. Processing response time matters!</li>
+<li><strong>Variety</strong>. Data comes from plenty of sources.</li>
+<li><strong>Veracity.</strong> Can we trust all sources, though?</li>
+</ul>
+<p>Some sources talk about a fifth V for <strong>Value</strong>; because processing this data is costly, it is important we can get value out of it.</p>
+<p>…And some other sources go as high as seven V’s, including <strong>Viability</strong> and <strong>Visualization</strong>. Computers can’t take decissions on their own (yet), a human has to. And they can only do so if they’re presented the data (and visualize it) in a meaningful way.</p>
+<h2 id="infographics"><a class="anchor" href="#infographics">¶</a>Infographics</h2>
+<p>Let’s see some pictures, we all love pictures:</p>
+<p><img src="4-Vs-of-big-data.jpg" alt="" /></p>
+<h2 id="common_patterns"><a class="anchor" href="#common_patterns">¶</a>Common patterns</h2>
+<h2 id="references"><a class="anchor" href="#references">¶</a>References</h2>
+<ul>
+<li>¿Qué es Big Data? – <a href="https://www.ibm.com/developerworks/ssa/local/im/que-es-big-data/">https://www.ibm.com/developerworks/ssa/local/im/que-es-big-data/</a></li>
+<li>The Four V’s of Big Data – <a href="https://www.ibmbigdatahub.com/infographic/four-vs-big-data">https://www.ibmbigdatahub.com/infographic/four-vs-big-data</a></li>
+<li>Big data – <a href="https://en.wikipedia.org/wiki/Big_data">https://en.wikipedia.org/wiki/Big_data</a></li>
+<li>Las 5 V’s del Big Data – <a href="https://www.quanticsolutions.es/big-data/las-5-vs-del-big-data">https://www.quanticsolutions.es/big-data/las-5-vs-del-big-data</a></li>
+<li>Las 7 V del Big data: Características más importantes – <a href="https://www.iic.uam.es/innovacion/big-data-caracteristicas-mas-importantes-7-v/#viabilidad">https://www.iic.uam.es/innovacion/big-data-caracteristicas-mas-importantes-7-v/</a></li>
+</ul>
+</main>
+</body>
+</html>
+ 

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What is ElasticSearch and why should you care?</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<main>
+<p>ElasticSearch is a giant search index with powerful analytics capabilities. It’s like a database and search engine on steroids, really easy and fast to get up and running. One can think of it as your own Google, a search engine with analytics.</p>
+<div class="date-created-modified">Created 2020-03-18<br>
+Modified 2020-03-27</div>
+<p>ElasticSearch is rich, stable, performs well, is well maintained, and able to scale to petabytes of any kind of data, whether it’s structured, semi-structured or not at all. It’s cost-effective and can be used to make business decisions.</p>
+<p>Or, described in 10 seconds:</p>
+<blockquote>
+<p>Schema-free, REST &amp; JSON based distributed document store
+Open source: Apache License 2.0
+Zero configuration</p>
+</blockquote>
+<p>-- Alex Reelsen</p>
+<h2 class="title" id="basic_capabilities"><a class="anchor" href="#basic_capabilities">¶</a>Basic capabilities</h2>
+<p>ElasticSearch lets you ask questions about your data, not just make queries. You may think SQL can do this too, but what’s important is making a pipeline of facets, and feed the results from query to query.</p>
+<p>Instead of changing your data, you can be flexible with your questions with no need to re-index it every time the questions change.</p>
+<p>ElasticSearch is not just to search for full-text data, either. It can search for structured data and return more than just the results. It also yields additional data, such as ranking, highlights, and allows for pagination.</p>
+<p>It doesn’t take a lot of configuration to get running, either, which can be a good boost on productivity.</p>
+<h2 id="how_does_it_work_"><a class="anchor" href="#how_does_it_work_">¶</a>How does it work?</h2>
+<p>ElasticSearch depends on Java, and can work in a distributed cluster if you execute multiple instances. Data will be replicated and sharded as needed. The current version at the time of writing is 7.6.1, and it’s being developed fast!</p>
+<p>It also has support for plugins, with an ever-growing ecosystem and integration on many programming languages. Tools around it are being built around it, too, like Kibana which helps you visualize your data.</p>
+<p>The way you use it is through a JSON API, served over HTTP/S.</p>
+<h2 id="how_can_i_use_it_"><a class="anchor" href="#how_can_i_use_it_">¶</a>How can I use it?</h2>
+<p><a href="https://www.elastic.co/downloads/">You can try ElasticSearch out for free on Elastic Cloud</a>, however, it can also be <a href="https://www.elastic.co/downloads/elasticsearch">downloaded and ran offline</a>, which is what we’ll do. Download the file corresponding to your operating system, unzip it, and execute the binary. Running it is as simple as that!</p>
+<p>Now you can make queries to it over HTTP, with for example <code>curl</code>:</p>
+<pre><code>curl -X PUT localhost:9200/orders/order/1 -d '
+{
+  &quot;created_at&quot;: &quot;2013/09/05 15:45:10&quot;,
+  &quot;items&quot;: [
+    {
+      name: &quot;HD Monitor&quot;
+    }
+  ],
+  &quot;total&quot;: 249.95
+}'
+</code></pre>
+<p>This will create a new order with some information, such as when it was created, what items it contains, and the total cost of the order.</p>
+<p>You can then query or filter as needed, script it or even create statistics.</p>
+<h2 id="references"><a class="anchor" href="#references">¶</a>References</h2>
+<ul>
+<li><a href="https://youtu.be/sKnkQSec1U0">YouTube – What is Elasticsearch?</a></li>
+<li><a href="https://youtu.be/yWNiRC_hUAw">YouTube – GOTO 2013 • Elasticsearch – Beyond Full-text Search • Alex Reelsen</a></li>
+<li><a href="https://www.elastic.co/kibana">Kibana – Your window into the Elastic Stack</a></li>
+<li><a href="https://www.elastic.co/guide/index.html">Elastic Stack and Product Documentation</a></li>
+</ul>
+</main>
+</body>
+</html>
+ 

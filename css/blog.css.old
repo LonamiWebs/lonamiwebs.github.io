@@ -1,0 +1,127 @@
+/* R.I.P. old blog CSS, 2018-02-03 to 2020-05-29 */
+
+﻿@font-face {
+    font-family: sf1;
+    src: url("../fonts/GeosansLight.ttf");
+}
+@font-face {
+    font-family: sf2;
+    src: url("../fonts/inglobal.ttf");
+}
+@font-face {
+    font-family: sf3;
+    src: url("../fonts/Larke Sans Light 2.ttf");
+}
+@font-face {
+    font-family: sf4;
+    src: url("../fonts/weblysleekuil.ttf");
+}
+
+::selection {
+  background: #FFFF66;
+}
+::-moz-selection {
+  background: #FFFF66;
+}
+
+body {
+    background-color: #F4F4F4;
+}
+
+.minMargin {
+    margin: 50px 30px;
+}
+
+.card {
+    margin: 20px auto;
+    padding: 8px 24px;
+    border-radius: 10px;
+    background-color: #FFF;
+    max-width: 640px;
+    box-shadow: 8px 8px 8px #B8B8B8;
+}
+
+h1 {
+    font-family: sf1;
+    font-size: 64px;
+}
+h2 {
+    font-family: sf3;
+    font-size: 48px;
+    border-bottom: 1px solid #888888;
+    padding-bottom: 4px;
+}
+h3, .versalita {
+    font-family: sf4;
+    font-variant: small-caps;
+}
+.right {
+    text-align: right;
+}
+
+p, ol, ul, td {
+    font-family: sf2;
+    font-size: 18px;
+    line-height: 125%;
+}
+td {
+    padding: 2px 20px;
+    vertical-align: top;
+}
+
+hr {
+    border: 1px dashed #D0D0D0;
+    margin: 20px 10px;
+}
+
+em {
+    color: #484848;
+}
+
+img {
+    border-radius: 10px;
+    box-shadow: 4px 4px 4px #888888;
+}
+
+.center {
+    text-align: center;
+    display: block;
+    margin: 0 auto;
+}
+
+a {
+    text-decoration: none;
+    border-bottom: 0px solid #00CCCC;
+    margin-bottom: 3px;
+    color: #00CCCC;
+    transition: border-bottom 0.1s ease-in-out 0s, margin-bottom 0.1s ease-in-out 0s, color 0.2s ease-in-out 0s;
+}
+a:hover {
+    border-bottom: 3px solid #00AAAA;
+    margin-bottom: 0px;
+    color: #00AAAA;
+}
+
+code {
+    background-color: #F7F7F7;
+    color: #F77;
+    padding: 2px;
+    font-size: 14px;
+    border-radius: 2px;
+}
+
+li {
+    margin: 4px 0;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid #777;
+}
+
+th {
+    padding: 2px 8px;
+}
