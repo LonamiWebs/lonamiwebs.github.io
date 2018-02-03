@@ -1,0 +1,30 @@
+KLOONI PRIVACY POLICY
+=====================
+
+NOTICE
+------
+
+Q: What personal information is being collected?
+A: No information is collected by the application, other than your highscores, in-game money, and last running game. In addition, the application lacks internet access.
+
+CHOICE
+------
+
+Q: What options do I have as a user of the application about how/whether personal data is collected and used?
+A: If you are not comfortable with the game remembering highscores, in-game money or last-saved games offline, you may clear application data and/or uninstall the application.
+
+ACCESS
+------
+
+Q: How can I as a user of the application see what data has been collected and change/correct it if necessary?
+A: You may open the application and play the game to see what information it had saved previously, and you may try to achieve better highscores or earn/spend more money to change its in-game amount.
+
+SECURITY
+--------
+Q: How any data that is collected is stored/protected?
+A: No sensitive data is stored, and it is accessible if your phone is rooted.
+
+REDRESS
+-------
+Q: What can I as a user of the application do if the privacy policy is not met?
+A: Please contact the developer and let them know that they are not a lawyer and how to fix or improve the privacy policy.

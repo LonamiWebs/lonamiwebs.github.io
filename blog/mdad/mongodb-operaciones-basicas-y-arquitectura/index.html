@@ -1,0 +1,187 @@
+<!DOCTYPE html><html lang=en><head><meta charset=utf-8><meta name=description content="Official Lonami's website"><meta name=viewport content="width=device-width, initial-scale=1.0, user-scalable=yes"><title> MongoDB: Operaciones Básicas y Arquitectura | Lonami's Blog </title><link rel=stylesheet href=/style.css><body><nav class=sections><ul><li><a href=/>lonami's site</a><li><a href=/blog class=selected>blog</a><li><a href=/golb>golb</a></ul></nav><main><h1 class=title>MongoDB: Operaciones Básicas y Arquitectura</h1><div class=time><p>2020-03-05T03:00:53+00:00<p>last updated 2020-03-20T11:42:15+00:00</div><p>Este es el segundo post en la serie sobre MongoDB, con una breve descripción de las operaciones básicas (tales como inserción, recuperación e indexado), y ejecución por completo junto con el modelo de datos y arquitectura.<p>Otros posts en esta serie:<ul><li><a href=/blog/mdad/mongodb-introduction/>MongoDB: Introducción</a><li><a href=/blog/mdad/mongodb-operaciones-basicas-y-arquitectura/>MongoDB: Operaciones Básicas y Arquitectura</a> (este post)</ul><p>Este post está hecho en colaboración con un compañero, y en él veremos algunos ejemplos de las operaciones básicas (<a href=https://stackify.com/what-are-crud-operations/>CRUD</a>) sobre MongoDB.<hr><p>Empezaremos viendo cómo creamos una nueva base de datos dentro de MongoDB y una nueva colección donde poder insertar nuestros documentos.<h2 id=creacion-de-una-base-de-datos-e-insercion-de-un-primer-documento>Creación de una base de datos e inserción de un primer documento</h2><p>Podemos ver las bases de datos que tenemos disponibles ejecutando el comando:<pre><code>> show databases
+admin   0.000GB
+config  0.000GB
+local   0.000GB
+</code></pre><p>Para crear una nueva base de datos, o utilizar una de las que tenemos creadas ejecutamos <code>use</code> junto con el nombre que le vamos a dar:<pre><code>> use new_DB
+switched to db new_DB
+</code></pre><p>Una vez hecho esto, podemos ver que si volvemos a ejecutar «show databases», la nueva base de datos no aparece. Esto es porque para que Mongo registre una base de datos en la lista de las existentes, necesitamos insertar al menos un nuevo documento en una colección de esta. Lo podemos hacer de la siguiente forma:<pre><code>> db.movie.insert({"name":"tutorials point"})
+WriteResult({ "nInserted" : 1 })
+
+> show databases
+admin       0.000GB
+config      0.000GB
+local       0.000GB
+movie       0.000GB
+</code></pre><p>Al igual que podemos ver las bases de datos existentes, también podemos consultar las colecciones que existen dentro de estas. Siguiendo la anterior ejecución, si ejecutamos:<pre><code>> show collections
+movie
+</code></pre><h3 id=borrar-base-de-datos>Borrar base de datos</h3><p>Para borrar una base de datos tenemos que ejecutar el siguiente comando:<pre><code>> db.dropDatabase()
+{ "dropped" : "new_DB", "ok" : 1 }
+</code></pre><h3 id=crear-coleccion>Crear colección</h3><p>Para crear una colección podemos hacerlo de dos formas. O bien mediante el comando:<pre><code>db.createCollection(&LTnombre de la colección>, opciones)
+</code></pre><p>Donde el primer parámetro es el nombre que le queremos asignar a la colección, y los siguientes, todos opcionales, pueden ser (entre otros):<table><thead><tr><th>Campo<th>Tipo<th>Descripción<tbody><tr><td><code>
+     capped
+    </code><td>Booleano<td>Si es <code>
+     true
+    </code> , permite una colección limitada. Una colección limitada es una colección de tamaño fijo que sobrescribe automáticamente sus entradas más antiguas cuando alcanza su tamaño máximo. Si especifica <code>
+     true
+    </code> , también debe especificar el parámetro de <code>
+     size
+    </code> .<tr><td><code>
+     autoIndexId
+    </code><td>Booleano<td>Si es <code>
+     true
+    </code> crea automáticamente un índice en el campo <code>
+     _id
+    </code> . Por defecto es <code>
+     false
+    </code><tr><td><code>
+     size
+    </code><td>Número<td>Especifica el tamaño máximo en bytes para una colección limitada. Es obligatorio si el campo <code>
+     capped
+    </code> está a <code>
+     true
+    </code> .<tr><td><code>
+     max
+    </code><td>Número<td>Especifica el número máximo de documentos que están permitidos en la colección limitada.</table><pre><code>> use test
+switched to db test
+
+> db.createCollection("mycollection")
+{ "ok" : 1 }
+
+> db.createCollection("mycol", {capped : true, autoIndexId: true, size: 6142800, max: 10000})
+{
+    "note" : "the autoIndexId option is deprecated and will be removed in a future release",
+    "ok" : 1
+}
+
+> show collections
+mycol
+mycollection
+</code></pre><p>Como se ha visto anteriormente al crear la base de datos, podemos insertar un documento en una colección sin que la hayamos creado anteriormente. Esto es porque MongoDB crea automáticamente una colección cuando insertas algún documento en ella:<pre><code>> db.tutorialspoint.insert({"name":"tutorialspoint"})
+WriteResult({ "nInserted" : 1 })
+
+> show collections
+mycol
+mycollection
+tutorialspoint
+</code></pre><h3 id=borrar-coleccion>Borrar colección</h3><p>Para borrar una colección basta con situarnos en la base de datos que la contiene, y ejecutar lo siguiente:<pre><code>db.&LTnombre_de_la_colección>.drop()
+</code></pre><pre><code>> db.mycollection.drop()
+true
+
+> show collections
+mycol
+tutorialspoint
+</code></pre><h3 id=insertar-documento>Insertar documento</h3><p>Para insertar datos en una colección de MongoDB necesitaremos usar el método <code>insert()</code> o <code>save()</code>.<p>Ejemplo del método <code>insert</code>:<pre><code>> db.colection.insert({
+... title: 'Esto es una prueba para MDAD',
+... description: 'MongoDB es una BD no SQL',
+... by: 'Classmate and Me',
+... tags: ['mongodb', 'database'],
+... likes: 100
+... })
+WriteResults({ "nInserted" : 1 })
+</code></pre><p>En este ejemplo solo se ha insertado un único documento, pero podemos insertar los que queramos separándolos de la siguiente forma:<pre><code>db.collection.insert({documento}, {documento2}, {documento3})
+</code></pre><p>No hace falta especificar un ID ya que el propio mongo asigna un ID a cada documento automáticamente, aunque nos da la opción de poder asignarle uno mediante el atributo <code>_id</code> en la inserción de los datos<p>Como se indica en el título de este apartado también se puede insertar mediante el método <code>db.coleccion.save(documento)</code>, funcionando este como el método <code>insert</code>.<h3 id=metodo-find>Método <code>find()</code></h3><p>El método find en MongoDB es el que nos permite realizar consultas a las colecciones de nuestra base de datos:<pre><code>db.&LTnombre_de_la_colección>.find()
+</code></pre><p>Este método mostrará de una forma no estructurada todos los documentos de la colección. Si le añadimos la función <code>pretty</code> a este método, se mostrarán de una manera más «bonita».<pre><code>> db.colection.find()
+{ "_id": ObjectId("5e738f0989f85a7eafdf044a"), "title" : "Esto es una prueba para MDAD", "description" : "MongoDB es una BD no SQL", "by" : "Classmate and Me", "tags" : [ "mongodb", "database" ], "likes" : 100 }
+
+> db.colection.find().pretty()
+{
+    "_id": ObjectId("5e738f0989f85a7eafdf044a"),
+    "title" : "Esto es una prueba para MDAD",
+    "description" : "MongoDB es una BD no SQL",
+    "by" : "Classmate and Me",
+    "tags" : [
+        "mongodb",
+        "database"
+    ],
+    "likes" : 100
+}
+</code></pre><p>Los equivalentes del <code>where</code> en las bases de datos relacionales son:<table><thead><tr><th>Operación<th>Sintaxis<th>Ejemplo<th>Equivalente en RDBMS<tbody><tr><td>Igual<td><code>
+     {&LTclave>:&LTvalor>}
+    </code><td><code>
+     db.mycol.find({"by":"Classmate and Me"})
+    </code><td><code>
+     where by = 'Classmate and Me'
+    </code><tr><td>Menor que<td><code>
+     {&LTclave>:{$lt:&LTvalor>}}
+    </code><td><code>
+     db.mycol.find({"likes":{$lt:60}})
+    </code><td><code>
+     where likes < 60
+    </code><tr><td>Menor o igual que<td><code>
+     {&LTclave>:{$lte:&LTvalor>}}
+    </code><td><code>
+     db.mycol.find({"likes":{$lte:60}})
+    </code><td><code>
+     where likes <= 60
+    </code><tr><td>Mayor que<td><code>
+     {&LTclave>:{$gt:&LTvalor>}}
+    </code><td><code>
+     db.mycol.find({"likes":{$gt:60}})
+    </code><td><code>
+     where likes > 60
+    </code><tr><td>Mayor o igual que<td><code>
+     {&LTclave>:{$gte:&LTvalor>}}
+    </code><td><code>
+     db.mycol.find({"likes":{$gte:60}})
+    </code><td><code>
+     where likes >= 60
+    </code><tr><td>No igual<td><code>
+     {&LTclave>:{$ne:&LTvalor>}}
+    </code><td><code>
+     db.mycol.find({"likes":{$ne:60}})
+    </code><td><code>
+     where likes != 60
+    </code></table><p>En el método <code>find()</code> podemos añadir condiciones AND y OR de la siguiente manera:<pre><code>(AND)
+> db.colection.find({$and:[{"by":"Classmate and Me"},{"title": "Esto es una prueba para MDAD"}]}).pretty()
+
+(OR)
+> db.colection.find({$or:[{"by":"Classmate and Me"},{"title": "Esto es una prueba para MDAD"}]}).pretty()
+
+(Ambos a la vez)
+> db.colection.find({"likes": {$gt:10}, $or: [{"by": "Classmate and Me"}, {"title": "Esto es una prueba para MDAD"}]}).pretty()
+</code></pre><p>La última llamada con ambos a la vez equivalente en una consulta SQL a:<pre><code>where likes>10 AND (by = 'Classmate and Me' OR title = 'Esto es una prueba para MDAD')
+</code></pre><h3 id=actualizar-un-documento>Actualizar un documento</h3><p>En MongoDB se hace utilizando el método <code>update</code>:<pre><code>db.&LTnombre_colección>.update(&LTcriterio_de_selección>, &LTdato_actualizado>)
+</code></pre><p>Para este ejemplo vamos a actualizar el documento que hemos insertado en el apartado anterior:<pre><code>> db.colection.update({'title':'Esto es una prueba para MDAD'},{$set:{'title':'Título actualizado'}})
+WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+> db.colection.find().pretty()
+{
+    "_id": ObjectId("5e738f0989f85a7eafdf044a"),
+    "title" : "Título actualizado",
+    "description" : "MongoDB es una BD no SQL",
+    "by" : "Classmate and Me",
+    "tags" : [
+        "mongodb",
+        "database"
+    ],
+    "likes" : 100
+}
+</code></pre><p>Anteriormente se ha mencionado el método <code>save()</code> para la inserción de documentos, pero también podemos utilizarlo para sustituir documentos enteros por uno nuevo:<pre><code>> db.&LTnombre_de_la_colección>.save({_id:ObjectId(), &LTnuevo_documento>})
+</code></pre><p>Con nuestro documento:<pre><code>> db.colection.save(
+...   {
+...     "_id": ObjectId("5e738f0989f85a7eafdf044a"), "title": "Este es el nuevo título", "by": "MDAD"
+...   }
+... )
+WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+
+> db.colection.find()
+{
+    "_id": ObjectId("5e738f0989f85a7eafdf044a"),
+    "title": "Este es el nuevo título",
+    "by": "MDAD"
+}
+</code></pre><h3 id=borrar-documento>Borrar documento</h3><p>Para borrar un documento utilizaremos el método <code>remove()</code> de la siguiente manera:<pre><code>db.&LTnombre_de_la_colección>.remove(&LTcriterio_de_borrado>)
+</code></pre><p>Considerando la colección del apartado anterior borraremos el único documento que tenemos:<pre><code>> db.colection.remove({'title': 'Este es el nuevo título'})
+WriteResult({ "nRemoved" : 1 })
+> db.colection.find().pretty()
+>
+</code></pre><p>Para borrar todos los documentos de una colección usamos:<pre><code>db.&LTcolección>.remove({})
+</code></pre><h3 id=indexacion>Indexación</h3><p>MongDB nos permite crear índices sobre atributos de una colección de la siguiente forma:<pre><code>db.&LTcolección>.createIndex( {&LTatributo>:&LTopciones>})
+</code></pre><p>Como ejemplo:<pre><code>> db.mycol.createIndex({"title":1})
+{
+    "createdCollectionAutomatically" : false,
+    "numIndexesBefore" : 1,
+    "numIndexesAfter" : 2,
+    "ok" : 1
+}
+</code></pre><p>Si queremos más de un atributo en el índice lo haremos así:<pre><code>> db.mycol.ensureIndex({"title":1,"description":-1})
+</code></pre><p>Los valores que puede tomar son <code>+1</code> para ascendente o <code>-1</code> para descendente.<h3 id=referencias>Referencias</h3><ul><li>Manual MongoDB. (n.d.). <a href=https://docs.mongodb.com/manual/>https://docs.mongodb.com/manual/</a><li>MongoDB Tutorial – Tutorialspoint. (n.d.). – <a href=https://www.tutorialspoint.com/mongodb/index.htm>https://www.tutorialspoint.com/mongodb/index.htm</a></ul></main>

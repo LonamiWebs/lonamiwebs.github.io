@@ -1,0 +1,124 @@
+<!DOCTYPE html><html lang=en><head><meta charset=utf-8><meta name=description content="Official Lonami's website"><meta name=viewport content="width=device-width, initial-scale=1.0, user-scalable=yes"><title> MongoDB: Basic Operations and Architecture | Lonami's Blog </title><link rel=stylesheet href=/style.css><body><nav class=sections><ul><li><a href=/>lonami's site</a><li><a href=/blog class=selected>blog</a><li><a href=/golb>golb</a></ul></nav><main><h1 class=title>MongoDB: Basic Operations and Architecture</h1><div class=time><p>2020-03-05T04:00:08+00:00<p>last updated 2020-04-08T17:36:25+00:00</div><p>This is the second post in the MongoDB series, where we will take a look at the <a href=https://stackify.com/what-are-crud-operations/>CRUD operations</a> they support, the data model and architecture used.<p>Other posts in this series:<ul><li><a href=/blog/ribw/mongodb-an-introduction/>MongoDB: an Introduction</a><li><a href=/blog/ribw/mongodb-basic-operations-and-architecture/>MongoDB: Basic Operations and Architecture</a> (this post)<li><a href=/blog/ribw/developing-a-python-application-for-mongodb/>Developing a Python application for MongoDB</a></ul><p>This post is co-authored wih Classmate, and in it we will take an explorative approach using the <code>mongo</code> command line shell to execute commands against the database. It even has TAB auto-completion, which is awesome!<hr><p>Before creating any documents, we first need to create somewhere for the documents to be in. And before we create anything, the database has to be running, so let’s do that first. If we don’t have a service installed, we can run the <code>mongod</code> command ourselves in some local folder to make things easier:<pre><code>$ mkdir -p mongo-database
+$ mongod --dbpath mongo-database
+</code></pre><p>Just like that, we will have Mongo running. Now, let’s connect to it using the <code>mongo</code> command in another terminal (don’t close the terminal where the server is running, we need it!). By default, it connects to localhost, which is just what we need.<pre><code>$ mongo
+</code></pre><h2 id=create>Create</h2><h3 id=create-a-database>Create a database</h3><p>Let’s list the databases:<pre><code>> show databases
+admin   0.000GB
+config  0.000GB
+local   0.000GB
+</code></pre><p>Oh, how interesting! There’s already some databases, even though we just created the directory where Mongo will store everything. However, they seem empty, which make sense.<p>Creating a new database is done by <code>use</code>-ing a name that doesn’t exist. Let’s call our new database «helloworld».<pre><code>> use helloworld
+switched to db helloworld
+</code></pre><p>Good! Now the «local variable» called <code>db</code> points to our <code>helloworld</code> database.<pre><code>> db
+helloworld
+</code></pre><p>What happens if we print the databases again? Surely our new database will show up now…<pre><code>> show databases
+admin   0.000GB
+config  0.000GB
+local   0.000GB
+</code></pre><p>…maybe not! It seems Mongo won’t create the database until we create some collections and documents in it. Databases contain collections, and inside collections (which you can think of as tables) we can insert new documents (which you can think of as rows). Like in many programming languages, the dot operator is used to access these «members».<h3 id=create-a-document>Create a document</h3><p>Let’s add a new greeting into the <code>greetings</code> collection:<pre><code>> db.greetings.insert({message: "¡Bienvenido!", lang: "es"})
+WriteResult({ "nInserted" : 1 })
+
+> show collections
+greetings
+
+> show databases
+admin       0.000GB
+config      0.000GB
+helloworld  0.000GB
+local       0.000GB
+</code></pre><p>That looks promising! We can also see our new <code>helloworld</code> database also shows up. The Mongo shell actually works on JavaScript-like code, which is why we can use a variant of JSON (BSON) to insert documents (note the lack of quotes around the keys, convenient!).<p>The <a href=https://docs.mongodb.com/manual/reference/method/db.collection.insert/index.html><code>insert</code></a> method actually supports a list of documents, and by default Mongo will assign a unique identifier to each. If we don’t want that though, all we have to do is add the <code>_id</code> key to our documents.<pre><code>> db.greetings.insert([
+... {message: "Welcome!", lang: "en"},
+... {message: "Bonjour!", lang: "fr"},
+... ])
+BulkWriteResult({
+    "writeErrors" : [ ],
+    "writeConcernErrors" : [ ],
+    "nInserted" : 2,
+    "nUpserted" : 0,
+    "nMatched" : 0,
+    "nModified" : 0,
+    "nRemoved" : 0,
+    "upserted" : [ ]
+})
+</code></pre><h3 id=create-a-collection>Create a collection</h3><p>In this example, we created the collection <code>greetings</code> implicitly, but behind the scenes Mongo made a call to <a href=https://docs.mongodb.com/manual/reference/method/db.createCollection/><code>createCollection</code></a>. Let’s do just that:<pre><code>> db.createCollection("goodbyes")
+{ "ok" : 1 }
+
+> show collections
+goodbyes
+greetings
+</code></pre><p>The method actually has a default parameter to configure other options, like the maximum size of the collection or maximum amount of documents in it, validation-related options, and so on. These are all described in more details in the documentation.<h2 id=read>Read</h2><p>To read the contents of a document, we have to <a href=https://docs.mongodb.com/manual/reference/method/db.collection.find/index.html><code>find</code></a> it.<pre><code>> db.greetings.find()
+{ "_id" : ObjectId("5e74829a0659f802b15f18dd"), "message" : "¡Bienvenido!", "lang" : "es" }
+{ "_id" : ObjectId("5e7487b90659f802b15f18de"), "message" : "Welcome!", "lang" : "en" }
+{ "_id" : ObjectId("5e7487b90659f802b15f18df"), "message" : "Bonjour!", "lang" : "fr" }
+</code></pre><p>That’s a bit unreadable for my taste, can we make it more <a href=https://docs.mongodb.com/manual/reference/method/cursor.pretty/index.html><code>pretty</code></a>?<pre><code>> db.greetings.find().pretty()
+{
+    "_id" : ObjectId("5e74829a0659f802b15f18dd"),
+    "message" : "¡Bienvenido!",
+    "lang" : "es"
+}
+{
+    "_id" : ObjectId("5e7487b90659f802b15f18de"),
+    "message" : "Welcome!",
+    "lang" : "en"
+}
+{
+    "_id" : ObjectId("5e7487b90659f802b15f18df"),
+    "message" : "Bonjour!",
+    "lang" : "fr"
+}
+</code></pre><p>Gorgeous! We can clearly see Mongo created an identifier for us automatically. The queries are also JSON, and support a bunch of operators (prefixed by <code>$</code>), known as <a href=https://docs.mongodb.com/manual/reference/operator/query/>Query Selectors</a>. Here’s a few:<table><thead><tr><th>Operation<th>Syntax<th>RDBMS equivalent<tbody><tr><td>Equals<td><code>
+     {key: {$eq: value}}
+    </code> <br> Shorthand: <code>
+     {key: value}
+    </code><td><code>
+     where key = value
+    </code><tr><td>Less Than<td><code>
+     {key: {$lte: value}}
+    </code><td><code>
+     where key < value
+    </code><tr><td>Less Than or Equal<td><code>
+     {key: {$lt: value}}
+    </code><td><code>
+     where key <= value
+    </code><tr><td>Greater Than<td><code>
+     {key: {$gt: value}}
+    </code><td><code>
+     where key > value
+    </code><tr><td>Greater Than or Equal<td><code>
+     {key: {$gte: value}}
+    </code><td><code>
+     where key >= value
+    </code><tr><td>Not Equal<td><code>
+     {key: {$ne: value}}
+    </code><td><code>
+     where key != value
+    </code><tr><td>And<td><code>
+     {$and: [{k1: v1}, {k2: v2}]}
+    </code><td><code>
+     where k1 = v1 and k2 = v2
+    </code><tr><td>Or<td><code>
+     {$or: [{k1: v1}, {k2: v2}]}
+    </code><td><code>
+     where k1 = v1 or k2 = v2
+    </code></table><p>The operations all do what you would expect them to do, and their names are really intuitive. Aggregating operations with <code>$and</code> or <code>$or</code> can be done anywhere in the query, nested any level deep.<h2 id=update>Update</h2><p>Updating a document can be done by using <a href=https://docs.mongodb.com/manual/reference/method/db.collection.save/index.html><code>save</code></a> on an already-existing document (that is, the document we want to save has <code>_id</code> and it’s in the collection already). If the document is not in the collection yet, this method will create it.<pre><code>> db.greetings.save({_id: ObjectId("5e74829a0659f802b15f18dd"), message: "¡Bienvenido, humano!", "lang" : "es"})
+WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+
+> db.greetings.find({lang: "es"})
+{ "_id" : ObjectId("5e74829a0659f802b15f18dd"), "message" : "¡Bienvenido, humano!", "lang" : "es" }
+</code></pre><p>Alternatively, the <a href=https://docs.mongodb.com/manual/reference/method/db.collection.update/index.html><code>update</code></a> method takes a query and new value.<pre><code>> db.greetings.update({lang: "en"}, {$set: {message: "Welcome, human!"}})
+WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+
+> db.greetings.find({lang: "en"})
+{ "_id" : ObjectId("5e7487b90659f802b15f18de"), "message" : "Welcome, human!", "lang" : "en" }
+</code></pre><h2 id=indexing>Indexing</h2><p>Creating an index is done with <a href=https://docs.mongodb.com/manual/reference/method/db.collection.createIndex/index.html><code>createIndex</code></a>:<pre><code>> db.greetings.createIndex({lang: +1})
+{
+    "createdCollectionAutomatically" : false,
+    "numIndexesBefore" : 1,
+    "numIndexesAfter" : 2,
+    "ok" : 1
+}
+</code></pre><p>Here, we create an ascending index on the lang key. Descending order is done with <code>-1</code>. Now a query for <code>lang</code> in our three documents will be fast… well maybe iteration over three documents was faster than an index.<h2 id=delete>Delete</h2><h3 id=delete-a-document>Delete a document</h3><p>I have to confess, I can’t talk French. I learnt it long ago and it’s long forgotten, so let’s remove the translation I copied online from our greetings with <a href=https://docs.mongodb.com/manual/reference/method/db.collection.remove/index.html><code>remove</code></a>.<pre><code>> db.greetings.remove({lang: "fr"})
+WriteResult({ "nRemoved" : 1 })
+</code></pre><h3 id=delete-a-collection>Delete a collection</h3><p>We never really used the <code>goodbyes</code> collection. Can we get rid of that?<pre><code>> db.goodbyes.drop()
+true
+</code></pre><p>Yes, it is <code>true</code> that we can <a href=https://docs.mongodb.com/manual/reference/method/db.collection.drop/index.html><code>drop</code></a> it.<h3 id=delete-a-database>Delete a database</h3><p>Now, I will be honest, I don’t really like our <code>greetings</code> database either. It stinks. Let’s get rid of it as well:<pre><code>> db.dropDatabase()
+{ "dropped" : "helloworld", "ok" : 1 }
+</code></pre><p>Yeah, take that! The <a href=https://docs.mongodb.com/manual/reference/method/db.dropDatabase/><code>dropDatabase</code></a> can be used to drop databases.<h2 id=references>References</h2><p>The examples in this post are all fictional, and the methods that could be used where taken from Classmate’s post, and of course <a href=https://docs.mongodb.com/manual/reference/method/>Mongo’s documentation</a>.</main>
