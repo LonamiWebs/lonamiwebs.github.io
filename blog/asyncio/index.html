@@ -1,0 +1,216 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>An Introduction to Asyncio</title>
+    <link rel="stylesheet" type="text/css" href="../styles/main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <div class="minMargin">
+    <div class="card">
+        <h1>An Introduction to Asyncio</h1>
+        <p class="right"><em>Written by
+        <a href="https://lonamiwebs.github.io">Imanol H.</a><br />
+        the 13-06-2018. Last revision the 13-06-2018</em></p>
+        <hr />
+	<p>After seeing some friends struggle with <code>asyncio</code> I
+	decided that it could be a good idea to write a blog post using my
+	own words to explain how I understand the world of asynchronous IO.
+	I will focus on Python's <code>asyncio</code> module but this post
+	should apply to any other language easily.</p>
+
+	<p>So what is <code>asyncio</code> and what makes it good? Why don't
+	we just use the old and known threads to run several parts of the
+	code concurrently, at the same time?</p>
+
+	<p>For starters, the most common Python interpreter in use, CPython,
+	has a Global Interpreter Lock (or <em>GIL</em>), which means your
+	threads can interleave your lines of code to run, but not run them
+	at the same time. That's a big performance penalty and not what
+	someone would normally expect, indeed, it can make your code run
+	slower!</p>
+
+	<p>Second, having threads forces you to think about how your code
+	will run in all possible combinations. Maybe the first thread runs
+	one line, then the second two. Or maybe it runs first ten lines and
+	the second one. Any combination is possible, and while using locks
+	for critical sections helps, it's not always enough, even if you
+	structure your code correctly, it makes it harder to reason about
+	it.</p>
+
+	<p>So how does <code>asyncio</code> help? First we need to understand
+	a very crucial concept before we can dive any deeper, and I'm talking
+	about the <em>event loop</em>. What is it and why do we need it?</p>
+
+	<p>You can think of the event loop as a <em>loop</em> that will
+	be responsible for calling your <code>async</code> functions:</p>
+
+	<img src="img/eventloop.svg" alt="The Event Loop" />
+
+	<p>That's silly you may think. Now not only we run our code but
+	we also have to run some "event loop". It doesn't sound beneficial
+	at all. What are these events?</p>
+
+	<p><code>asyncio</code>'s event loop is responsible for handling
+	<em>IO</em> events, that is, Input and Output events. To do so,
+	these events must not block. So the event loop can check what
+	input or output events are ready, and call your code accordingly.
+	That's also why it's called <em>async IO</em>.</p>
+
+	<p>This has some nice advantages. It means that, instead of waiting
+	for a network request to send you a response or some file, instead
+	of blocking there, the event loop can decide to run other code
+	meanwhile. Whenever the contents are ready, they can be read, and
+	your code can continue. Waiting for the contents to be received
+	is done with the <code>await</code> keyword, and it tells the loop
+	that it can run other code meanwhile:</p>
+
+	<img src="img/awaitkwd1.svg" alt="Step 1, await keyword" />
+	<img src="img/awaitkwd2.svg" alt="Step 2, await keyword" />
+
+	<p>Start reading the code of the event loop and follow the arrows.
+	You can see that, in the beginning, there are no events yet, so the
+	loop calls one of your functions. The code runs until it has to
+	<code>await</code> for some IO operation to complete, such as
+	sending a request over the network. The method is "paused" until
+	an event occurs (for example, an "event" occurs when the request
+	has been sent completely).</p>
+
+	<p>While the first method is busy, the event loop can enter the
+	second method, and run its code until the first <code>await</code>.
+	But it can happen that the event of the second query occurs before
+	the request on the first method, so the event loop can re-enter
+	the second method because it has already sent the query, but the
+	first method isn't done sending the request yet.</p>
+
+	<p>Then, the second method <code>await</code>'s for an answer,
+	and an event occurs telling the event loop that the request from
+	the first method was sent. The code can be resumed again, until
+	it has to <code>await</code> for a response, and so on.</p>
+
+	<p>There are some important things to note here. The first is that
+	we only need one thread to be running! The event loop decides when
+	and which methods should run. The second is that we know when it
+	may run other methods. Those are the <code>await</code> keywords!
+	Whenever there is one of those, we know that the loop is able to
+	run other things until the resource (again, like network) becomes
+	ready.</p>
+
+	<p>So far, we already have two advantages. We are only using a single
+	thread so the cost for switching between methods is low, and we can
+	easily reason about where our program may interleave operations.</p>
+
+	<p>Another advantage is that, with the event loop, you can easily
+	schedule when a piece of code should run, such as using the method
+	<code><a href="https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.AbstractEventLoop.call_at">
+	loop.call_at</a></code>, without the need for spawning another
+	thread at all.</p>
+
+	<p>To tell the <code>asyncio</code> to run the two methods shown
+	above, we can use
+	<code><a href="https://docs.python.org/3/library/asyncio-task.html#asyncio.ensure_future">
+	asyncio.ensure_future</a></code>, which is a way of saying
+	"I want the future of my method to be ensured". That is, you want
+	to run your method in the future, whenever the loop is free to do
+	so. This method returns a <code>Future</code> object, so if your
+	method returns a value, you can <code>await</code> this future to
+	retrieve its result.</p>
+
+	<p>What is a <code>Future</code>? This object represents the value
+	of something that will be there in the future, but might not be
+	there yet. Just like you can <code>await</code> your own
+	<code>async def</code> functions, you can <code>await</code>
+	these <code>Future</code>'s.
+
+	<p>The <code>async def</code> functions are also called "coroutines",
+	and Python does some magic behind the scenes to turn them into such.
+	The coroutines can be <code>await</code>'ed, and this is what you
+	normally do.</p>
+
+	<p>That's all about <code>asyncio</code>! Let's wrap up with some
+	example code. We will create a server that replies with the text
+	a client sends, but reversed.</p>
+
+<pre>
+# server.py
+import asyncio
+import socket
+
+# get the default "event loop" that we will run
+loop = asyncio.get_event_loop()
+
+
+async def server_method():
+	# create a new server socket to listen for connections
+	server = socket.socket()
+
+	# bind to localhost:6789 for new connections
+	server.bind(('localhost', 6789))
+
+	# we will listen for one client at most
+	server.listen(1)
+
+	# await for a new client
+	client, _ = await loop.sock_accept(server)
+
+	# await for some data
+	data = await loop.sock_recv(client, 1024)
+
+	# reverse the data
+	data = data[::-1]
+
+	# await for sending the data
+	await loop.sock_sendall(client, data)
+
+	# close client and server
+	server.close()
+	client.close()
+
+
+# run the loop until "server method" is complete
+loop.run_until_complete(server_method())
+</pre>
+<pre>
+# client.py
+import asyncio
+import socket
+
+loop = asyncio.get_event_loop()
+
+async def client_method():
+	message = b'Hello Server!\n'
+	client = socket.socket()
+
+	# await to stabilish a connection
+	await loop.sock_connect(client, ('localhost', 6789))
+
+	# await to send the message
+	print('Sending', message)
+	await loop.sock_sendall(client, message)
+
+	# await to receive a response
+	response = await loop.sock_recv(client, 1024)
+	print('Server replied', response)
+
+	client.close()
+
+
+loop.run_until_complete(client_method())
+</pre>
+
+	<p>That's it! You can place these two files separately and
+	run, first the server, then the client. You should see output
+	in the client.</p>
+
+	<p>You may ask, this is similar to synchronous code, there is
+	only one method running, and you would be correct. But you could
+	easily improve this to be able to handle more than one client at
+	once! When you accept a new client in the server code, you could
+	<code>asyncio.ensure_future(handle(client), loop=loop)</code>, and
+	the loop would make sure to run the code whenever it could!</p>
+	<hr />
+	<p><a href="../index">Back to the index</a></p>
+    </div>
+    </div>
+</body>
+</html>

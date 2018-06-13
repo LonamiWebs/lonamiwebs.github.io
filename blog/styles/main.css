@@ -91,7 +91,7 @@ a {
     text-decoration: none;
     border-bottom: 0px solid #00CCCC;
     margin-bottom: 3px;
-    color: #00CCCC;
+    color: #0AA;
     transition: border-bottom 0.1s ease-in-out 0s, margin-bottom 0.1s ease-in-out 0s, color 0.2s ease-in-out 0s;
 }
 a:hover {
@@ -102,10 +102,15 @@ a:hover {
 
 code {
     background-color: #F7F7F7;
-    color: #F77;
+    color: #F33;
     padding: 2px;
     font-size: 14px;
     border-radius: 2px;
+}
+
+pre {
+    border: 1px solid #111;
+    padding: 8px;
 }
 
 li {
