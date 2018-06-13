@@ -31,12 +31,29 @@
 	slower!</p>
 
 	<p>Second, having threads forces you to think about how your code
-	will run in all possible combinations. Maybe the first thread runs
-	one line, then the second two. Or maybe it runs first ten lines and
-	the second one. Any combination is possible, and while using locks
-	for critical sections helps, it's not always enough, even if you
-	structure your code correctly, it makes it harder to reason about
-	it.</p>
+	will run in all possible combinations. Say you have this code:</p>
+
+<pre>
+def method():
+	line 1
+	line 2
+	line 3
+	line 4
+	line 5
+</pre>
+
+	<p>And you start two threads to run the method at the same time. What
+	is the order in which the lines of code get executed? The answer is
+	that you can't know! The first thread can run the entire method before
+	the second thread even starts. Or it could be the first thread that
+	runs the after the second thread. Perhaps both run the "line 1", and
+	then the line 2. Maybe the first thread runs lines 1 and 2, and then
+	the second thread only runs the line 1 before the first thread
+	finishes.</p>
+
+	<p>As you can see, any combination of the order in which the lines
+	run is possible. If the lines modify some global shared state, that
+	will get messy quickly.</p>
 
 	<p>So how does <code>asyncio</code> help? First we need to understand
 	a very crucial concept before we can dive any deeper, and I'm talking
