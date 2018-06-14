@@ -23,15 +23,10 @@
 	we just use the old and known threads to run several parts of the
 	code concurrently, at the same time?</p>
 
-	<p>For starters, the most common Python interpreter in use, CPython,
-	has a Global Interpreter Lock (or <em>GIL</em>), which means your
-	threads can interleave your lines of code to run, but not run them
-	at the same time. That's a big performance penalty and not what
-	someone would normally expect, indeed, it can make your code run
-	slower!</p>
-
-	<p>Second, having threads forces you to think about how your code
-	will run in all possible combinations. Say you have this code:</p>
+	<p>The first reason is that <code>asyncio</code> makes your code
+	easier to reason about, as opposed to using threads, because the
+	amount of ways in which your code can run grows exponentially.
+	Let's see that with an example. Imagine you have this code:</p>
 
 <pre>
 def method():
@@ -46,7 +41,7 @@ def method():
 	is the order in which the lines of code get executed? The answer is
 	that you can't know! The first thread can run the entire method before
 	the second thread even starts. Or it could be the first thread that
-	runs the after the second thread. Perhaps both run the "line 1", and
+	runs after the second thread. Perhaps both run the "line 1", and
 	then the line 2. Maybe the first thread runs lines 1 and 2, and then
 	the second thread only runs the line 1 before the first thread
 	finishes.</p>
@@ -54,6 +49,19 @@ def method():
 	<p>As you can see, any combination of the order in which the lines
 	run is possible. If the lines modify some global shared state, that
 	will get messy quickly.</p>
+
+	<p>Second, in Python, threads <em>won't</em> make your code faster.
+	It will only increase the concurrency of your program, allowing you
+	to run several things at the same time, so using threads for speed
+	isn't a real advantage. Indeed, your code will probably run slower
+	under the most common Python implementation, CPython, which makes
+	use of a Global Interpreter Lock (GIL) that only lets a thread run
+	at once.</p>
+
+	<p>Now we've seen threads make your code harder to reason about,
+	but they give concurrency (yet not more speed). Is there any other
+	way to achieve this concurrency that doesn't involve threads? Yes!
+	The answer is <code>asyncio</code>.</p>
 
 	<p>So how does <code>asyncio</code> help? First we need to understand
 	a very crucial concept before we can dive any deeper, and I'm talking
