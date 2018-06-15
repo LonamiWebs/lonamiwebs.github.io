@@ -41,11 +41,11 @@ body {
 
 h1 {
     font-family: sf1;
-    font-size: 48px;
+    font-size: 38px;
 }
 h2 {
     font-family: sf3;
-    font-size: 40px;
+    font-size: 24px;
     border-bottom: 1px solid #888888;
     padding-bottom: 4px;
 }
@@ -59,7 +59,7 @@ h3, .versalita {
 
 p, ol, ul, td {
     font-family: sf2;
-    font-size: 18px;
+    font-size: 16px;
     line-height: 125%;
 }
 td {

@@ -11,8 +11,19 @@
         <h1>An Introduction to Asyncio</h1>
         <p class="right"><em>Written by
         <a href="https://lonamiwebs.github.io">Imanol H.</a><br />
-        the 13-06-2018. Last revision the 13-06-2018</em></p>
+        the 13-06-2018. Last revision the 15-06-2018</em></p>
         <hr />
+
+	<h2>Index</h2>
+	<ul>
+		<li><a href="#background">Background</a></li>
+		<li><a href="#divingin">Diving In</a></li>
+		<li><a href="#toyexample">A Toy Example</a></li>
+		<li><a href="#example">A Real Example</a></li>
+	</ul>
+
+	<h2 id="background">Background</h2>
+
 	<p>After seeing some friends struggle with <code>asyncio</code> I
 	decided that it could be a good idea to write a blog post using my
 	own words to explain how I understand the world of asynchronous IO.
@@ -57,6 +68,8 @@ def method():
 	under the most common Python implementation, CPython, which makes
 	use of a Global Interpreter Lock (GIL) that only lets a thread run
 	at once.</p>
+
+	<h2 id="divingin">Diving In</h2>
 
 	<p>Now we've seen threads make your code harder to reason about,
 	but they give concurrency (yet not more speed). Is there any other
@@ -152,9 +165,94 @@ def method():
 	The coroutines can be <code>await</code>'ed, and this is what you
 	normally do.</p>
 
+	<h2 id="toyexample">A Toy Example</h2>
+
 	<p>That's all about <code>asyncio</code>! Let's wrap up with some
 	example code. We will create a server that replies with the text
-	a client sends, but reversed.</p>
+	a client sends, but reversed. First, we will show what you could
+	write with normal synchronous code, and then we will port it.</p>
+
+	<p>Here is the <strong>synchronous version</strong>:</p>
+<pre>
+# server.py
+import socket
+
+
+def server_method():
+	# create a new server socket to listen for connections
+	server = socket.socket()
+
+	# bind to localhost:6789 for new connections
+	server.bind(('localhost', 6789))
+
+	# we will listen for one client at most
+	server.listen(1)
+
+	# *block* waiting for a new client
+	client, _ = server.accept()
+
+	# *block* waiting for some data
+	data = client.recv(1024)
+
+	# reverse the data
+	data = data[::-1]
+
+	# *block* sending the data
+	client.sendall(data)
+
+	# close client and server
+	server.close()
+	client.close()
+
+
+if __name__ == '__main__':
+	# block running the server
+	server_method()
+</pre>
+<pre>
+# client.py
+import socket
+
+
+def client_method():
+	message = b'Hello Server!\n'
+	client = socket.socket()
+
+	# *block* trying to stabilish a connection
+	client.connect(('localhost', 6789))
+
+	# *block* trying to send the message
+	print('Sending', message)
+	client.sendall(message)
+
+	# *block* until we receive a response
+	response = client.recv(1024)
+	print('Server replied', response)
+
+	client.close()
+
+
+if __name__ == '__main__':
+	client_method()
+</pre>
+
+	<p>From what we've seen, this code will block on all the lines
+	with a comment above them saying that they will block. This means
+	that for running more than one client or server, or both in the
+	same file, you will need threads. But we can do better, we can
+	rewrite it into <code>asyncio</code>!</p>
+
+	<p>The first step is to mark all your <code>def</code>initions
+	that may block with <code>async</code>. This marks them as
+	coroutines, which can be <code>await</code>ed on.
+
+	<p>Second, since we're using low-level sockets, we need to
+	make use of the methods that <code>asyncio</code> provides
+	directly. If this was a third-party library, this would be
+	just like using their <code>async def</code>initions.</p>
+
+	<p>Here is the <strong>asynchronous version</strong>:</p>
+
 
 <pre>
 # server.py
@@ -165,35 +263,30 @@ import socket
 loop = asyncio.get_event_loop()
 
 
+# notice our new "async" before the definition
 async def server_method():
-	# create a new server socket to listen for connections
 	server = socket.socket()
-
-	# bind to localhost:6789 for new connections
 	server.bind(('localhost', 6789))
-
-	# we will listen for one client at most
 	server.listen(1)
 
 	# await for a new client
+	# the event loop can run other code while we wait here!
 	client, _ = await loop.sock_accept(server)
 
 	# await for some data
 	data = await loop.sock_recv(client, 1024)
-
-	# reverse the data
 	data = data[::-1]
 
 	# await for sending the data
 	await loop.sock_sendall(client, data)
 
-	# close client and server
 	server.close()
 	client.close()
 
 
-# run the loop until "server method" is complete
-loop.run_until_complete(server_method())
+if __name__ == '__main__':
+	# run the loop until "server method" is complete
+	loop.run_until_complete(server_method())
 </pre>
 <pre>
 # client.py
@@ -201,6 +294,7 @@ import asyncio
 import socket
 
 loop = asyncio.get_event_loop()
+
 
 async def client_method():
 	message = b'Hello Server!\n'
@@ -220,19 +314,128 @@ async def client_method():
 	client.close()
 
 
-loop.run_until_complete(client_method())
+if __name__ == '__main__':
+	loop.run_until_complete(client_method())
 </pre>
 
 	<p>That's it! You can place these two files separately and
 	run, first the server, then the client. You should see output
 	in the client.</p>
 
-	<p>You may ask, this is similar to synchronous code, there is
-	only one method running, and you would be correct. But you could
-	easily improve this to be able to handle more than one client at
-	once! When you accept a new client in the server code, you could
-	<code>asyncio.ensure_future(handle(client), loop=loop)</code>, and
-	the loop would make sure to run the code whenever it could!</p>
+	<p>The big difference here is that you can easily modify the
+	code to run more than one server or clients at the same time.
+	Whenever you <code>await</code> the event loop will run other
+	of your code. It seems to "block" on the <code>await</code>
+	parts, but remember it's actually jumping to run more code,
+	and the event loop will get back to you whenever it can.</p>
+
+	<p>In short, you need an <code>async def</code> to
+	<code>await</code> things, and you run them with the
+	event loop instead of calling them directly. So this&hellip;</p>
+
+<pre>
+def main():
+	...  # some code
+
+
+if __name__ == '__main__':
+	main()
+</pre>
+
+	<p>&hellip;becomes this:</p>
+
+<pre>
+import asyncio
+
+
+async def main():
+	...  # some code
+
+
+if __name__ == '__main__':
+	asyncio.get_event_loop().run_until_complete(main)
+</pre>
+
+	<p>This is pretty much how most of your <code>async</code> scripts
+	will start, running the main method until its completion.</p>
+
+	<h2 id="example">A Real Example</h2>
+	<p>Let's have some fun with a real library. We'll be using
+	<a href="https://github.com/LonamiWebs/Telethon">Telethon</a>
+	to broadcast a message to our three best friends, all at the
+	same time, thanks to the magic of <code>asyncio</code>. We'll
+	dive right into the code, and then I'll explain our new friend
+	<code>asyncio.wait(...)</code>:</p>
+
+<pre>
+# broadcast.py
+import asyncio
+import sys
+
+from telethon import TelegramClient
+
+# (you need your own values here, check Telethon's documentation)
+api_id = 123
+api_hash = '123abc'
+friends = [
+	'@friend1__username',
+	'@friend2__username',
+	'@bestie__username'
+]
+
+# we will have to await things, so we need an async def
+async def main(message):
+	# start is a coroutine, so we need to await it to run it
+	client = await TelegramClient('me', api_id, api_hash).start()
+
+	# wait for all three client.send_message to complete
+	await asyncio.wait([
+		client.send_message(friend, message)
+		for friend in friends
+	])
+
+	# and close our client
+	await client.disconnect()
+
+
+if __name__ == '__main__':
+	if len(sys.argv) != 2:
+		print('You must pass the message to broadcast!')
+		quit()
+
+	message = sys.argv[1]
+	asyncio.get_event_loop().run_until_complete(main(message))
+</pre>
+
+	<p>Wait&hellip; how did that send a message to all three of
+	my friends? The magic is done here:</p>
+
+<pre>
+[
+	client.send_message(friend, message)
+	for friend in friends
+]
+</pre>
+
+	<p>This list comprehension creates another list with three
+	coroutines, the three <code>client.send_message(...)</code>.
+	Then we just pass that list to <code>asyncio.wait</code>:
+
+<pre>
+await asyncio.wait([...])
+</pre>
+
+	<p>This method, by default, waits for the list of coroutines
+	to run until they've all finished. You can read more on the Python
+	<a href="https://docs.python.org/3/library/asyncio-task.html#asyncio.wait">documentation</a>.
+	Truly a good function to know about!</p>
+
+	<p>Now whenever you have some important news for your friends,
+	you can simply <code>python3 broadcast.py 'I bought a car!'</code>
+	to tell all your friends about your new car! All you need to
+	remember is that you need to <code>await</code> on coroutines,
+	and you will be good. <code>asyncio</code> will warn you when
+	you forget to do so.</p>
 	<hr />
 	<p><a href="../index">Back to the index</a></p>
     </div>
