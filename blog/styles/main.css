@@ -27,7 +27,7 @@ body {
 }
 
 .minMargin {
-    margin: 50px 30px;
+    margin: 2em 0.5em;
 }
 
 .card {
@@ -112,6 +112,7 @@ code {
 pre {
     border: 1px solid #111;
     padding: 8px;
+    overflow-x: auto;
 }
 
 li {
