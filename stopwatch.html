@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stopwatch</title>
+    <meta charset="utf-8">
+<style>
+body {
+    background-color: #000;
+    color: #eee;
+}
+.big {
+    font-size: 8em;
+    text-align: center;
+    margin-bottom: 0;
+}
+.smaller {
+    font-size: 0.2em;
+    margin-left: -1.5em;
+}
+.center {
+    margin: 1em auto;
+    width: 60%;
+}
+button {
+    border-radius: 0;
+    border: 0;
+    width: 46%;
+    height: 4em;
+}
+button {
+    font-size: 2em;
+    color: #fff;
+    transition: background-color 300ms;
+}
+button.green {
+    background-color: #373;
+}
+button.green:hover {
+    background-color: #595;
+}
+button.red {
+    background-color: #733;
+    float: right;
+}
+button.red:hover {
+    background-color: #955;
+}
+</style>
+</head>
+<body>
+    <p class="big">
+        <span id="counter">00:00:00</span>
+        <span id="counterms" class="smaller">.000</span>
+    </p>
+    <div class="center">
+    <button id="toggle" class="green" type="button"
+        onclick="toggleCounter()">Start</button>
+    <button type="button" class="red"
+        onclick="resetCounter()">Reset</button>
+    </div>
+
+    <script>
+var counter = document.getElementById("counter");
+var counterms = document.getElementById("counterms");
+var toggle = document.getElementById("toggle");
+
+var ms = 0;
+var last = null;
+var running = false;
+
+function renderCounter() {
+    var t = ms;
+    var h = Math.floor(t / 3600000).toString().padStart(2, "0");
+    t %= 3600000;
+    var m = Math.floor(t / 60000).toString().padStart(2, "0");
+    t %= 60000;
+    var s = Math.floor(t / 1000).toString().padStart(2, "0");
+    t %= 1000;
+    var z = Math.floor(t).toString().padStart(3, "0");
+
+    counterms.innerHTML = `.${z}`;
+    counter.innerHTML = `${h}:${m}:${s}`
+}
+
+function updateCounter() {
+    if (last != null) {
+        var now = new Date();
+        if (running) {
+            ms += now - last;
+        }
+        last = now;
+        renderCounter();
+        setTimeout(updateCounter, 16);
+    }
+}
+
+function toggleCounter() {
+    running = !running;
+    if (running) {
+        toggle.innerHTML = "Stop";
+    } else {
+        toggle.innerHTML = "Start";
+    }
+    if (last == null) {
+        last = new Date();
+        setTimeout(updateCounter, 16);
+    }
+}
+
+function resetCounter() {
+    running = false;
+    last = null;
+    ms = 0;
+    toggle.innerHTML = "Start";
+    renderCounter();
+}
+
+window.onbeforeunload = function() {
+    if (running) {
+        return 'The timer is running';
+    }
+};
+
+renderCounter();
+    </script>
+</body>
+</html>
