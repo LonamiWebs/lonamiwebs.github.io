@@ -65,12 +65,17 @@ var counter = document.getElementById("counter");
 var counterms = document.getElementById("counterms");
 var toggle = document.getElementById("toggle");
 
-var ms = 0;
-var last = null;
-var running = false;
+var start = null;
+var paused = null;
 
 function renderCounter() {
-    var t = ms;
+    if (start == null) {
+        counterms.innerHTML = ".000";
+        counter.innerHTML = "00:00:00";
+        return;
+    }
+
+    var t = (paused == null ? Date.now() : paused) - start;
     var h = Math.floor(t / 3600000).toString().padStart(2, "0");
     t %= 3600000;
     var m = Math.floor(t / 60000).toString().padStart(2, "0");
@@ -84,43 +89,35 @@ function renderCounter() {
 }
 
 function updateCounter() {
-    if (last != null) {
-        var now = new Date();
-        if (running) {
-            ms += now - last;
-        }
-        last = now;
+    if (start != null && paused == null) {
         renderCounter();
         setTimeout(updateCounter, 16);
     }
 }
 
 function toggleCounter() {
-    running = !running;
-    if (running) {
-        toggle.innerHTML = "Stop";
-    } else {
+    if (start != null && paused == null) {
+        paused = Date.now();
         toggle.innerHTML = "Start";
-    }
-    if (last == null) {
-        last = new Date();
-        setTimeout(updateCounter, 16);
+        renderCounter();
+    } else {
+        if (start == null) {
+            start = Date.now();
+        } else if (paused != null) {
+            start += Date.now() - paused;
+            paused = null;
+        }
+        toggle.innerHTML = "Stop";
+        updateCounter();
     }
 }
 
 function resetCounter() {
-    running = false;
-    last = null;
-    ms = 0;
+    start = null;
+    paused = null;
     toggle.innerHTML = "Start";
     renderCounter();
 }
-
-window.onbeforeunload = function() {
-    if (running) {
-        return 'The timer is running';
-    }
-};
 
 renderCounter();
     </script>
