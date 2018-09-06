@@ -17,21 +17,22 @@
     </div>
     <div class="body">
         <h1>About</h1>
-        <p>I'm a
-        <span id="age"><noscript>boy born in the year 1998</noscript></span>
-        from Spain. I absolutely love programming, and so I've been programming
-        <span id="programming"><noscript>since 2012 or so</noscript></span>
-        now, although I also love designing my own logotypes and taking
-        photographs. I'm fascinated about the <i>Artificial Intelligence</i>
-        field and am currently studying a Software Engineering Degree.
-        <br /><br />
-        I can perfectly talk Spanish and also write and read in English,
-        although my English speech is far from perfect. I can also talk
-        C#, Java, Python, HTML, CSS, and also some C, C++, JavaScript, 
-        SQL and Haskell.
-        <br /><br />
-        On the Internet, I'm often known as <i>Lonami</i>, although my real
-        name is simply my nick name, put the other way round.</p>
+        <p>Spanish male
+        <span id="age"><noscript>born in 1998</noscript></span>.
+        I have been programming
+        <span id="programming"><noscript>since 2012</noscript></span>
+        and it's my passion.</p>
+
+        <p>I also like the camp, taking pictures, playing video-games,
+        drawing vector graphics, or just chatting with people online.</p>
+
+        <p>I can talk perfect Spanish, read and write perfect English
+        and Python, and have programmed in C#, Java, JavaScript, Rust,
+        some C and C++, and designed pages like this with plain HTML
+        and CSS.</p>
+        
+        <p>On the Internet, I'm often known as <i>Lonami</i>, although
+        my real name is simply my nick name, put the other way round.</p>
     </div>
     <div class="social">
         <ul>
@@ -47,10 +48,10 @@
 now = (new Date()).getFullYear();
 
 document.getElementById("age").innerHTML =
-    (now - 1999) + " year-old-boy";
+    "aged " + (now - 1999);
 
 document.getElementById("programming").innerHTML =
-    "for around " + (now - 2012) + " years or so";
+    "for " + (now - 2012) + " years";
 </script>
 </body>
 </html>
