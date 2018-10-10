@@ -88,10 +88,10 @@ function renderCounter() {
     counter.innerHTML = `${h}:${m}:${s}`
 }
 
-function updateCounter() {
+function updateCounter(timestamp) {
     if (start != null && paused == null) {
         renderCounter();
-        setTimeout(updateCounter, 16);
+        window.requestAnimationFrame(updateCounter);
     }
 }
 
@@ -108,7 +108,7 @@ function toggleCounter() {
             paused = null;
         }
         toggle.innerHTML = "Stop";
-        updateCounter();
+        updateCounter(0);
     }
 }
 
