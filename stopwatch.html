@@ -61,12 +61,12 @@ button.red:hover {
     </div>
 
     <script>
-var counter = document.getElementById("counter");
-var counterms = document.getElementById("counterms");
-var toggle = document.getElementById("toggle");
+const counter = document.getElementById("counter");
+const counterms = document.getElementById("counterms");
+const toggle = document.getElementById("toggle");
 
-var start = null;
-var paused = null;
+let start = null;
+let paused = null;
 
 function renderCounter() {
     if (start == null) {
@@ -96,15 +96,16 @@ function updateCounter(timestamp) {
 }
 
 function toggleCounter() {
+    const now = Date.now();
     if (start != null && paused == null) {
-        paused = Date.now();
+        paused = now;
         toggle.innerHTML = "Start";
         renderCounter();
     } else {
         if (start == null) {
-            start = Date.now();
+            start = now;
         } else if (paused != null) {
-            start += Date.now() - paused;
+            start += now - paused;
             paused = null;
         }
         toggle.innerHTML = "Stop";
