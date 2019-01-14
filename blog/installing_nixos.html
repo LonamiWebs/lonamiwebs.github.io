@@ -11,7 +11,7 @@
         <h1>Installing NixOS</h1>
         <p class="right"><em>Written by
         <a href="https://lonamiwebs.github.io">Imanol H.</a><br />
-        the 13-05-2017. Last revision the 13-05-2017</em></p>
+        the 13-05-2017. Last revision the 14-01-2019</em></p>
         <hr />
         <p>Today I decided to install
         <a href="http://nixos.org/" target="_blank">NixOS</a> as a
@@ -97,6 +97,21 @@
         something very limitting in my opinion, though they've done a good job.
         </p>
         <p>I'm now back to Xubuntu, with a fresh install.</p>
+        <h2>Update</h2>
+        <p>It is not true that "they don't allow running arbitrary binaries
+        by default", as pointed out in their <a href="https://nixos.org/nixpkgs/manual/#sec-fhs-environments">manual, buildFHSUserEnv</a>:</p>
+        <p><em><code>buildFHSUserEnv</code> provides a way to build and run
+        FHS-compatible lightweight sandboxes. It creates an isolated root
+        with bound <code>/nix/store</code>, so its footprint in terms of
+        disk space needed is quite small. This allows one to run software
+        which is hard or unfeasible to patch for NixOS -- 3rd-party source
+        trees with FHS assumptions, games distributed as tarballs, software
+        with integrity checking and/or external self-updated binaries. It
+        uses Linux namespaces feature to create temporary lightweight
+        environments which are destroyed after all child processes exit,
+        without root user rights requirement.</em></p>
+        <p>Thanks to <a href="https://github.com/bb010g">@bb010g</a> for
+        pointing this out.</p>
         <h2>Notes</h2>
         <ul>
         <li id="note1">The keyboard mapping is a bit strange. On my Spanish
