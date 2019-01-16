@@ -83,12 +83,11 @@ a:hover {
     border-bottom: solid 2px #444444;
 }
 
-.social ul {
-    list-style-type: none;
-    float: right;
-    clear: both;
+dl img {
+    margin-bottom: -0.4em;
+    margin-right: 0.6em;
 }
 
-.social li {    
-    display: inline;
+dd {
+    margin-bottom: 1em;
 }
