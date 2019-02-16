@@ -31,10 +31,15 @@
         should probably verify it's <code>sha256sum</code> and make
         sure that it matches. The easiest thing to do in my opinion
         is using an USB to burn the image in it. Plug it in and check
-        its device name with <code># fdisk -l</code>. In my case, it
+        its device name with <code>fdisk -l</code>. In my case, it
         was <code>/dev/sdb</code>, so I went ahead with it and ran
-        <code># dd if=nixos.iso of=/dev/sdb status=progress</code>.
+        <code>dd if=nixos.iso of=/dev/sdb status=progress</code>.
         Make sure to run <code>sync</code> once that's done.</p>
+
+        <p>If either <code>dd</code> or <code>sync</code> seem
+        "stuck" in the end, they are just flushing the changes
+        to disk to make sure all is good. This is normal, and
+        depends on your drives.</p>
 
         <p>Now, reboot your computer with the USB plugged in
         and make sure to boot into it. You should be welcome
@@ -103,6 +108,13 @@ environment.systemPackages = with pkgs; [
   wpa_supplicant wget curl vim neovim cmus mpv firefox git tdesktop
 ];
 
+# Printing is useful, sure, enable CUPS
+services.printing.enable = true;
+
+# We have speakers, let's make use of them.
+sound.enable = true;
+hardware.pulseaudio.enable = true;
+
 # We want the X11 windowing system enabled, in Spanish.
 services.xserver.enable = true;
 services.xserver.layout = "es";
@@ -112,16 +124,126 @@ services.xserver.layout = "es";
 # of other options, such as Plasma, i3 WM, or whatever.
 services.xserver.desktopManager.xfce.enable = true;
 services.xserver.desktopManager.default = "xfce";
+
+# Touchpad is useful (although sometimes annoying) in a laptop
+services.xserver.libinput.enable = true;
+
+# We don't want to do everything as root!
+users.users.lonami = {
+  isNormalUser = true;
+  uid = 1000;
+  home = "/home/lonami";
+  extraGroups = [ "wheel" "networkmanager" "audio" ];
+};
 </pre>
+
+        <p><em>(Fun fact, I overlooked the configuration file until
+        I wrote this and hadn't noticed sound/pulseaudio was there.
+        It wasn't hard to find online how to enable it though!)</em></p>
+
+        <p>Now, let's modify <code>hardware-configuration.nix</code>.
+        But if you have <code>/home</code> in a separate partition
+        like me, you should run <code>blkid</code> to figure out
+        its UUID. To avoid typing it out myself, I just ran
+        <code>blkid &gt;&gt; /mnt/etc/nixos/hardware-configuration.nix</code>
+        so that I could easily move it around with <code>vim</code>:</p>
+
+<pre># (stuff...)
+
+fileSystems."/home" =
+  { device = "/dev/disk/by-uuid/d344c686-cae7-4dd3-840e-308eddf86608";
+    fsType = "ext4";
+  };
+
+# (more stuff...)
+</pre>
+
+        <p>Note that, obviously, you should put your own partition's
+        UUID there. Modifying the configuration is where I think the
+        current NixOS' manual should have made more emphasis, at this
+        step of the installation. They do detail it below, but that
+        was already too late in my first attempt. Anyway, you can boot
+        from the USB and run <code>nixos-install</code> as many times
+        as you need until you get it working!</p>
+
+        <p>But before installing, we need to configure the network
+        since there are plenty of things to download. If you want to
+        work from WiFi, you should first figure out the name of your
+        network card with <code>ip link show</code>. In my case it's
+        called <code>wlp3s0</code>. So with that knowledge we can run
+        <code>wpa_supplicant -B -i wlp3s0 -c
+        &lt;(wpa_passphrase SSID key)</code>. Be sure to replace both
+        <code>SSID</code> and <code>key</code> with the name of your
+        network and password key, respectively. If they have spaces,
+        surround them in quotes.</p>
+
+        <p>Another funny pitfall was typing <code>wpa_supplicant</code>
+        in the command above twice (instead of <code>wpa_passphrase</code>).
+        That sure spit out a few funny errors! Once you have ran that,
+        wait a few seconds and <code>ping 1.1.1.1</code> to make sure
+        that you can reach the internet. If you do, <code>^C</code> and
+        let's install NixOS!</p>
+
+<pre>nixos-install</pre>
+
+        <p>Well, that was pretty painless. You can now <code>reboot</code>
+        and enjoy your new, functional system.</p>
+
+        <h2>Afterword</h2>
+
+        <p>The process of installing NixOS was really painless once you
+        have made sense out of what things mean. I was far more pleased
+        this time than in my previous attempt, despite the four attempts
+        I needed to have it up and running.</p>
+
+        <p>However not all is so good. I'm not sure where I went wrong,
+        but the first time I tried with <code>i3</code> instead of
+        <code>xfce</code>, all I was welcome with was a white, small
+        terminal in the top left corner. I even generated a configuration
+        file with <code>i3-config-wizard</code> to make sure it could
+        detect my Mod1/Mod4 keys (which, it did), but even after rebooting,
+        my commands weren't responding. For example, I couldn't manage
+        to open another terminal with <code>Mod1+Enter</code>. I'm not
+        even sure that I was in <code>i3</code>…</p>
+
+        <p>In my very first attempt, I pressed <code>Alt+F8</code> as
+        suggested in the welcome message. This took me an offline copy
+        of the manual, which is really nicely done. Funny enough, though,
+        I couldn't exit <code>w3m</code>. Both <code>Q</code> and
+        <code>B</code> to quit and take me back wouldn't work. Somehow,
+        it kept throwing me back into <code>w3m</code>, so I had to
+        forcibly shutdown.</p>
+
+        <p>In my second attempt, I also forgot to configure network,
+        so I had no way to download <code>wpa_supplicant</code> without
+        having <code>wpa_supplicant</code> itself to connect my laptop to
+        the network! So, it was important to do that through the USB before
+        installing it (which comes with the program preinstalled), just
+        by making sure to add it in the configuration file.</p>
+
+        <p>Some other notes, if you can't reach the internet, don't
+        add any DNS in <code>/etc/resolv.conf</code>. This should be
+        done declaratively in <code>configuration.nix</code>.
+
+        <p>In the end, I spent the entire afternoon playing around
+        with it, taking breaks and what-not. I still haven't figured
+        out why <code>nvim</code> was printing the literal escape
+        character when going from normal to insert mode in the
+        <code>xfce4-terminal</code> (and other actions also made it
+        print this "garbage" to the console), why sometimes the network
+        can reach the internet (and only some sites!) and sometimes not,
+        and how to setup dualboot.</p>
+
+        <p>But despite all of this, I think it was a worth installing
+        it again. One sure sees things from a different perspective,
+        and gets the chance to write another blog post!</p>
 
         <p>If there's something I overlooked or that could be done better,
         or maybe you can explain it differently, please be sure to
         <a href="https://lonamiwebs.github.io/contact">contact me</a>
         to let me know!</p>
 
-        <p>More to come when I have more time...</p>
-
-		<p><a href="index">Back to the index</a></p>
+        <p><a href="index">Back to the index</a></p>
     </div>
     </div>
 </body>
