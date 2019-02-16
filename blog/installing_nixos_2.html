@@ -14,7 +14,7 @@
         <h1>Installing NixOS, Take 2</h1>
         <p class="right"><em>Written by
         <a href="https://lonamiwebs.github.io">Imanol H.</a><br />
-        the 15-02-2019. Last revision the 15-02-2019</em></p>
+        the 15-02-2019. Last revision the 16-02-2019</em></p>
         <hr />
         <p>This is my second take at installing NixOS, after
         a while being frustrated with Arch Linux and the fact
@@ -245,6 +245,66 @@ fileSystems."/home" =
         or maybe you can explain it differently, please be sure to
         <a href="https://lonamiwebs.github.io/contact">contact me</a>
         to let me know!</p>
+
+        <h2>Update</h2>
+
+        <p>Well, that was surprisingly fast feedback. Thank you very much
+        <a href="https://bb010g.keybase.pub/" target="_blank">@bb010g</a>
+        for it! As he rightfully pointed out, one can avoid adding
+        <code>/home</code> manually to <code>hardware-configuration.nix</code>
+        if you mount it before generating the configuration files. However,
+        the installation process doesn't need <code>/home</code> mounted, so
+        I didn't do it.</p>
+
+        <p>The second weird issue with <code>w3m</code> is actually a funny
+        one. <code>Alt+F8</code> <em>switches to another TTY</em>! That's why
+        quitting the program wouldn't do anything. You'd still be in a
+        different TTY! Normally, this is <code>Ctrl+Alt+FX</code>, so I
+        hadn't even thought that this is what could be happening. Anyway,
+        the solution is not quitting the program, but rather going back
+        to the main TTY with <code>Alt+F1</code>. You can switch back and
+        forth all you need to consult the manual.</p>
+
+        <p>More suggestions are having
+        <a href="https://nixos.wiki/wiki/Home_Manager" target="_blank"><code>home-manager</code></a>
+        manage the graphical sessions, since it should be easier to deal with
+        than the alternatives.</p>
+
+        <p>Despite having followed the guide and having read it over and over
+        several times, it seems like my thoughts in this blog post may be a
+        bit messy. So I recommend you also reading through the guide to have
+        two versions of all this, just in case.</p>
+
+        <p>Regarding network issues, he uses <code>connman</code> so that
+        may be worth checking out.</p>
+
+        <p>Regarding terminal issues with <code>nvim</code> printing the
+        literal escape character, I was told off for not having checked
+        what my <code>$TERM</code> was. I hadn't really looked into it
+        much myself, just complained about it here, so sorry for being
+        annoying about that. A quick search in the <code>nixpkgs</code>
+        repository lets us find
+        <a href="https://github.com/NixOS/nixpkgs/blob/release-18.09/pkgs/applications/editors/neovim/default.nix" target="_blank">neovim/default.nix</a>,
+        with version 0.3.1. Looking at
+        <a href="https://github.com/neovim/neovim" target="_blank">Neovim's
+        main repository</a> we can see that this is a bit outdated, but that
+        is fine.</p>
+
+        <p>If only I had bothered to look at
+        <a href="https://github.com/neovim/neovim/wiki/FAQ#nvim-shows-weird-symbols-2-q-when-changing-modes" target="_blank">Neovim's wiki</a>,
+        (which he found through
+        <a href="https://github.com/neovim/neovim/issues/7749" target="_blank">Neovim's GitHub issues</a>)
+        I would've seen that some terminals just don't support the program
+        properly. The solution is, of course, to use a different terminal
+        emulator with better support or to disable the <code>guicursor</code>
+        in Neovim's config.</p>
+
+        <p>This is a pretty good life lesson. 30 seconds of searching, maybe
+        two minutes and a half for also checking XFCE issues, are often more
+        than enough to troubleshoot your issues. The internet is a big place
+        and more people have surely came across the problem before, so make
+        sure to look online first. In my defense I'll say that it didn't
+        bother me so much so I didn't bother looking for that soon either.</p>
 
         <p><a href="index">Back to the index</a></p>
     </div>
