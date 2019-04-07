@@ -16,19 +16,21 @@
     the 02-06-2017. Last revision the 02-06-2017
   </em></p>
 
-  <p>Let's imagine we have 5 bus stations, which we'll denote by <mark>s_i</mark>:</p>
-  <div class="csv math addBorder">
-    ;s_1 ;s_2 ;s_3 ;s_4 ;s_5
-s_1 ;    ; V  ;    ;    ;
-s_2 ; V  ;    ;    ;    ; V
-s_3 ;    ;    ;    ; V  ;
-s_4 ;    ; V  ; V  ;    ;
-s_5 ; V  ;    ;    ; V  ;
-  </div>
+  <p>Let's imagine we have 5 bus stations, which we'll denote by \(s_i\):</p>
+
+  \(\begin{bmatrix}
+  & s_1 & s_2 & s_3 & s_4 & s_5 \\
+  s_1   &   & V &   &   &       \\
+  s_2   & V &   &   &   & V     \\
+  s_3   &   &   &   & V &       \\
+  s_4   &   & V & V &   &       \\
+  s_5   & V &   &   & V & 
+ \end{bmatrix}\)
+
   <p>This is known as a <i>"table of direct interconnections"</i>.</p>
-  <p>The <mark>V</mark> represent connected paths. For instance, on the first
-  row starting at <mark>s_1</mark>, reaching the <mark>V</mark>,
-  allows us to turn up to get to <mark>s_2</mark>.</p>
+  <p>The <\(V\) represent connected paths. For instance, on the first
+  row starting at \(s_1\), reaching the \(V\),
+  allows us to turn up to get to \(s_2\).</p>
 
   <p>We can see the above table represented in a more graphical way:</p>
   <img src="img/example1.svg" />
@@ -38,28 +40,28 @@ s_5 ; V  ;    ;    ; V  ;
   lines or directed <b>arcs</b>).</p>
 
   <p>One can walk from a node to another through different <b>paths</b>. For
-  example, <mark>s_4 → s_2 → s_5</mark> is an indirect path of <b>order</b>
-  two, because we must use two edges to go from <mark>s_4</mark> to
-  <mark>s_5</mark>.</p>
+  example, \(s_4 \rightarrow s_2 \rightarrow s_5\) is an indirect path of <b>order</b>
+  two, because we must use two edges to go from \(s_4\) to
+  \(s_5\).</p>
 
   <p>Let's now represent its adjacency matrix called A which represents the
   same table, but uses <mark>1</mark> instead </mark>V</mark> to represent
   a connection:</p>
 
-  <div class="csv math matrix">
-0 ; 1 ; 0 ; 0 ; 0
-1 ; 0 ; 0 ; 0 ; 1
-0 ; 0 ; 0 ; 1 ; 0
-0 ; 1 ; 1 ; 0 ; 0
-1 ; 0 ; 0 ; 1 ; 0
-  </div>
+  \(\begin{bmatrix}
+    0 & 1 & 0 & 0 & 0 \\
+    1 & 0 & 0 & 0 & 1 \\
+    0 & 0 & 0 & 1 & 0 \\
+    0 & 1 & 1 & 0 & 0 \\
+    1 & 0 & 0 & 1 & 0
+\end{bmatrix}\)
 
-  <p>This way we can see how the <mark>a_21</mark> element represents the
-  connection <mark>s_2 → s_1</mark>, and the <mark>a_51</mark> element the
-  <mark>s_5 → s_1</mark> connection, etc.</p>
+  <p>This way we can see how the \(a_{2,1}\) element represents the
+  connection \(s_2 \rightarrow s_1\), and the \(a_{5,1}\) element the
+  \(s_5 \rightarrow s_1\) connection, etc.</p>
 
-  <p>In general, <mark>a_ij</mark> represents a connection from
-  <mark>s_i → s_j</mark> as long as <mark>a_ij ≥ 1</mark>.</p>
+  <p>In general, \(a_{i,j}\) represents a connection from
+    \(s_i \rightarrow s_j\)as long as \(a_{i,j}\geq 1\)>.</p>
 
   <p>Working with matrices allows us to have a computable representation of
   any graph, which is very useful.</p>
@@ -68,45 +70,44 @@ s_5 ; V  ;    ;    ; V  ;
 
   <p>Graphs have a lot of interesting properties besides being representable
   by a computer. What would happen if, for instance, we calculated
-  <mark>A^2</mark>? We obtain the following matrix:</p>
+  \(A^2\)? We obtain the following matrix:</p>
 
-  <div class="csv math matrix">
-1 ; 0 ; 0 ; 0 ; 1
-1 ; 1 ; 0 ; 1 ; 0
-0 ; 1 ; 1 ; 0 ; 0
-1 ; 0 ; 0 ; 1 ; 1
-0 ; 2 ; 1 ; 0 ; 0
-  </div>
+  \(\begin{bmatrix}
+  1 & 0 & 0 & 0 & 1 \\
+  1 & 1 & 0 & 1 & 0 \\
+  0 & 1 & 1 & 0 & 0 \\
+  1 & 0 & 0 & 1 & 1 \\
+  0 & 2 & 1 & 0 & 0
+  \end{bmatrix}\)
 
   <p>We can interpret this as the paths of order <b>two</b>.</p>
-  <p>But what does the element <mark>a_52 = 2</mark> represent? It indicates
-  the amount of possible ways to go from <mark>s_5 → s_i → s_2</mark>.</p>
+  <p>But what does the element \(a_{5,2}=2\) represent? It indicates
+  the amount of possible ways to go from  \(s_5 \rightarrow s_i \rightarrow s_2\).</p>
 
   <p>One can manually multiply the involved row and column to determine which
   element is the one we need to pass through, this way we have the row
-  <mark>(1, 0, 0, 1, 0)</mark> and the column <mark>(1, 0, 0, 1, 0)</mark> (on
-  vertical). The elements <mark>s_1 ≥ 1</mark> are <mark>s_1</mark> and
-  <mark>s_4</mark>. This is, we can go from <mark>s_5</mark> to
-  <mark>s_2</mark> via <mark>s_5 → s_1 → s_2</mark> or via
-  <mark>s_5 → s_4 → s_2</mark>:</p>
+  \([1 0 0 1 0]\) and the column \([1 0 0 1 0]\) (on
+  vertical). The elements \(s_i\geq 1\) are \(s_1\) and
+  \(s_4\). This is, we can go from \(s_5\) to
+  \(s_2\) via \(s_5 \rightarrow s_1 \rightarrow s_2\) or via
+  \(s_5 \rightarrow s_4 \rightarrow s_2\):</p>
   <img src="img/example2.svg" />
 
   <p>It's important to note that graphs to not consider self-connections, this
-  is, <mark>s_i → s_i</mark> is not allowed; neither we work with multigraphs
+  is, \(s_i \rightarrow s_i) is not allowed; neither we work with multigraphs
   here (those which allow multiple connections, for instance, an arbitrary
-  number <mark>n</mark> of times).</p>
+  number \(n\) of times).</p>
 
-  <p>Let's finish with <mark>A^3</mark>:</p>
-  <div class="csv math matrix">
-1 ; 1 ;   0    ; 1 ; 0
-1 ; 2 ;<b>1</b>; 0 ; 1
-1 ; 0 ;   0    ; 1 ; 1
-1 ; 2 ;   1    ; 1 ; 0
-2 ; 0 ;   0    ; 1 ; 2
-  </div>
+  \(\begin{bmatrix}
+  1 & 1 & 0          & 1 & 0 \\
+  1 & 2 & \textbf{1} & 0 & 1 \\
+  1 & 0 & 0          & 1 & 1 \\
+  1 & 2 & 1          & 1 & 0 \\
+  2 & 0 & 0          & 1 & 2
+  \end{bmatrix}\)
 
-  <p>We can see how the first <mark>1</mark> just appeared on the element
-  <mark>a_23</mark>, which means that the shortest path to it is at least
+  <p>We can see how the first \(1\) just appeared on the element
+    \(a_{2,3}\), which means that the shortest path to it is at least
   of order three.</mark>
 
   <hr />
@@ -116,26 +117,26 @@ s_5 ; V  ;    ;    ; V  ;
 
   <p>We can see all the available paths until now by simply adding up all the
   direct and indirect ways to reach a node, so for now, we can add
-  <mark>A + A^2 + A^3</mark> in such a way that:</p>
+  \(A+A^2+A^3\) in such a way that:</p>
 
-  <div class="csv math matrix">
-2 ; 2 ; 0 ; 1 ; 1
-3 ; 3 ; 1 ; 1 ; 3
-1 ; 1 ; 1 ; 2 ; 1
-2 ; 3 ; 2 ; 2 ; 1
-3 ; 2 ; 1 ; 2 ; 2
-  </div>
+  \(\begin{bmatrix}
+  2 & 2 & 0 & 1 & 1 \\
+  3 & 3 & 1 & 1 & 3 \\
+  1 & 1 & 1 & 2 & 1 \\
+  2 & 3 & 2 & 2 & 1 \\
+  3 & 2 & 1 & 2 & 2
+  \end{bmatrix}\)
 
-  <p>There isn't a connection between <mark>s_1</mark> y <mark>s_3</mark> yet.
-  If we were to calculate <mark>A^4</mark>:</p>
+  <p>There isn't a connection between \(s_1\) and \(s_3\) yet.
+  If we were to calculate \(A^4\):</p>
 
-  <div class="csv math matrix">
-1 ; 2 ;<b>1</b>;;
-;;;;
-;;;;
-;;;;
-;;;;
-  </div>
+  \(\begin{bmatrix}
+  1 & 2 & 1 &   &   \\
+    &   &   &   &   \\
+    &   &   &   &   \\
+    &   &   &   &   \\
+    &   &   &   &  
+  \end{bmatrix}\)
 
   <p>We don't need to calculate anymore. We now know that the graph is
   strongly connected!</p>
