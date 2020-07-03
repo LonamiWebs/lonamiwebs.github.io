@@ -1,6 +1,6 @@
 ```meta
 created: 2020-06-19
-modified: 2020-06-22
+modified: 2020-07-03
 ```
 
 # My new computer
@@ -239,7 +239,7 @@ Some other packages I installed after I had a working system in no particular or
 * `nano`, so much nicer to write a simple commit message.
 * `python` and `python-pip`, my favourite language to toy around ideas or use as a calculator.
 * `telegram-desktop`, for my needs on sharing memes.
-* `cmus`, a simple terminal music player.
+* `cmus` and `mpv`, a simple terminal music player and media player.
 * `openssh`, to connect into any VPS I have access to.
 * `base-devel`, necessary to build most projects I'll find myself working with (or even compiling some projects Rust which I installed via `rustup`).
 * `flac`, `libmad`, `opus`, and `libvorbis`, to be able to play more audio files.
@@ -247,9 +247,14 @@ Some other packages I installed after I had a working system in no particular or
 * `ffmpeg`, to convert media or record screen.
 * `xclip`, to automatically copy screenshots to my clipboard.
 * `gvfs`, needed by Thunar to handle mounting and having a trash (perma-deletion by default can be nasty sometimes).
-* `noto-fonts`, `noto-fonts-cjk` and `noto-fonts-extra`, if you don't want missing gliphs everywhere.
+* `noto-fonts`, `noto-fonts-cjk`, `noto-fonts-extra` and `noto-fonts-emoji`, if you don't want missing gliphs everywhere.
 * `xfce4-notifyd` and `libnotify`, for notifications.
 * `cronie`, to be able to `crontab -e`. Make sure to `system enable cronie`.
+* `xarchiver` (with `p7zip`, `zip`, `unzip` and `unrar`) to uncompress stuff.
+* `xreader` to read `.pdf` files.
+* `sqlitebrowser` is always nice to tinker around with SQLite databases.
+* `jre8-openjdk` if you want to run Java applications.
+* `smartmontools` is nice with a SSD to view your disk statistics.
 
 After that, I configured my Super L key to launch `xfce4-popup-whiskermenu` so that it opens the application menu, pretty much the same as it would on Windows, moved the panels around and configured them to my needs, and it feels like home once more.
 
@@ -296,11 +301,13 @@ echo export RUSTC_WRAPPER=sccache >> ~/.bashrc
 
 Once I had `cargo` ready, installed `hacksaw` and `shotgun` with it to perform screenshots.
 
-I also disabled the security delay when downloading files in Firefox because it's just annoying, in `about:config` setting `security.dialog_enable_delay` to `0`.
+I also disabled the security delay when downloading files in Firefox because it's just annoying, in `about:config` setting `security.dialog_enable_delay` to `0`, and added the [Kill sticky headers](https://alisdair.mcdiarmid.org/kill-sticky-headers/) to my bookmarks (you may prefer [the updated version](https://github.com/t-mart/kill-sticky)).
 
 The `utils-linux` comes with a `fstrim` utility to [trim the SSD weekly](https://wiki.archlinux.org/index.php/Solid_state_drive#Periodic_TRIM), which I want enabled via `systemctl enable fstrim.timer` (you may also want to `start` it if you don't reboot often). For more SSD tips, check [How to optimize your Solid State Drive](https://easylinuxtipsproject.blogspot.com/p/ssd.html).
 
 If the sound is funky prior to reboot, try `pulseaudio --kill` and `pulseaudio --start`, or delete `~/.config/pulse`.
+
+I haven't been able to get the brightness keys to work yet, but it's not a big deal, because scrolling on the power manager plugin of Xfce does work (and also `xbacklight` works, or writing directly to `/sys/class/backlight/*`).
 
 ## Tuning Windows
 
@@ -310,6 +317,14 @@ On the Windows side, I disabled the annoying Windows defender by running (<kbd>C
 * *User Configuration > Administrative Templates > Start Menu and Taskbar » Remove Notifications and Action Center » Enable*
 
 I also updated the [`hosts` file](https://github.com/WindowsLies/BlockWindows/raw/master/hosts) (located at `%windir%\system32\Drivers\etc\hosts`) with the hope that it will stop some of the telemetry.
+
+Last, to have consistent time on Windows and Linux, I changed the following registry key for a `qword` with value `1`:
+
+```
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation\RealTimeIsUniversal
+```
+
+(The key might not exist, but you can create it if that's the case).
 
 All this time, my laptop had the keyboard lights on, which have been quite annoying. Apparently, they also can cause [massive FPS drops](https://www.reddit.com/r/ValveIndex/comments/cm6pos/psa_uninstalldisable_aura_sync_lighting_if_you/). I headed over to [Asus Rog downloads](https://rog.asus.com/downloads/), selected Aura Sync…
 
@@ -339,7 +354,7 @@ Well, at least rebooting worked. I tried to [uninstall Aura, but of course that 
 
 After searching around how to disable the lights (because [my BIOS did not have this setting](https://rog.asus.com/forum/showthread.php?112786-Option-to-Disable-Aura-Lights-on-Strix-G-series-(G531GT)-irrespective-of-OSes)), I stumbled upon ["Armoury Crate"](https://rog.asus.com/us/innovation/armoury_crate/). Okay, fine, I will install that.
 
-The experience wasn't much better. It did the same thing with a lot of consoles flashing on screen. And of course, it resulted in another blue-screen, this time `KERNEL_SECURITY_CHECK_FAILURE`. To finish up, the BSOD kept happening as I rebooted the system. Time to reinstall Windows once more.
+The experience wasn't much better. It did the same thing with a lot of consoles flashing on screen. And of course, it resulted in another blue-screen, this time `KERNEL_SECURITY_CHECK_FAILURE`. To finish up, the BSOD kept happening as I rebooted the system. ~~Time to reinstall Windows once more.~~ After booting and crashing a few more times I could get into secure mode and perform the reinstall from there, which saved me from burning the `.iso` again.
 
 Asus software might be good, but the software is utter crap.
 
