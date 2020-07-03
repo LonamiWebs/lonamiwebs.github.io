@@ -10,7 +10,7 @@
 <main>
 <h1 class="title" id="my_new_computer"><a class="anchor" href="#my_new_computer">¶</a>My new computer</h1>
 <div class="date-created-modified">Created 2020-06-19<br>
-Modified 2020-06-22</div>
+Modified 2020-07-03</div>
 <p>This post will be mostly me ranting about setting up a new laptop, but I also just want to share my upgrade. If you're considering installing Arch Linux with dual-boot for Windows, maybe this post will help. Or perhaps you will learn something new to troubleshoot systems in the future. Let's begin!</p>
 <p>Last Sunday, I ordered a Asus Rog Strix G531GT-BQ165 for 900€ (on a 20% discount) with the following specifications:</p>
 <ul>
@@ -167,7 +167,7 @@ rankmirrors -n 6 /etc/pacman.d/mirrorlist.backup | tee /etc/pacman.d/mirrorlist
 <li><code>nano</code>, so much nicer to write a simple commit message.</li>
 <li><code>python</code> and <code>python-pip</code>, my favourite language to toy around ideas or use as a calculator.</li>
 <li><code>telegram-desktop</code>, for my needs on sharing memes.</li>
-<li><code>cmus</code>, a simple terminal music player.</li>
+<li><code>cmus</code> and <code>mpv</code>, a simple terminal music player and media player.</li>
 <li><code>openssh</code>, to connect into any VPS I have access to.</li>
 <li><code>base-devel</code>, necessary to build most projects I'll find myself working with (or even compiling some projects Rust which I installed via <code>rustup</code>).</li>
 <li><code>flac</code>, <code>libmad</code>, <code>opus</code>, and <code>libvorbis</code>, to be able to play more audio files.</li>
@@ -175,9 +175,14 @@ rankmirrors -n 6 /etc/pacman.d/mirrorlist.backup | tee /etc/pacman.d/mirrorlist
 <li><code>ffmpeg</code>, to convert media or record screen.</li>
 <li><code>xclip</code>, to automatically copy screenshots to my clipboard.</li>
 <li><code>gvfs</code>, needed by Thunar to handle mounting and having a trash (perma-deletion by default can be nasty sometimes).</li>
-<li><code>noto-fonts</code>, <code>noto-fonts-cjk</code> and <code>noto-fonts-extra</code>, if you don't want missing gliphs everywhere.</li>
+<li><code>noto-fonts</code>, <code>noto-fonts-cjk</code>, <code>noto-fonts-extra</code> and <code>noto-fonts-emoji</code>, if you don't want missing gliphs everywhere.</li>
 <li><code>xfce4-notifyd</code> and <code>libnotify</code>, for notifications.</li>
 <li><code>cronie</code>, to be able to <code>crontab -e</code>. Make sure to <code>system enable cronie</code>.</li>
+<li><code>xarchiver</code> (with <code>p7zip</code>, <code>zip</code>, <code>unzip</code> and <code>unrar</code>) to uncompress stuff.</li>
+<li><code>xreader</code> to read <code>.pdf</code> files.</li>
+<li><code>sqlitebrowser</code> is always nice to tinker around with SQLite databases.</li>
+<li><code>jre8-openjdk</code> if you want to run Java applications.</li>
+<li><code>smartmontools</code> is nice with a SSD to view your disk statistics.</li>
 </ul>
 <p>After that, I configured my Super L key to launch <code>xfce4-popup-whiskermenu</code> so that it opens the application menu, pretty much the same as it would on Windows, moved the panels around and configured them to my needs, and it feels like home once more.</p>
 <p>I made some mistakes while <a href="https://wiki.archlinux.org/index.php/Systemd-networkd">configuring systemd-networkd</a> and accidentally added a service that was incorrect, which caused boot to wait for it to timeout before completing. My boot time was taking 90 seconds longer because of this! <a href="https://www.reddit.com/r/archlinux/comments/4nv9yi/my_arch_greets_me_now_with_a_start_job/">The solution was to remove said service</a>, so this is something to look out for.</p>
@@ -205,9 +210,10 @@ export LANGUAGE=en_US.UTF-8
 echo export RUSTC_WRAPPER=sccache &gt;&gt; ~/.bashrc
 </code></pre>
 <p>Once I had <code>cargo</code> ready, installed <code>hacksaw</code> and <code>shotgun</code> with it to perform screenshots.</p>
-<p>I also disabled the security delay when downloading files in Firefox because it's just annoying, in <code>about:config</code> setting <code>security.dialog_enable_delay</code> to <code>0</code>.</p>
+<p>I also disabled the security delay when downloading files in Firefox because it's just annoying, in <code>about:config</code> setting <code>security.dialog_enable_delay</code> to <code>0</code>, and added the <a href="https://alisdair.mcdiarmid.org/kill-sticky-headers/">Kill sticky headers</a> to my bookmarks (you may prefer <a href="https://github.com/t-mart/kill-sticky">the updated version</a>).</p>
 <p>The <code>utils-linux</code> comes with a <code>fstrim</code> utility to <a href="https://wiki.archlinux.org/index.php/Solid_state_drive#Periodic_TRIM">trim the SSD weekly</a>, which I want enabled via <code>systemctl enable fstrim.timer</code> (you may also want to <code>start</code> it if you don't reboot often). For more SSD tips, check <a href="https://easylinuxtipsproject.blogspot.com/p/ssd.html">How to optimize your Solid State Drive</a>.</p>
 <p>If the sound is funky prior to reboot, try <code>pulseaudio --kill</code> and <code>pulseaudio --start</code>, or delete <code>~/.config/pulse</code>.</p>
+<p>I haven't been able to get the brightness keys to work yet, but it's not a big deal, because scrolling on the power manager plugin of Xfce does work (and also <code>xbacklight</code> works, or writing directly to <code>/sys/class/backlight/*</code>).</p>
 <h2 id="tuning_windows"><a class="anchor" href="#tuning_windows">¶</a>Tuning Windows</h2>
 <p>On the Windows side, I disabled the annoying Windows defender by running (<kbd>Ctrl+R</kbd>) <code>gpedit.msc</code> and editing:</p>
 <ul>
@@ -215,6 +221,10 @@ echo export RUSTC_WRAPPER=sccache &gt;&gt; ~/.bashrc
 <li><em>User Configuration &gt; Administrative Templates &gt; Start Menu and Taskbar » Remove Notifications and Action Center » Enable</em></li>
 </ul>
 <p>I also updated the <a href="https://github.com/WindowsLies/BlockWindows/raw/master/hosts"><code>hosts</code> file</a> (located at <code>%windir%\system32\Drivers\etc\hosts</code>) with the hope that it will stop some of the telemetry.</p>
+<p>Last, to have consistent time on Windows and Linux, I changed the following registry key for a <code>qword</code> with value <code>1</code>:</p>
+<pre><code>HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\TimeZoneInformation\RealTimeIsUniversal
+</code></pre>
+<p>(The key might not exist, but you can create it if that's the case).</p>
 <p>All this time, my laptop had the keyboard lights on, which have been quite annoying. Apparently, they also can cause <a href="https://www.reddit.com/r/ValveIndex/comments/cm6pos/psa_uninstalldisable_aura_sync_lighting_if_you/">massive FPS drops</a>. I headed over to <a href="https://rog.asus.com/downloads/">Asus Rog downloads</a>, selected Aura Sync…</p>
 <pre><code class="language-md"># Not Found
 
@@ -234,7 +244,7 @@ We'll be back shortly.Thank you for your patience!
 <p>Oh come on. After waiting for the next day, I headed over, downloaded their software, tried to install it and it was an awful experience. It felt like I was purposedly installing malware. It spammed and flashed a lot of <code>cmd</code>'s on screen as if it was a virus. It was stuck at 100% doing that and then, Windows blue-screened with <code>KERNEL_MODE_HEAP_CORRUPTION</code>. Amazing. How do you screw up this bad?</p>
 <p>Well, at least rebooting worked. I tried to <a href="https://answers.microsoft.com/en-us/windows/forum/all/unable-to-uninstall-asus-aura-sync-utility/e9bec36c-e62f-4773-80be-88fb68dace16">uninstall Aura, but of course that failed</a>. Using the <a href="https://support.microsoft.com/en-us/help/17588/windows-fix-problems-that-block-programs-being-installed-or-removed">troubleshooter to uninstall programs</a> helped me remove most of the crap that was installed.</p>
 <p>After searching around how to disable the lights (because <a href="https://rog.asus.com/forum/showthread.php?112786-Option-to-Disable-Aura-Lights-on-Strix-G-series-(G531GT)-irrespective-of-OSes">my BIOS did not have this setting</a>), I stumbled upon <a href="https://rog.asus.com/us/innovation/armoury_crate/">&quot;Armoury Crate&quot;</a>. Okay, fine, I will install that.</p>
-<p>The experience wasn't much better. It did the same thing with a lot of consoles flashing on screen. And of course, it resulted in another blue-screen, this time <code>KERNEL_SECURITY_CHECK_FAILURE</code>. To finish up, the BSOD kept happening as I rebooted the system. Time to reinstall Windows once more.</p>
+<p>The experience wasn't much better. It did the same thing with a lot of consoles flashing on screen. And of course, it resulted in another blue-screen, this time <code>KERNEL_SECURITY_CHECK_FAILURE</code>. To finish up, the BSOD kept happening as I rebooted the system. <del>Time to reinstall Windows once more.</del> After booting and crashing a few more times I could get into secure mode and perform the reinstall from there, which saved me from burning the <code>.iso</code> again.</p>
 <p>Asus software might be good, but the software is utter crap.</p>
 <p>After trying out <a href="https://github.com/wroberts/rogauracore">rogauracore</a> (which didn't list my model), it worked! I could disable the stupid lights from Linux, and <a href="https://gitlab.com/CalcProgrammer1/OpenRGB/-/wikis/home">OpenRGB</a> also works on Windows which may be worth checking out too.</p>
 <p>Because <code>rougauracore</code> helped me and they linked to <a href="https://github.com/linuxhw/hw-probe/blob/master/README.md#appimage">hw-probe</a>, I decided to <a href="https://linux-hardware.org/?probe=0e3e48c501">run it on my system</a>, with the hopes it is useful for other people.</p>
