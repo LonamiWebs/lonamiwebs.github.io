@@ -1,4 +1,4 @@
-<feed xmlns="http://www.w3.org/2005/Atom"><title>pagong</title><id>pagong</id><updated>2020-07-02T22:00:00+00:00</updated><entry><title>Information Retrieval and Web Search</title><id>dist/index/index.html</id><updated>2020-07-02T22:00:00+00:00</updated><published>2020-07-02T22:00:00+00:00</published><summary>During 2020 at university, this subject ("Recuperación de la Información y Búsqueda en la Web")</summary><content type="html" src="dist/index/index.html">&lt;!DOCTYPE html&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>pagong</title><id>pagong</id><updated>2020-08-23T22:00:00+00:00</updated><entry><title>Information Retrieval and Web Search</title><id>dist/index/index.html</id><updated>2020-08-23T22:00:00+00:00</updated><published>2020-08-23T22:00:00+00:00</published><summary>During 2020 at university, this subject ("Recuperación de la Información y Búsqueda en la Web")</summary><content type="html" src="dist/index/index.html">&lt;!DOCTYPE html&gt;
 &lt;html&gt;
 &lt;head&gt;
 &lt;meta charset=&quot;utf-8&quot; /&gt;
@@ -9,7 +9,7 @@
 &lt;body&gt;
 &lt;main&gt;
 &lt;h1 class=&quot;title&quot; id=&quot;information_retrieval_and_web_search&quot;&gt;&lt;a class=&quot;anchor&quot; href=&quot;#information_retrieval_and_web_search&quot;&gt;¶&lt;/a&gt;Information Retrieval and Web Search&lt;/h1&gt;
-&lt;div class=&quot;date-created-modified&quot;&gt;2020-07-03&lt;/div&gt;
+&lt;div class=&quot;date-created-modified&quot;&gt;2020-08-24&lt;/div&gt;
 &lt;p&gt;During 2020 at university, this subject (&amp;quot;Recuperación de la Información y Búsqueda en la Web&amp;quot;)
 had us write blog posts as assignments. I think it would be really fun and I wanted to preserve
 that work here, with the hopes it's interesting to someone.&lt;/p&gt;
