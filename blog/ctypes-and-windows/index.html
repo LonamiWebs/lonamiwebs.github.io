@@ -10,7 +10,7 @@
 <main>
 <h1 class="title" id="python_ctypes_and_windows"><a class="anchor" href="#python_ctypes_and_windows">¶</a>Python ctypes and Windows</h1>
 <div class="date-created-modified">Created 2019-06-19<br>
-Modified 2020-08-24</div>
+Modified 2020-10-03</div>
 <p><a href="https://www.python.org/">Python</a>'s <a href="https://docs.python.org/3/library/ctypes.html"><code>ctypes</code></a> is quite a nice library to easily load and invoke C methods available in already-compiled <a href="https://en.wikipedia.org/wiki/Dynamic-link_library"><code>.dll</code> files</a> without any additional dependencies. And I <em>love</em> depending on as little as possible.</p>
 <p>In this blog post, we will walk through my endeavors to use <code>ctypes</code> with the <a href="https://docs.microsoft.com/en-us/windows/desktop/api/">Windows API</a>, and do some cool stuff with it.</p>
 <p>We will assume some knowledge of C/++ and Python, since we will need to read and write a bit of both. Please note that this post is only an introduction to <code>ctypes</code>, and if you need more information you should consult the <a href="https://docs.python.org/3/library/ctypes.html">Python's documentation for <code>ctypes</code></a>.</p>
