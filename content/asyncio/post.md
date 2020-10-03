@@ -1,6 +1,6 @@
 ```meta
 created: 2018-06-13
-updated: 2018-06-15
+updated: 2020-10-03
 ```
 
 An Introduction to Asyncio
@@ -10,11 +10,11 @@ Index
 -----
 
 * [Background](#background)
-* [Input / Output](#inputoutput)
-* [Diving In](#divingin)
-* [A Toy Example](#toyexample)
-* [A Real Example](#example)
-* [Extra Material](#extra)
+* [Input / Output](#input_output)
+* [Diving In](#diving_in)
+* [A Toy Example](#a_toy_example)
+* [A Real Example](#a_real_example)
+* [Extra Material](#extra_material)
 
 
 Background
@@ -39,8 +39,9 @@ And you start two threads to run the method at the same time. What is the order 
 
 As you can see, any combination of the order in which the lines run is possible. If the lines modify some global shared state, that will get messy quickly.
 
-Second, in Python, threads *won't* make your code faster. It will only increase the concurrency of your program, allowing you to run several things at the same time, so using threads for speed isn't a real advantage. Indeed, your code will probably run slower under the most common Python implementation, CPython, which makes use of a Global Interpreter Lock (GIL) that only lets a thread run at once.
+Second, in Python, threads *won't* make your code faster most of the time. It will only increase the concurrency of your program (which is okay if it makes many blocking calls), allowing you to run several things at the same time.
 
+If you have a lot of CPU work to do though, threads aren't a real advantage. Indeed, your code will probably run slower under the most common Python implementation, CPython, which makes use of a Global Interpreter Lock (GIL) that only lets a thread run at once. The operations won't run in parallel!
 
 Input / Output
 --------------
@@ -50,18 +51,31 @@ Before we go any further, let's first stop to talk about input and output, commo
 The first one is known as "blocking IO". What this means is that, when you try performing IO, the current application thread is going to *block* until the Operative System can tell you it's done. Normally, this is not a problem, since disks are pretty fast anyway, but it can soon become a performance bottleneck. And network IO will be much slower than disk IO!
 
 ```python
-# "open" will block until the OS creates a new file in the disk.
-#        this can be really slow if the disk is under heavy load!
-with open('hello.txt', 'w') as fd:
-    fd.write('hello!\n')
+import socket
 
-    # "flush" will block until the OS has written all data to disk*
-    fd.flush()
+# Setup a network socket and a very simple HTTP request.
+# By default, sockets are open in blocking mode.
+sock = socket.socket()
+request = b'''HEAD / HTTP/1.0\r
+Host: example.com\r
+\r
+'''
 
-# * the reality is a bit more complicated, since writes to disk are
-#   quite expensive, the OS will normally keep the data in RAM until
-#   it has more stuff to write to disk, and then it will `sync`
-#   everything after a few seconds
+# "connect" will block until a successful TCP connection
+# is made to the host "example.com" on port 80.
+sock.connect(('example.com', 80))
+
+# "sendall" will repeatedly call "send" until all the data in "request" is
+# sent to the host we just connected, which blocks until the data is sent.
+sock.sendall(request)
+
+# "recv" will try to receive up to 1024 bytes from the host, and block until
+# there is any data to receive (or empty if the host closes the connection).
+response = sock.recv(1024)
+
+# After all those blocking calls, we got out data! These are the headers from
+# making a HTTP request to example.com.
+print(response.decode())
 ```
 
 Blocking IO offers timeouts, so that you can get control back in your code if the operation doesn't finish. Imagine that the remote host doesn't want to reply, your code would be stuck for as long as the connection remains alive!
@@ -70,13 +84,13 @@ But wait, what if we make the timeout small? Very, very small? If we do that, we
 
 How does non-blocking IO work if the IO device needs a while to answer with the data? In that case, the operative system responds with "not ready", and your application gets control back so it can do other stuff while the IO device completes your request. It works a bit like this:
 
-```python
-&lt;app&gt; Hey, I would like to read 16 bytes from this file
-&lt;OS&gt; Okay, but the disk hasn't sent me the data yet
-&lt;app&gt; Alright, I will do something else then
+```
+<app> Hey, I would like to read 16 bytes from this file
+<OS> Okay, but the disk hasn't sent me the data yet
+<app> Alright, I will do something else then
 (a lot of computer time passes)
-&lt;app&gt; Do you have my 16 bytes now?
-&lt;OS&gt; Yes, here they are! "Hello, world !!\n"
+<app> Do you have my 16 bytes now?
+<OS> Yes, here they are! "Hello, world !!\n"
 ```
 
 In reality, you can tell the OS to notify you when the data is ready, as opposed to polling (constantly asking the OS whether the data is ready yet or not), which is more efficient.
@@ -111,9 +125,59 @@ Start reading the code of the event loop and follow the arrows. You can see that
 
 While the first method is busy, the event loop can enter the second method, and run its code until the first `await`. But it can happen that the event of the second query occurs before the request on the first method, so the event loop can re-enter the second method because it has already sent the query, but the first method isn't done sending the request yet.
 
-Then, the second method `await`'s for an answer, and an event occurs telling the event loop that the request from the first method was sent. The code can be resumed again, until it has to `await` for a response, and so on.
+Then, the second method `await`'s for an answer, and an event occurs telling the event loop that the request from the first method was sent. The code can be resumed again, until it has to `await` for a response, and so on. Here's an explanation with pseudo-code for this process if you prefer:
 
-There are some important things to note here. The first is that we only need one thread to be running! The event loop decides when and which methods should run. The second is that we know when it may run other methods. Those are the `await` keywords! Whenever there is one of those, we know that the loop is able to run other things until the resource (again, like network) becomes ready.
+```python
+async def method(request):
+    prepare request
+    await send request
+
+    await receive request
+
+    process request
+    return result
+
+run in parallel (
+	method with request 1,
+	method with request 2,
+)
+```
+
+This is what the event loop will do on the above pseudo-code:
+
+```
+no events pending, can advance
+
+enter method with request 1
+	prepare request
+	await sending request
+pause method with request 1
+
+no events ready, can advance
+
+enter method with request 2
+	prepare request
+	await sending request
+pause method with request 2
+
+both requests are paused, cannot advance
+wait for events
+event for request 2 arrives (sending request completed)
+
+enter method with request 2
+	await receiving response
+pause method with request 2
+
+event for request 1 arrives (sending request completed)
+
+enter method with request 1
+	await receiving response
+pause method with request 1
+
+...and so on
+```
+
+You may be wondering "okay, but threads work for me, so why should I change?". There are some important things to note here. The first is that we only need one thread to be running! The event loop decides when and which methods should run. This results in less pressure for the operating system. The second is that we know when it may run other methods. Those are the `await` keywords! Whenever there is one of those, we know that the loop is able to run other things until the resource (again, like network) becomes ready (when a event occurs telling us it's ready to be used without blocking or it has completed).
 
 So far, we already have two advantages. We are only using a single thread so the cost for switching between methods is low, and we can easily reason about where our program may interleave operations.
 
