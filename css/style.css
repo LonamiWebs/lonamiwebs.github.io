@@ -24,14 +24,18 @@ div {
     box-shadow: 5px 5px 10px #CCCCCC;
 }
 
-h1 {
-    text-align: center;
+h1, h2 {
     font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
-    font-size: 2.5em;
+    font-size: 200%;
     font-weight: lighter;
+    text-transform: capitalize;
 }
 
-p, li {
+h1 {
+    text-align: center;
+}
+
+p, li, dl {
     font-family: Tahoma, Geneva, sans-serif;
     font-size: 1.1em;
 }
