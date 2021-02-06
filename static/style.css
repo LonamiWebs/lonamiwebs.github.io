@@ -1,10 +1,14 @@
 /* main */
 body {
-    background-color: #FFFFF0;
+    background-color: #000;
     margin: 0;
 }
 
-nav, main {
+article {
+    background-color: #fffff0;
+}
+
+nav, main, footer div {
     max-width: 720px;
     margin: 0 auto;
 }
@@ -18,7 +22,7 @@ main {
 
 /* navigation */
 nav.sections {
-    margin-top: 40px;
+    padding-top: 20px;
     display: block;
 }
 
@@ -45,6 +49,28 @@ nav.sections a {
 nav.sections a.selected, nav.sections a:hover {
     color: #000000;
     border-bottom: solid 2px #444444;
+}
+
+/* footer */
+footer {
+    margin-top: 32px;
+    min-height: 64px;
+    background: linear-gradient(#fffff0, #ccccc0);
+}
+
+footer p {
+    font-style: italic;
+    color: #666;
+    font-family: serif;
+}
+
+footer img {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.abyss {
+    text-align: center;
 }
 
 /* headers */
