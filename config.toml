@@ -1,0 +1,13 @@
+# primary config
+base_url = "https://lonami.dev"
+title = "Lonami's Site"
+default_language = "en"
+minify_html = true
+
+# blog
+generate_feed = true
+feed_limit = 10
+taxonomies = [
+    { name = "category" },
+    { name = "tags" },
+]
