@@ -1,6 +1,9 @@
 +++
 title = "Python ctypes and Windows"
 date = 2019-06-19
+[taxonomies]
+category = ["sw"]
+tags = ["python", "ffi", "windows"]
 +++
 
 [Python](https://www.python.org/)'s [`ctypes`](https://docs.python.org/3/library/ctypes.html) is quite a nice library to easily load and invoke C methods available in already-compiled [`.dll` files](https://en.wikipedia.org/wiki/Dynamic-link_library) without any additional dependencies. And I *love* depending on as little as possible.

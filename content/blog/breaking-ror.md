@@ -1,6 +1,9 @@
 +++
 title = "Breaking Risk of Rain"
 date = 2019-01-12
+[taxonomies]
+category = ["games"]
+tags = ["tips"]
 +++
 
 [Risk of Rain](https://riskofraingame.com/) is a fun little game you can spend a lot of hours on. It's incredibly challenging for new players, and fun once you have learnt the basics. This blog will go through what I've learnt and how to play the game correctly.

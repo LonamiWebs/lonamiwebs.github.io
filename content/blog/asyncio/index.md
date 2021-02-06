@@ -2,6 +2,9 @@
 title = "An Introduction to Asyncio"
 date = 2018-06-13
 updated = 2020-10-03
+[taxonomies]
+category = ["sw"]
+tags = ["python", "asyncio"]
 +++
 
 Index

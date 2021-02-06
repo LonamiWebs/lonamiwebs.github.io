@@ -22,7 +22,7 @@ Qué es
 
 La inteligencia artificial es una rama apasionante que tiene su origen en la **informática** y se basa en el concepto de conseguir *emular*[^1] al cerebro humano, mediante el desarrollo un programa que sea capaz de **aprender y mejorar por sí sólo** (normalmente bajo algún tipo de supervisión)
 
-Fue un concepto acuñado por *John McCarthy* en un congreso de informática de 1956, y desde entonces este campo ha crecido de manera exponencial con unas buenas previsiones de futuro.</p>
+Fue un concepto acuñado por *John McCarthy* en un congreso de informática de 1956, y desde entonces este campo ha crecido de manera exponencial con unas buenas previsiones de futuro.
 
 ![Progreso humano en la inteligencia artificial](human_progress_edge.svg)
 
@@ -34,7 +34,7 @@ En qué consiste
 
 La inteligencia artificial no consiste en escribir unas pautas fijas y finitas al igual que hacen la gran mayoría de programas, en los cuales introduces unos datos y producen siempre la misma salida, una salida predecible, programada e invariable, que además, tiene sus límites, ya que si introduces datos para los que la aplicación no está programada, esta aplicación no será capaz de manejarlos. No los entenderá y no producirá ningún resultado.
 
-La inteligencia artificial consiste en dar un paso **más allá**. Una inteligencia artificial *entrenada* es capaz de manejar datos para los cuales no ha sido programada de manera explícita[^2]</sup>
+La inteligencia artificial consiste en dar un paso **más allá**. Una inteligencia artificial *entrenada* es capaz de manejar datos para los cuales no ha sido programada de manera explícita[^2]
 
 
 Límites
@@ -50,7 +50,7 @@ A día de hoy, ya hemos conseguido emular el cerebro de un gusano de un milímet
 
 Comparado con las neuronas de un cerebro humano (cuya velocidad[^3] máxima oscilan entre los 200Hz), los procesadores de hoy en día (mucho más lentos que los que tendremos dentro de algunos años) ya tienen una velocidad superior a los 2Ghz, es decir, **10 millones de veces** más rápidos que las neuronas. Y la comunicación interna del cerebro, que oscila entre los 120m/s, queda infinitamente distante de la velocidad de los ordenadores que se comunican de manera óptica a la **velocidad de la luz**.
 
-Además de todo esto, la capacidad de los dispositivos puede ser **ampliada**, a diferencia del cerebro que tiene un tamaño ya determinado. Y, por último, un procesador puede estar **trabajando sin parar** nunca, sin cansarse.</p>
+Además de todo esto, la capacidad de los dispositivos puede ser **ampliada**, a diferencia del cerebro que tiene un tamaño ya determinado. Y, por último, un procesador puede estar **trabajando sin parar** nunca, sin cansarse.
 
 <!-- Boston dynamics artificial intelligence put some more examples, like Google or predicting models or big data, ocr -->
 

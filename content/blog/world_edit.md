@@ -2,6 +2,9 @@
 title = "WorldEdit Commands"
 date = 2018-07-11
 updated = 2018-07-11
+[taxonomies]
+category = ["games"]
+tags = ["minecraft", "worldedit", "tips"]
 +++
 
 [WorldEdit](https://dev.bukkit.org/projects/worldedit) is an extremely powerful tool for modifying entire worlds within [Minecraft](https://minecraft.net), which can be used as either a mod for your single-player worlds or as a plugin for your [Bukkit](https://getbukkit.org/) servers.

@@ -1,6 +1,6 @@
 +++
-title = "My Blog"
+title = "My Golb"
 sort_by = "date"
-template = "blog.html"
+template = "golb.html"
 page_template = "blog-page.html"
 +++

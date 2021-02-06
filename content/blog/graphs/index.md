@@ -2,6 +2,9 @@
 title = "Graphs"
 date = 2017-06-02
 updated = 2017-06-02
+[taxonomies]
+category = ["algos"]
+tags = ["graphs"]
 +++
 
 <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
