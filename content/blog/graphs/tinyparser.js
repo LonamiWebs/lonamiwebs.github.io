@@ -43,7 +43,7 @@ const mathify = content => {
   return `<em class="math">${result.trim()}</em>`
 }
 
-const parse_maths = html => html.replaceAll(/\\\([^\\]+\\\)/g, match =>
+const parse_maths = html => html.replaceAll(/\(\(.+?\)\)/g, match =>
   mathify(match.slice(2, -2))
 );
 
