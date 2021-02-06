@@ -1,0 +1,212 @@
+/* main */
+body {
+    background-color: #FFFFF0;
+    margin: 0;
+}
+
+nav, main {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+main {
+    padding: 10px 20px;
+    border-radius: 4px;
+    background-color: #fffff7;
+    box-shadow: 0 0 10px #eee;
+}
+
+/* navigation */
+nav.sections {
+    margin-top: 40px;
+    display: block;
+}
+
+nav.sections ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    margin-bottom: 8px;
+}
+
+nav.sections li {
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+    display: inline;
+    margin: 0 -2px;
+    font-size: 1.3em;
+}
+
+nav.sections a {
+    color: #787878;
+    border-bottom: solid 2px #A8A8A8;
+    padding: 0 16px;
+}
+
+nav.sections a.selected, nav.sections a:hover {
+    color: #000000;
+    border-bottom: solid 2px #444444;
+}
+
+/* headers */
+h1, h2 {
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+    font-size: 200%;
+    font-weight: lighter;
+    text-transform: capitalize;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #000;
+    text-align: center;
+}
+
+h1.title {
+    text-align: center;
+    font-family: serif;
+    font-size: 2.5em;
+    font-weight: lighter;
+    font-variant-caps: small-caps;
+    border-bottom: 4px double #000;
+}
+
+h1:not(.title):hover .anchor, h2:hover .anchor, h3:hover .anchor, h4:hover .anchor, h5:hover .anchor, h6:hover .anchor {
+    opacity: 1;
+}
+
+.anchor {
+    float: left;
+    padding-right: 0.4ch;
+    margin-left: -1.3ch;
+    opacity: 0;
+    transition: opacity 150ms;
+}
+
+/* body */
+p, li, dl {
+    font-family: Tahoma, Geneva, sans-serif;
+    font-size: 1.1em;
+    line-height: 1.5;
+}
+
+img {
+    max-width: 100%;
+}
+
+.dim {
+    color: #999;
+    font-size: smaller;
+}
+
+a {
+    text-decoration: none;
+    color: #f74c00;
+    border-bottom: 0 dashed rgba(0, 0, 0, 0);
+    transition: color 300ms, border-bottom 300ms;
+}
+
+a:hover {
+    color: #e33b26;
+    border-bottom: 1px solid #e33b26;
+}
+
+blockquote {
+    border-left: 4px solid #000;
+    padding-left: 8px;
+    font-style: italic;
+    color: #444;
+}
+
+.footnote:target {
+    background-color: rgba(255, 255, 0, 0.2);
+}
+
+dl img {
+    margin-bottom: -0.4em;
+    margin-right: 0.6em;
+}
+
+dd {
+    margin-bottom: 1em;
+}
+
+div.time {
+    text-align: right;
+    font-style: italic;
+    color: #777;
+    font-size: 0.9em;
+}
+
+hr {
+    border: 0;
+    border-bottom: 2px dashed #aaa;
+}
+
+/* code */
+pre {
+    background-color: #eee;
+    padding: 4px;
+    overflow: auto;
+    max-height: 480px;
+}
+
+kbd {
+    padding: 3px 5px;
+    font: 0.9em monospace;
+    color: #333;
+    background-color: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 0 #ddd;
+}
+
+/* tables */
+table {
+    border-collapse: collapse;
+}
+
+th {
+    background-color: #f7f7e8;
+}
+
+th, td {
+    padding: 0.5em;
+    border: 1px solid #aaa;
+}
+
+tr:nth-child(even) {
+    background-color: #f7f7e8;
+}
+
+/* graphs post */
+div.matrix table {
+    border-width: 0 2pt 0 2pt;
+    border-style: solid;
+    border-color: #000;
+}
+
+/* poor man's matrix */
+div.matrix tr:first-child td:first-child, div.matrix tr:first-child td:last-child {
+    border-top: 2pt solid #000;
+}
+
+div.matrix tr:last-child td:first-child, div.matrix tr:last-child td:last-child {
+    border-bottom: 2pt solid #000;
+}
+
+div.matrix td {
+    border: none;
+}
+
+em.math {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: larger;
+}
+
+/* special */
+::-moz-selection {
+    background-color: #FFAA00;
+    color: #000000;
+}
+
+::selection {
+    background-color: #FFAA00;
+    color: #000000;
+}
