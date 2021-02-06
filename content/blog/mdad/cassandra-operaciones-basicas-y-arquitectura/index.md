@@ -1,8 +1,8 @@
-```meta
-title: Cassandra: Operaciones Básicas y Arquitectura
-published: 2020-03-05T02:00:41+00:00
-updated: 2020-03-20T11:36:18+00:00
-```
++++
+title = "Cassandra: Operaciones Básicas y Arquitectura"
+date = 2020-03-05T02:00:41+00:00
+updated = 2020-03-20T11:36:18+00:00
++++
 Este es el segundo post en la serie sobre Cassandra, con una breve descripción de las operaciones básicas (tales como inserción, recuperación e indexado), y ejecución por completo junto con el modelo de datos y arquitectura.
 
 Otros posts en esta serie:

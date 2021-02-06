@@ -1,10 +1,8 @@
-```meta
-created: 2020-05-10
-updated: 2020-05-22
-```
-
-Tips for Outpost
-================
++++
+title = "Tips for Outpost"
+date = 2020-05-10
+updated = 2020-05-22
++++
 
 [Outpost](https://store.steampowered.com/app/1127110/Outpost/) is a fun little game by Open Mid Interactive that has popped in recently in my recommended section of Steam, and I decided to give it a try.
 

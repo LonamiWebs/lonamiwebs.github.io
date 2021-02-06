@@ -1,8 +1,8 @@
-```meta
-title: A practical example with Hadoop
-published: 2020-04-01T02:00:00+00:00
-updated: 2020-04-03T08:43:41+00:00
-```
++++
+title = "A practical example with Hadoop"
+date = 2020-04-01T02:00:00+00:00
+updated = 2020-04-03T08:43:41+00:00
++++
 
 In our [previous Hadoop post](/blog/ribw/introduction-to-hadoop-and-its-mapreduce/), we learnt what it is, how it originated, and how it works, from a theoretical standpoint. Here we will instead focus on a more practical example with Hadoop.
 
@@ -131,7 +131,7 @@ Hooray! We should have a new `results/` folder along with the following files:
 ```
 $ ls results
 part-r-00000  _SUCCESS
-$ cat results/part-r-00000 
+$ cat results/part-r-00000
 	154
 0	2
 1	3

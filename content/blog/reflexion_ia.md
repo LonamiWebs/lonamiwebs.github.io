@@ -1,10 +1,8 @@
-```meta
-created: 2016-06-13
-modified: 2016-06-13
-```
-
-Reflexión sobre la Inteligencia artificial
-==========================================
++++
+title = "TITReflexión sobre la Inteligencia artificialO"
+date = 2016-06-13
+updated = 2016-06-13
++++
 
 > Nota: esta reflexión ha sido sacada de una conversación en Telegram, aunque ha sido lo más adaptada posible a formato de blog.
 

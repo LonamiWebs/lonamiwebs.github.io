@@ -1,14 +1,12 @@
-```meta
-created: 2017-06-02
-updated: 2017-06-02
-```
++++
+title = "Graphs"
+date = 2017-06-02
+updated = 2017-06-02
++++
 
 <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
 <noscript>There are a few things which won't render unless you enable
 JavaScript. No tracking, I promise!</noscript>
-
-Graphs
-======
 
 > Don't know English? [Read the Spanish version instead](spanish.html).
 
@@ -20,7 +18,7 @@ Graphs
   s_2   & V &   &   &   & V     \\
   s_3   &   &   &   & V &       \\
   s_4   &   & V & V &   &       \\
-  s_5   & V &   &   & V & 
+  s_5   & V &   &   & V &
  \end{bmatrix}\)
 
   <p>This is known as a <i>"table of direct interconnections"</i>.</p>
@@ -131,7 +129,7 @@ Graphs
     &   &   &   &   \\
     &   &   &   &   \\
     &   &   &   &   \\
-    &   &   &   &  
+    &   &   &   &
   \end{bmatrix}\)
 
   <p>We don't need to calculate anymore. We now know that the graph is

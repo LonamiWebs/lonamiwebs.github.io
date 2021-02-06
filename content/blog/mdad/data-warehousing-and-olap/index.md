@@ -1,8 +1,8 @@
-```meta
-title: Data Warehousing and OLAP
-published: 2020-03-23T01:00:00+00:00
-updated: 2020-04-01T09:45:41+00:00
-```
++++
+title = "Data Warehousing and OLAP"
+date = 2020-03-23T01:00:00+00:00
+updated = 2020-04-01T09:45:41+00:00
++++
 
 Business intelligence (BI) refers to systems used to gain insights from data, traditionally taken from relational databases and being used to build a data warehouse. Performance and scalability are key aspects of BI systems.
 

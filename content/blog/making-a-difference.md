@@ -1,8 +1,7 @@
-```meta
-created: 2020-08-24
-```
-
-# Making a Difference
++++
+title = "Making a Difference"
+date = 2020-08-24
++++
 
 When I've thought about what "making a difference" means, I've always seen it as having to do something at very large scales. Something that changes everyone's lives. But I've realized that it doesn't need the case.
 

@@ -1,8 +1,8 @@
-```meta
-title: Visualizing Cáceres’ OpenData
-published: 2020-03-09T00:00:08+00:00
-updated: 2020-03-19T14:38:41+00:00
-```
++++
+title = "Visualizing Cáceres’ OpenData"
+date = 2020-03-09T00:00:08+00:00
+updated = 2020-03-19T14:38:41+00:00
++++
 
 The city of Cáceres has online services to provide [Open Data](http://opendata.caceres.es/) over a wide range of [categories](http://opendata.caceres.es/dataset), all of which are very interesting to explore!
 

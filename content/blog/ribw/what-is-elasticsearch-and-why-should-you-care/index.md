@@ -1,8 +1,8 @@
-```meta
-title: What is ElasticSearch and why should you care?
-published: 2020-03-18T02:00:00+00:00
-updated: 2020-03-27T11:04:45+00:00
-```
++++
+title = "What is ElasticSearch and why should you care?"
+date = 2020-03-18T02:00:00+00:00
+updated = 2020-03-27T11:04:45+00:00
++++
 
 ElasticSearch is a giant search index with powerful analytics capabilities. It’s like a database and search engine on steroids, really easy and fast to get up and running. One can think of it as your own Google, a search engine with analytics.
 

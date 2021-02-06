@@ -1,8 +1,8 @@
-```meta
-title: Privado: NoSQL evaluation
-published: 2020-03-16T00:00:35+00:00
-updated: 2020-03-28T19:22:31+00:00
-```
++++
+title = "Privado: NoSQL evaluation"
+date = 2020-03-16T00:00:35+00:00
+updated = 2020-03-28T19:22:31+00:00
++++
 
 This evaluation is based on the criteria for the first delivery described by Trabajos en grupo sobre Bases de Datos NoSQL.
 

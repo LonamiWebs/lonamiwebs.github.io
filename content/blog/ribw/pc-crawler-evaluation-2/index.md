@@ -1,8 +1,8 @@
-```meta
-title: Privado: PC-Crawler evaluation 2
-published: 2020-03-16T01:00:47+00:00
-updated: 2020-03-28T10:29:49+00:00
-```
++++
+title = "Privado: PC-Crawler evaluation 2"
+date = 2020-03-16T01:00:47+00:00
+updated = 2020-03-28T10:29:49+00:00
++++
 
 As the student `a(i)` where `i = 9`, I have been assigned to evaluate students `a(i - 1)` and `a(i - 2)`, these being:
 

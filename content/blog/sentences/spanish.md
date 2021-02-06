@@ -1,10 +1,8 @@
-```meta
-created: 2018-01-31
-updated: 2018-01-31
-```
-
-Frases
-======
++++
+title = "Frases"
+date = 2018-01-31
+updated = 2018-01-31
++++
 
 Simplemente algunas frases que se han ido amontonando a lo largo de los años y que creo que merecen persistir en algún lugar.
 
@@ -26,4 +24,3 @@ Simplemente algunas frases que se han ido amontonando a lo largo de los años y 
 * Prefiero ser feliz a llevar la razón.
 * Los motores no mueven la nave en absoluto. La nave se queda donde está y los motores mueven el universo a su alrededor.
 * Si nunca aspiro a llegar, nunca llegaré
-

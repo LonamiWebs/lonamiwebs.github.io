@@ -1,8 +1,8 @@
-```meta
-title: How does Google’s Search Engine work?
-published: 2020-03-18T01:00:00+00:00
-updated: 2020-03-28T10:17:09+00:00
-```
++++
+title = "How does Google’s Search Engine work?"
+date = 2020-03-18T01:00:00+00:00
+updated = 2020-03-28T10:17:09+00:00
++++
 
 The original implementation was written in C/++ for Linux/Solaris.
 

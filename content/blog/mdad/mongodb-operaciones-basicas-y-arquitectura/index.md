@@ -1,8 +1,8 @@
-```meta
-title: MongoDB: Operaciones Básicas y Arquitectura
-published: 2020-03-05T03:00:53+00:00
-updated: 2020-03-20T11:42:15+00:00
-```
++++
+title = "MongoDB: Operaciones Básicas y Arquitectura"
+date = 2020-03-05T03:00:53+00:00
+updated = 2020-03-20T11:42:15+00:00
++++
 
 Este es el segundo post en la serie sobre MongoDB, con una breve descripción de las operaciones básicas (tales como inserción, recuperación e indexado), y ejecución por completo junto con el modelo de datos y arquitectura.
 
@@ -105,7 +105,7 @@ Donde el primer parámetro es el nombre que le queremos asignar a la colección,
     </code>
     ,
  permite una colección limitada. Una colección limitada es una colección
- de tamaño fijo que sobrescribe automáticamente sus entradas más 
+ de tamaño fijo que sobrescribe automáticamente sus entradas más
 antiguas cuando alcanza su tamaño máximo. Si especifica
     <code>
      true

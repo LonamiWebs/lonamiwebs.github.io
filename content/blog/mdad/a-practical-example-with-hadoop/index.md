@@ -1,8 +1,8 @@
-```meta
-title: A practical example with Hadoop
-published: 2020-03-30T01:00:00+00:00
-updated: 2020-04-18T13:25:43+00:00
-```
++++
+title = "A practical example with Hadoop"
+date = 2020-03-30T01:00:00+00:00
+updated = 2020-04-18T13:25:43+00:00
++++
 
 In our [previous Hadoop post](/blog/mdad/introduction-to-hadoop-and-its-mapreduce/), we learnt what it is, how it originated, and how it works, from a theoretical standpoint. Here we will instead focus on a more practical example with Hadoop.
 
@@ -155,7 +155,7 @@ Hooray! We should have a new `results/` folder along with the following files:
 ```
 $ ls results
 part-r-00000  _SUCCESS
-$ cat results/part-r-00000 
+$ cat results/part-r-00000
 1901	317
 1902	244
 ```

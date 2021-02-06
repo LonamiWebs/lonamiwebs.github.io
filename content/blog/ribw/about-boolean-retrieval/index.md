@@ -1,8 +1,8 @@
-```meta
-title: About Boolean Retrieval
-published: 2020-02-25T00:00:29+00:00
-updated: 2020-03-18T09:38:02+00:00
-```
++++
+title = "About Boolean Retrieval"
+date = 2020-02-25T00:00:29+00:00
+updated = 2020-03-18T09:38:02+00:00
++++
 
 This entry will discuss the section on the _[Boolean retrieval](https://nlp.stanford.edu/IR-book/pdf/01bool.pdf)_ section of the book _[An Introduction to Information Retrieval](https://nlp.stanford.edu/IR-book/pdf/irbookprint.pdf)_.
 

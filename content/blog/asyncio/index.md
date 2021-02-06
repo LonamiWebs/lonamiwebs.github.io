@@ -1,10 +1,8 @@
-```meta
-created: 2018-06-13
-updated: 2020-10-03
-```
-
-An Introduction to Asyncio
-==========================
++++
+title = "An Introduction to Asyncio"
+date = 2018-06-13
+updated = 2020-10-03
++++
 
 Index
 -----

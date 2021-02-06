@@ -1,10 +1,8 @@
-```meta
-created: 2016-02-24
-updated: 2016-03-05
-```
-
-Inteligencia artificial
-=======================
++++
+title = "Inteligencia artificial"
+date = 2016-02-24
+updated = 2016-03-05
++++
 
 Índice
 ------

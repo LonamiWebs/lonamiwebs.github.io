@@ -1,8 +1,8 @@
-```meta
-title: Cassandra: Basic Operations and Architecture
-published: 2020-03-05T02:00:36+00:00
-updated: 2020-03-24T17:57:05+00:00
-```
++++
+title = "Cassandra: Basic Operations and Architecture"
+date = 2020-03-05T02:00:36+00:00
+updated = 2020-03-24T17:57:05+00:00
++++
 
 This is the second post in the NoSQL Databases series, with a brief description on the basic operations (such as insertion, retrieval, indexing…), and complete execution along with the data model / architecture.
 
@@ -26,7 +26,7 @@ To begin with the basic operations it is necessary to deploy Cassandra:
 $ bin/cassandra
 ```
 
-Once Cassandra is deployed, it is time to open a** CQL Shell**, in **other terminal**, with the command: 
+Once Cassandra is deployed, it is time to open a** CQL Shell**, in **other terminal**, with the command:
 
 ```
 $ bin/cqlsh
@@ -37,11 +37,11 @@ It is possible to check if Cassandra is deployed if the SQL Shell prints the nex
 ![](uwqQgQte-cuYb_pePFOuY58re23kngrDKNgL1qz4yOfnBDZkqMIH3fFuCrye.png)
 _CQL Shell_
 
-## Create/Insert 
+## Create/Insert
 
-### DDL (Data Definition Language) 
+### DDL (Data Definition Language)
 
-#### Create keyspace 
+#### Create keyspace
 
 A keyspace is created using a **CREATE KEYSPACE **statement:
 
@@ -53,7 +53,7 @@ The supported “**options**” are:
 
 * “**replication**”: this is **mandatory **and defines the **replication strategy** and the **replication factor** (the number of nodes that will have a copy of the data). Within this option there is a property called “**class**” in which the **replication strategy** is specified (“SimpleStrategy” or “NetworkTopologyStrategy”)
 * “**durable_writes**”: this is **not mandatory** and it is possible to use the **commit logs for updates**.
-Attempting to create an already existing keyspace will return an error unless the **IF NOT EXISTS **directive is used. 
+Attempting to create an already existing keyspace will return an error unless the **IF NOT EXISTS **directive is used.
 
 The example associated to this statement is create a keyspace with name “test_keyspace” with “SimpleStrategy” as “class” of replication and a “replication_factor” of 3.
 
@@ -63,7 +63,7 @@ The example associated to this statement is create a keyspace with name “test_
                         'replication_factor' : 3};
 ```
 
-The **USE **statement allows to **change** the current **keyspace**. The syntax of this statement is very simple: 
+The **USE **statement allows to **change** the current **keyspace**. The syntax of this statement is very simple:
 
 ```
 **USE** keyspace_name;
@@ -78,7 +78,7 @@ It is also possible to get the metadata from a keyspace with the **DESCRIBE **st
 **DESCRIBE** KEYSPACES | KEYSPACE keyspace_name;
 ```
 
-#### Create table 
+#### Create table
 
 Creating a new table uses the **CREATE TABLE **statement:
 
@@ -180,7 +180,7 @@ For example we are going to retrieve all the information about those values from
 ![](s6GrKIGATvOSD7oGRNScUU5RnLN_-3X1JXvnVi_wDT_hrmPMZdnCdBI8DpIJ.png)
 _SELECT statement_
 
-Furthermore, we are going to test the SELECT JSON statement. For this, we are going to retrieve only the species name with a population of 0. 
+Furthermore, we are going to test the SELECT JSON statement. For this, we are going to retrieve only the species name with a population of 0.
 
 ```
 **SELECT** JSON species **FROM** species_table **WHERE** population = 0 ALLOW FILTERING;
@@ -189,11 +189,11 @@ Furthermore, we are going to test the SELECT JSON statement. For this, we are go
 ![](Up_eHlqKQp2RI5XIbgPOvj1B5J3gLxz7v7EI0NDRgezQTipecdfDT6AQoso0.png)
 _SELECT JSON statement_
 
-## Update 
+## Update
 
 ### DDL (Data Definition Language)
 
-#### Alter keyspace 
+#### Alter keyspace
 
 The statement **ALTER KEYSPACE **allows to modify the options of a keyspace:
 
@@ -232,7 +232,7 @@ Another example is to DROP the column called “sex” from the table “species
 **ALTER** **TABLE** species_table **DROP** sex;
 ```
 
- Finally, alter the comment with the WITH clause and set the comment to “All species records”. 
+ Finally, alter the comment with the WITH clause and set the comment to “All species records”.
 
 ```
 **ALTER** **TABLE** species_table **WITH** **comment**='All species records';
@@ -302,7 +302,7 @@ Dropping a table uses the **DROP TABLE **statement:
 **DROP** **TABLE** [ **IF** **EXISTS** ] table_name;
 ```
 
- For example, drop the table called “species_2” if it exists: 
+ For example, drop the table called “species_2” if it exists:
 
 ```
 **DROP** **TABLE** **IF** **EXISTS** species_2;
@@ -339,7 +339,7 @@ Deleting rows or parts of rows uses the **DELETE **statement:
                       [ **IF** ( **EXISTS** | condition ( **AND** condition )*) ]
 ```
 
-Now we are going to delete the value of the column “average_size” from “Cloned Sheep”. 
+Now we are going to delete the value of the column “average_size” from “Cloned Sheep”.
 
 ```
 **DELETE** average_size **FROM** species_table **WHERE** species = 'Cloned Sheep';
@@ -348,7 +348,7 @@ Now we are going to delete the value of the column “average_size” from “Cl
 ![](CyuQokVL5J9TAelq-WEWhNl6kFtbIYs0R1AeU5NX4EkG-YQI81mNHdnf2yWN.png)
 _DELETE value statement_
 
-And we are going to delete the same row as mentioned before. 
+And we are going to delete the same row as mentioned before.
 
 ```
 **DELETE** **FROM** species_table **WHERE** species = 'Cloned Sheep';
@@ -390,7 +390,7 @@ _BATCH statement_
 
 ## Index
 
-CQL support creating secondary indexes on tables, allowing queries on the table to use those indexes. 
+CQL support creating secondary indexes on tables, allowing queries on the table to use those indexes.
 
 **Creating **a secondary index on a table uses the **CREATE INDEX **statement:
 
@@ -406,13 +406,13 @@ For example we are going to create a index called “population_idx” that is r
 **CREATE** **INDEX** population_idx **ON** species_table (population);
 ```
 
-**Dropping **a secondary index uses the **DROP INDEX** statement: 
+**Dropping **a secondary index uses the **DROP INDEX** statement:
 
 ```
 **DROP** **INDEX** [ **IF** **EXISTS** ] index_name;
 ```
 
-Now, we are going to drop the previous index: 
+Now, we are going to drop the previous index:
 
 ```
 **DROP** **INDEX** **IF** **EXISTS** population_idx;

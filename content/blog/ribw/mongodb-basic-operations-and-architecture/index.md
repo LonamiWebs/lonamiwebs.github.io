@@ -1,8 +1,8 @@
-```meta
-title: MongoDB: Basic Operations and Architecture
-published: 2020-03-05T04:00:08+00:00
-updated: 2020-04-08T17:36:25+00:00
-```
++++
+title = "MongoDB: Basic Operations and Architecture"
+date = 2020-03-05T04:00:08+00:00
+updated = 2020-04-08T17:36:25+00:00
++++
 
 This is the second post in the MongoDB series, where we will take a look at the [CRUD operations](https://stackify.com/what-are-crud-operations/) they support, the data model and architecture used.
 

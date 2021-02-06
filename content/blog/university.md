@@ -1,8 +1,7 @@
-```meta
-published: 2020-07-03
-```
-
-# University posts
++++
+title = "University posts"
+date = 2020-07-03
++++
 
 During university, there were a few subjects where I had to write blog posts for (either as
 evaluable tasks or just for fun). Currently, these are:

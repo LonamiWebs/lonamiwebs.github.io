@@ -1,8 +1,8 @@
-```meta
-title: Build your own PC
-published: 2020-02-25T02:00:12+00:00
-updated: 2020-03-18T09:38:46+00:00
-```
++++
+title = "Build your own PC"
+date = 2020-02-25T02:00:12+00:00
+updated = 2020-03-18T09:38:46+00:00
++++
 
 _…where PC obviously stands for Personal Crawler_.
 

@@ -1,10 +1,8 @@
-```meta
-created: 2016-06-21
-updated: 2016-06-21
-```
-
-Apuntes de bachillerato de Filosofía
-====================================
++++
+title = "Apuntes de bachillerato de Filosofía"
+date = 2016-06-21
+updated = 2016-06-21
++++
 
 Hay asignaturas que merecen la pena, y una de ellas es la filosofía. De verdad. Aprendes un montón de cosas y abres tu mente, comparas muchos puntos de vista y te das cuenta de grandes cosas. Por eso, quiero compartir mis apuntes con todo aquel interesado.
 

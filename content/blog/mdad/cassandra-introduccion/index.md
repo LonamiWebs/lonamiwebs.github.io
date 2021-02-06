@@ -1,8 +1,8 @@
-```meta
-title: Cassandra: Introducción
-published: 2020-03-05T00:00:33+00:00
-updated: 2020-03-30T09:28:07+00:00
-```
++++
+title = "Cassandra: Introducción"
+date = 2020-03-05T00:00:33+00:00
+updated = 2020-03-30T09:28:07+00:00
++++
 
 ![](1200px-Cassandra_logo.png)
 

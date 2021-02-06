@@ -1,8 +1,8 @@
-```meta
-title: Developing a Python application for Cassandra
-published: 2020-03-23T00:00:00+00:00
-updated: 2020-04-16T07:52:26+00:00
-```
++++
+title = "Developing a Python application for Cassandra"
+date = 2020-03-23T00:00:00+00:00
+updated = 2020-04-16T07:52:26+00:00
++++
 
 _**Warning**: this post is, in fact, a shameless self-plug to my own library. If you continue reading, you accept that you are okay with this. Otherwise, please close the tab, shut down your computer, and set it on fire.__(Also, that was a joke. Please don’t do that.)_
 
@@ -99,7 +99,7 @@ For each user, execute the statement with the user data as input parameters. Sim
 ```
 def save_users(session, users):
     insert_stmt = session.prepare(
-        'INSERT INTO users (id, first_name, last_name, username) ' 
+        'INSERT INTO users (id, first_name, last_name, username) '
         'VALUES (?, ?, ?, ?)')
 
     for user in users:

@@ -1,8 +1,8 @@
-```meta
-title: Introduction to NoSQL
-published: 2020-02-25T01:00:15+00:00
-updated: 2020-03-18T09:38:23+00:00
-```
++++
+title = "Introduction to NoSQL"
+date = 2020-02-25T01:00:15+00:00
+updated = 2020-03-18T09:38:23+00:00
++++
 
 This post will primarly focus on the talk held in the [GOTO 2012 conference: Introduction to NoSQL by Martin Fowler](https://youtu.be/qI_g07C_Q5I). It can be seen as an informal, summarized transcript of the talk
 

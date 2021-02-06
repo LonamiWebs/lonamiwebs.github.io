@@ -1,10 +1,8 @@
-```meta
-created: 2018-01-31
-updated: 2018-01-31
-```
-
-Sentences
-=========
++++
+title = "Sentences"
+date = 2018-01-31
+updated = 2018-01-31
++++
 
 > Don't know English? [Read the Spanish version instead](spanish.html).
 
@@ -28,4 +26,3 @@ Just a few sentences that I've been gathering among the years and I think are wo
 * I'd rather be happy than be right.
 * The engines don’t move the ship at all. The ship stays where it is and the engines move the universe around it.
 * If I never try getting there, I'll never get there.
-

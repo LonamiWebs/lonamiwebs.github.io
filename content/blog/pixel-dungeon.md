@@ -1,9 +1,7 @@
-```meta
-created: 2019-06-03
-```
-
-Shattered Pixel Dungeon
-=======================
++++
+title = "Shattered Pixel Dungeon"
+date = 2019-06-03
++++
 
 [Shattered Pixel Dungeon](https://shatteredpixel.com/shatteredpd/) is the classic roguelike RPG game with randomly-generated dungeons. As a new player, it was a bit frustrating to be constantly killed on the first levels of the dungeon, but with some practice it's easy to reach high levels if you can kill the first boss.
 

@@ -1,8 +1,8 @@
-```meta
-title: Introduction to Hadoop and its MapReduce
-published: 2020-03-30T00:00:00+00:00
-updated: 2020-04-01T11:01:46+00:00
-```
++++
+title = "Introduction to Hadoop and its MapReduce"
+date = 2020-03-30T00:00:00+00:00
+updated = 2020-04-01T11:01:46+00:00
++++
 
 Hadoop is an open-source, free, Java-based programming framework that helps processing large datasets in a distributed environment and the problems that arise when trying to harness the knowledge from BigData, capable of running on thousands of nodes and dealing with petabytes of data. It is based on Google File System (GFS) and originated from the work on the Nutch open-source project on search engines.
 

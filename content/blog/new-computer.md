@@ -1,9 +1,8 @@
-```meta
-created: 2020-06-19
-modified: 2020-07-03
-```
-
-# My new computer
++++
+title = "My new computer"
+date = 2020-06-19
+updated = 2020-07-03
++++
 
 This post will be mostly me ranting about setting up a new laptop, but I also just want to share my upgrade. If you're considering installing Arch Linux with dual-boot for Windows, maybe this post will help. Or perhaps you will learn something new to troubleshoot systems in the future. Let's begin!
 

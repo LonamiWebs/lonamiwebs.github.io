@@ -1,8 +1,8 @@
-```meta
-title: Big Data
-published: 2020-02-25T01:00:30+00:00
-updated: 2020-03-18T09:51:17+00:00
-```
++++
+title = "Big Data"
+date = 2020-02-25T01:00:30+00:00
+updated = 2020-03-18T09:51:17+00:00
++++
 
 Big Data sounds like a buzzword you may be hearing everywhere, but it’s actually here to stay!
 

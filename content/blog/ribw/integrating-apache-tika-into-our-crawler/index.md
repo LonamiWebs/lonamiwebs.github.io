@@ -1,8 +1,8 @@
-```meta
-title: Integrating Apache Tika into our Crawler
-published: 2020-03-18T00:00:00+00:00
-updated: 2020-03-25T17:38:07+00:00
-```
++++
+title = "Integrating Apache Tika into our Crawler"
+date = 2020-03-18T00:00:00+00:00
+updated = 2020-03-25T17:38:07+00:00
++++
 
 [In our last crawler post](/blog/ribw/upgrading-our-baby-crawler/), we detailed how our crawler worked, and although it did a fine job, it’s time for some extra upgrading.
 

@@ -1,10 +1,8 @@
-```meta
-created: 2017-05-13
-updated: 2019-02-16
-```
-
-Installing NixOS
-================
++++
+title = "Installing NixOS"
+date = 2017-05-13
+updated = 2019-02-16
++++
 
 Update
 ------

@@ -1,10 +1,8 @@
-```meta
-created: 2019-02-15
-updated: 2019-02-16
-```
-
-Installing NixOS, Take 2
-========================
++++
+title = "Installing NixOS, Take 2"
+date = 2019-02-15
+updated = 2019-02-16
++++
 
 This is my second take at installing NixOS, after a while being frustrated with Arch Linux and the fact that a few kernel upgrades ago, the system crashed randomly from time to time. `journalctl` did not have any helpful hints and I thought reinstalling could be worthwhile anyway.
 

@@ -1,8 +1,8 @@
-```meta
-title: Google’s BigTable
-published: 2020-04-01T00:00:00+00:00
-updated: 2020-04-03T09:30:05+00:00
-```
++++
+title = "Google’s BigTable"
+date = 2020-04-01T00:00:00+00:00
+updated = 2020-04-03T09:30:05+00:00
++++
 
 Let’s talk about BigTable, and why it is what it is. But before we get into that, let’s see some important aspects anybody should consider when dealing with a lot of data (something BigTable does!).
 

@@ -1,8 +1,8 @@
-```meta
-title: Upgrading our Baby Crawler
-published: 2020-03-11T00:00:07+00:00
-updated: 2020-03-18T09:49:33+00:00
-```
++++
+title = "Upgrading our Baby Crawler"
+date = 2020-03-11T00:00:07+00:00
+updated = 2020-03-18T09:49:33+00:00
++++
 
 In our [last post on this series](/blog/ribw/build-your-own-pc/), we presented the code for our Personal Crawler. However, we didn’t quite explain what a crawler even is! We will use this moment to go a bit more in-depth, and make some upgrades to it.
 

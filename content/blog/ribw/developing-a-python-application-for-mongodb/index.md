@@ -1,8 +1,8 @@
-```meta
-title: Developing a Python application for MongoDB
-published: 2020-03-25T00:00:04+00:00
-updated: 2020-04-16T08:01:23+00:00
-```
++++
+title = "Developing a Python application for MongoDB"
+date = 2020-03-25T00:00:04+00:00
+updated = 2020-04-16T08:01:23+00:00
++++
 
 This is the third and last post in the MongoDB series, where we will develop a Python application to process and store OpenData inside Mongo.
 
@@ -644,7 +644,7 @@ Time to put everything together! We wil include our function to make REST querie
                                 <li>There are <b>{area_info.census_count} persons </b> within the area</li>
                             </ul>
                         </div>
-                        {#if area_info.trees_per_type.length > 0} 
+                        {#if area_info.trees_per_type.length > 0}
                             <div class="text-center">
                                 <h2 class="m-1 bg-dark text-white">Tree count per type</h2>
                             </div>

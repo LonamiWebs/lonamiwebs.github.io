@@ -1,8 +1,8 @@
-```meta
-title: MongoDB: Introducción
-published: 2020-03-05T01:00:18+00:00
-updated: 2020-03-20T10:31:10+00:00
-```
++++
+title = "MongoDB: Introducción"
+date = 2020-03-05T01:00:18+00:00
+updated = 2020-03-20T10:31:10+00:00
++++
 
 Este es el primer post en la serie sobre Mongo, en el cuál introduciremos dicha bases de datos NoSQL y veremos sus características e instalación.
 
@@ -27,16 +27,16 @@ MongoDB está escrito en C++, aunque las consultas se hacen pasando objetos JSON
 {
         "_id" : ObjectId("52f602d787945c344bb4bda5"),
         "name" : "Tyrion",
-        "hobbies" : [ 
-            "books", 
-            "girls", 
+        "hobbies" : [
+            "books",
+            "girls",
             "wine"
         ],
-        "friends" : [ 
+        "friends" : [
             {
                 "name" : "Bronn",
                 "ocuppation" : "sellsword"
-            }, 
+            },
             {
                 "name" : "Shae",
                 "ocuppation" : "handmaiden"
@@ -66,7 +66,7 @@ En cuanto a la arquitectura, podríamos decir que divide en tres partes: las bas
 
 * **Base de datos**: cada una de las bases de datos tiene un conjunto propio de archivos en el sistema de archivos con diversas bases de datos existentes en un solo servidor.
 * **Colección**: un conjunto de documentos de base de datos. El equivalente RDBMS de la colección es una tabla. Toda colección existe dentro de una única base de datos.
-* **Documento**: un conjunto de pares clave/valor. Los documentos están asociados con esquemas dinámicos. La ventaja de tener esquemas dinámicos es que el documento en una sola colección no tiene que tener la misma estructura o campos. 
+* **Documento**: un conjunto de pares clave/valor. Los documentos están asociados con esquemas dinámicos. La ventaja de tener esquemas dinámicos es que el documento en una sola colección no tiene que tener la misma estructura o campos.
 
 ## Arista dentro del Teorema CAP
 
@@ -74,7 +74,7 @@ En cuanto a la arquitectura, podríamos decir que divide en tres partes: las bas
 
 MongoDB es CP por defecto, es decir, garantiza consistencia y tolerancia a particiones (fallos). Pero también podemos configurar el nivel de consistencia, eligiendo el número de nodos a los que se replicarán los datos. O podemos configurar si se pueden leer datos de los nodos secundarios (en MongoDB solo hay un servidor principal, que es el único que acepta inserciones o modificaciones). Si permitimos leer de un nodo secundario mediante la replicación, sacrificamos consistencia, pero ganamos disponibilidad.
 
-## Descarga e instalación 
+## Descarga e instalación
 
 ### Windows
 
@@ -82,7 +82,7 @@ Descargar el archivo desde [https://www.mongodb.com/download-center#production](
 
 1. Doble clic en el archivo `.msi`
 2. El instalador de Windows lo guía a través del proceso de instalación.
-Si elige la opción de instalación personalizada, puede especificar un directorio de instalación. 
+Si elige la opción de instalación personalizada, puede especificar un directorio de instalación.
 MongoDB no tiene ninguna otra dependencia del sistema. Puede instalar y ejecutar MongoDB desde cualquier carpeta que elija.
 3. Ejecutar el `.exe` que hemos instalado.
 

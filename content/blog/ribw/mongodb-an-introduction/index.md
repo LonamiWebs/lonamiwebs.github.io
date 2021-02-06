@@ -1,8 +1,8 @@
-```meta
-title: MongoDB: an Introduction
-published: 2020-03-05T01:00:06+00:00
-updated: 2020-04-08T17:38:22+00:00
-```
++++
+title = "MongoDB: an Introduction"
+date = 2020-03-05T01:00:06+00:00
+updated = 2020-04-08T17:38:22+00:00
++++
 
 This is the first post in the MongoDB series, where we will introduce the MongoDB database system and take a look at its features and installation methods.
 
@@ -18,13 +18,13 @@ This post is co-authored wih Classmate.
 
 ![NoSQL database – MongoDB – First delivery](mongodb.png)
 
-## Purpose of technology 
+## Purpose of technology
 
 MongoDB is a **general purpose, document-based, distributed database** built for modern application developers and for the cloud era, with the scalability and flexibility that you want with the querying and indexing that you need. It being a document database means it stores data in JSON-like documents.
 
 The Mongo team believes this is the most natural way to think about data, which is (they claim) much more expressive and powerful than the traditional row/column model, since programmers think in objects.
 
-## How it works 
+## How it works
 
 MongoDB’s architecture can be summarized as follows:
 
@@ -49,7 +49,7 @@ MongoDB also supports the creation of **indices**, similar to those in other dat
 
 In Mongo, the **aggregation pipeline** allows us to filter and analyze data based on a given set of criteria. For example, we could pull all the documents in the `restaurants` collection that have a `category` of `Bakery` using the `$match` operator. Then, we can group them by their star rating using the `$group` operator. Using the accumulator operator, `$sum`, we can see how many bakeries in our collection have each star rating.
 
-## Features 
+## Features
 
 The features can be seen all over the place in their site, because it’s something they make a lot of emphasis on:
 
@@ -63,7 +63,7 @@ The features can be seen all over the place in their site, because it’s someth
 * **A distributed systems design**, which allows developers to intelligently put data where they want it. High availability, horizontal scaling, and geographic distribution are built in and easy to use.
 * **A unified experience** with the freedom to run anywhere, which allows developers to future-proof their work and eliminate vendor lock-in.
 
-## Corner in CAP theorem 
+## Corner in CAP theorem
 
 MongoDB’s position in the CAP theorem (Consistency, Availability, Partition Tolerance) depends on the database and driver configurations, and the type of disaster.
 
@@ -76,9 +76,9 @@ The general consensus seems to be that Mongo is **CP**.
 
 We will be using the apt-based installation.
 
-The Community version can be downloaded by anyone through [MongoDB Download Center](https://www.mongodb.com/download-center/community), where one can choose the version, Operating System and Package.MongoDB also seems to be [available in Ubuntu’s PPAs](https://packages.ubuntu.com/eoan/mongodb). 
+The Community version can be downloaded by anyone through [MongoDB Download Center](https://www.mongodb.com/download-center/community), where one can choose the version, Operating System and Package.MongoDB also seems to be [available in Ubuntu’s PPAs](https://packages.ubuntu.com/eoan/mongodb).
 
-## Installation 
+## Installation
 
 We will be using an Ubuntu-based system, with apt available. To install MongoDB, we open a terminal and run the following command:
 
@@ -92,7 +92,7 @@ After confirming that we do indeed want to install the package, we should be abl
 mongod --version
 ```
 
-The output should be similar to the following: 
+The output should be similar to the following:
 
 ```
 db version v4.0.16
@@ -106,7 +106,7 @@ build environment:
 	target_arch: x86_64
 ```
 
-## References 
+## References
 
 * [MongoDB’s official site](https://www.mongodb.com/)
 * [What is MongoDB?](https://www.mongodb.com/what-is-mongodb)

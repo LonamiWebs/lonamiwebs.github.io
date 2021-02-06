@@ -1,8 +1,8 @@
-```meta
-title: What is an algorithm?
-published: 2020-02-25T00:00:16+00:00
-updated: 2020-03-18T09:51:02+00:00
-```
++++
+title = "What is an algorithm?"
+date = 2020-02-25T00:00:16+00:00
+updated = 2020-03-18T09:51:02+00:00
++++
 
 Algorithms are a sequence of instructions that can be followed to achieve _something_. That something can be anything, and depends entirely on your problem!
 

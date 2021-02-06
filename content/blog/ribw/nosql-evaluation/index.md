@@ -1,8 +1,8 @@
-```meta
-title: Privado: NoSQL evaluation
-published: 2020-03-16T00:00:15+00:00
-updated: 2020-03-27T11:22:45+00:00
-```
++++
+title = "Privado: NoSQL evaluation"
+date = 2020-03-16T00:00:15+00:00
+updated = 2020-03-27T11:22:45+00:00
++++
 
 I have decided to evaluate Classmate‘s post and Classmate‘s post, because they review databases I have not seen or used before, and I think it would be interesting to see new ones.
 

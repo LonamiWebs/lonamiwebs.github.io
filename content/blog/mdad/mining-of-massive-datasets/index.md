@@ -1,8 +1,8 @@
-```meta
-title: Mining of Massive Datasets
-published: 2020-03-16T01:00:00+00:00
-updated: 2020-03-28T19:09:44+00:00
-```
++++
+title = "Mining of Massive Datasets"
+date = 2020-03-16T01:00:00+00:00
+updated = 2020-03-28T19:09:44+00:00
++++
 
 In this post we will talk about the Chapter 1 of the book Mining of Massive Datasets Leskovec, J. et al., available online, and I will summarize and share my thoughts on it.
 

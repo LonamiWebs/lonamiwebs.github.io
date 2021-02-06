@@ -1,10 +1,8 @@
-```meta
-created: 2016-03-04
-updated: 2018-01-31
-```
-
-Blog de Lonami
-==============
++++
+title = "Blog de Lonami"
+date = 2016-03-04
+updated = 2018-01-31
++++
 
 Hola | Hi.
 

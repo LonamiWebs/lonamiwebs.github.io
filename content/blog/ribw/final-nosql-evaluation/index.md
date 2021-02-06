@@ -1,8 +1,8 @@
-```meta
-title: Privado: Final NoSQL evaluation
-published: 2020-05-13T00:00:00+00:00
-updated: 2020-05-14T07:30:08+00:00
-```
++++
+title = "Privado: Final NoSQL evaluation"
+date = 2020-05-13T00:00:00+00:00
+updated = 2020-05-14T07:30:08+00:00
++++
 
 This evaluation is a bit different to my [previous one](/blog/ribw/16/nosql-evaluation/) because this time I have been tasked to evaluate the student `a(i - 2)`, and because I am `a = 9` that happens to be `a(7) =` Classmate.
 
