@@ -38,4 +38,6 @@ The post I have evaluted is Raven.
 
 They have done a good job describing the project’s goals, corner in the CAP theorem, download, and provide an extensive installation section.
 
-They don’t seem to use some of WordPress features, such as lists, but otherwise the post is good and deserves an A grading.
+<!-- TODO if this sentence ends with a dot, zola complains about invalid UTF-8, what? -->
+
+They don’t seem to use some of WordPress features, such as lists, but otherwise the post is good and deserves an A grading
