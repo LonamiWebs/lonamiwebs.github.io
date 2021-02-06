@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="Official Lonami's website">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+    <title>Lonami's Site</title>
+    {% block css %}
+    <link rel="stylesheet" type="text/css" href="/style.css">
+    {% endblock %}
+</head>
+<body>
+    <nav class="sections">
+        <ul>
+            <li><a href="/" class="selected">lonami's site</a></li>
+            <li><a href="/blog">blog</a></li>
+            <li><a href="/golb">golb</a></li>
+        </ul>
+    </nav>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
