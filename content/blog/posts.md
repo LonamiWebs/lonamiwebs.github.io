@@ -1,5 +1,7 @@
-Atemporal Blog Posts
-====================
++++
+title = "Atemporal Blog Posts"
+date = 2018-02-03
++++
 
 These are some interesting posts and links I've found around the web. I believe they are quite interesting and nice reads, so if you have the time, I encourage you to check some out.
 
