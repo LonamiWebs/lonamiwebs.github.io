@@ -7,6 +7,6 @@ mv public/* .
 echo "lonami.dev" > CNAME
 rmdir public/
 git add .
-git commit --amend -m "Deploy site"
-git push --force
+git commit -m "Deploy site"
+git push
 git checkout master
