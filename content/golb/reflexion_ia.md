@@ -1,5 +1,5 @@
 +++
-title = "TITReflexión sobre la Inteligencia artificialO"
+title = "Reflexión sobre la Inteligencia artificial"
 date = 2016-06-13
 updated = 2016-06-13
 +++
