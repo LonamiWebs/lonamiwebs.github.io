@@ -134,6 +134,10 @@ div.time {
     font-size: 0.9em;
 }
 
+div.time p {
+    line-height: 0.5;
+}
+
 hr {
     border: 0;
     border-bottom: 2px dashed #aaa;
