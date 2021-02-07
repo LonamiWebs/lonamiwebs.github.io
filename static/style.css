@@ -106,7 +106,7 @@ h1:not(.title):hover .anchor, h2:hover .anchor, h3:hover .anchor, h4:hover .anch
 }
 
 /* body */
-p, li, dl {
+p, li, dl, summary {
     font-family: Tahoma, Geneva, sans-serif;
     font-size: 1.1em;
     line-height: 1.5;
