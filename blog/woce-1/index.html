@@ -1,0 +1,167 @@
+<!DOCTYPE html><html lang=en><head><meta charset=utf-8><meta name=description content="Official Lonami's website"><meta name=viewport content="width=device-width, initial-scale=1.0, user-scalable=yes"><title> Writing our own Cheat Engine: Introduction | Lonami's Blog </title><link rel=stylesheet href=/style.css><body><article><nav class=sections><ul><li><a href=/>lonami's site</a><li><a href=/blog class=selected>blog</a><li><a href=/golb>golb</a></ul></nav><main><h1 class=title>Writing our own Cheat Engine: Introduction</h1><div class=time><p>2021-02-07</div><p>This is part 1 on the <em>Writing our own Cheat Engine</em> series.<p><a href=https://cheatengine.org/>Cheat Engine</a> is a tool designed to modify single player games and contains other useful tools within itself that enable its users to debug games or other applications. It comes with a memory scanner, (dis)assembler, inspection tools and a handful other things. In this series, we will be writing our own tiny Cheat Engine capable of solving all steps of the tutorial, and diving into how it all works underneath.<p>Needless to say, we're doing this for private and educational purposes only. One has to make sure to not violate the EULA or ToS of the specific application we're attaching to. This series, much like cheatengine.org, does not condone the illegal use of the code shared.<p>Cheat Engine is a tool for Windows, so we will be developing for Windows as well. However, you can also <a href=https://stackoverflow.com/q/12977179/4759433>read memory from Linux-like systems</a>. <a href=https://github.com/scanmem/scanmem>GameConqueror</a> is a popular alternative to Cheat Engine on Linux systems, so if you feel adventurous, you could definitely follow along too! The techniques shown in this series apply regardless of how we read memory from a process. You will learn a fair bit about doing FFI in Rust too.<p>We will be developing the application in Rust, because it enables us to interface with the Windows API easily, is memory safe (as long as we're careful with <code>unsafe</code>!), and is speedy (we will need this for later steps in the Cheat Engine tutorial). You could use any language of your choice though. For example, <a href=https://lonami.dev/blog/ctypes-and-windows/>Python also makes it relatively easy to use the Windows API</a>.<p><a href=https://github.com/cheat-engine/cheat-engine/>Cheat Engine's source code</a> is mostly written in Pascal and C. And it's <em>a lot</em> of code, with a very flat project structure, and files ranging in the thousand lines of code each. It's daunting. It's a mature project, with a lot of knowledge encoded in the code base, and a lot of features like distributed scanning or an entire disassembler. Unfortunately, there's not a lot of comments. For these reasons, I'll do some guesswork when possible as to how it's working underneath, rather than actually digging into what Cheat Engine is actually doing.<p>With that out of the way, let's get started!<h2 id=welcome-to-the-cheat-engine-tutorial>Welcome to the Cheat Engine Tutorial</h2><details open><summary>Cheat Engine Tutorial: Step 1</summary> <blockquote><p>This tutorial will teach you the basics of cheating in video games. It will also show you foundational aspects of using Cheat Engine (or CE for short). Follow the steps below to get started.<ol><li>Open Cheat Engine if it currently isn't running.<li>Click on the "Open Process" icon (it's the top-left icon with the computer on it, below "File".).<li>With the Process List window now open, look for this tutorial's process in the list. It will look something like > "00001F98-Tutorial-x86_64.exe" or "0000047C-Tutorial-i386.exe". (The first 8 numbers/letters will probably be different.)<li>Once you've found the process, click on it to select it, then click the "Open" button. (Don't worry about all the > other buttons right now. You can learn about them later if you're interested.)</ol><p>Congratulations! If you did everything correctly, the process window should be gone with Cheat Engine now attached to the > tutorial (you will see the process name towards the top-center of CE).<p>Click the "Next" button below to continue, or fill in the password and click the "OK" button to proceed to that step.)<p>If you're having problems, simply head over to forum.cheatengine.org, then click on "Tutorials" to view beginner-friendly > guides!</blockquote></details><h2 id=enumerating-processes>Enumerating processes</h2><p>Our first step is attaching to the process we want to work with. But we need a way to find that process in the first place! Having to open the task manager, look for the process we care about, noting down the process ID (PID), and slapping it in the source code is not satisfying at all. Instead, let's enumerate all the processes from within the program, and let the user select one by typing its name.<p>From a quick <a href=https://ddg.gg/winapi%20enumerate%20all%20processes>DuckDuckGo search</a>, we find an official tutorial for <a href=https://docs.microsoft.com/en-us/windows/win32/psapi/enumerating-all-processes>Enumerating All Processes</a>, which leads to the <a href=https://docs.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-enumprocesses><code>EnumProcesses</code></a> call. Cool! Let's slap in the <a href=https://crates.io/crates/winapi><code>winapi</code></a> crate on <code>Cargo.toml</code>, because I don't want to write all the definitions by myself:<pre><code class=language-toml data-lang=toml>[dependencies]
+winapi = { version = "0.3.9", features = ["psapi"] }
+</code></pre><p>Because <a href=https://docs.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-enumprocesses><code>EnumProcesses</code></a> is in <code>Psapi.h</code> (you can see this in the online page of its documentation), we know we'll need the <code>psapi</code> crate feature. Another option is to search for it in the <a href=https://docs.rs/winapi/><code>winapi</code> documentation</a> and noting down the parent module where its stored.<p>The documentation for the method has the following remark:<blockquote><p>It is a good idea to use a large array, because it is hard to predict how many processes there will be at the time you call <strong>EnumProcesses</strong>.</blockquote><p><em>Sidenote: reading the documentation for the methods we'll use from the Windows API is extremely important. There's a lot of gotchas involved, so we need to make sure we're extra careful.</em><p>1024 is a pretty big number, so let's go with that:<pre><code class=language-rust data-lang=rust>use std::io;
+use std::mem;
+use winapi::shared::minwindef::{DWORD, FALSE};
+
+pub fn enum_proc() -> io::Result&LTVec&LTu32>> {
+    let mut pids = Vec::&LTDWORD>::with_capacity(1024);
+    let mut size = 0;
+    // SAFETY: the pointer is valid and the size matches the capacity.
+    if unsafe {
+        winapi::um::psapi::EnumProcesses(
+            pids.as_mut_ptr(),
+            (pids.capacity() * mem::size_of::&LTDWORD>()) as u32,
+            &mut size,
+        )
+    } == FALSE
+    {
+        return Err(io::Error::last_os_error());
+    }
+
+    todo!()
+}
+</code></pre><p>We allocate enough space for 1024 <code>pids</code> in a vector, and pass a mutable pointer to the contents to <code>EnumProcesses</code>. Note that the size of the array is in <em>bytes</em>, not items, so we need to multiply the capacity by the size of <code>DWORD</code>. The API likes to use <code>u32</code> for sizes, unlike Rust which uses <code>usize</code>, so we need a cast.<p>Last, we need another mutable variable where the amount of bytes written is stored, <code>size</code>.<blockquote><p>If the function fails, the return value is zero. To get extended error information, call <a href=https://docs.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-getlasterror><code>GetLastError</code></a>.</blockquote><p>That's precisely what we do. If it returns false (zero), we return the last OS error. Rust provides us with <a href=https://doc.rust-lang.org/stable/std/io/struct.Error.html#method.last_os_error><code>std::io::Error::last_os_error</code></a>, which essentially makes that same call but returns a proper <code>io::Error</code> instance. Cool!<blockquote><p>To determine how many processes were enumerated, divide the <em>lpcbNeeded</em> value by <code>sizeof(DWORD)</code>.</blockquote><p>Easy enough:<pre><code class=language-rust data-lang=rust>let count = size as usize / mem::size_of::&LTDWORD>();
+// SAFETY: the call succeeded and count equals the right amount of items.
+unsafe { pids.set_len(count) };
+Ok(pids)
+</code></pre><p>Rust doesn't know that the memory for <code>count</code> items were initialized by the call, but we do, so we make use of the <a href=https://doc.rust-lang.org/stable/std/vec/struct.Vec.html#method.set_len><code>Vec::set_len</code></a> call to indicate this. The Rust documentation even includes a FFI similar to our code!<p>Let's give it a ride:<pre><code class=language-rust data-lang=rust>fn main() {
+    dbg!(enum_proc().unwrap().len());
+}
+</code></pre><pre><code>>cargo run
+   Compiling memo v0.1.0
+    Finished dev [unoptimized + debuginfo] target(s) in 0.20s
+     Running `target\debug\memo.exe`
+[src\main.rs:27] enum_proc().unwrap().len() = 178
+</code></pre><p>It works! But currently we only have a bunch of process identifiers, with no way of knowing which process they refer to.<blockquote><p>To obtain process handles for the processes whose identifiers you have just obtained, call the <a href=https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-openprocess><code>OpenProcess</code></a> function.</blockquote><p>Oh!<h2 id=opening-a-process>Opening a process</h2><p>The documentation for <code>OpenProcess</code> also contains the following:<blockquote><p>When you are finished with the handle, be sure to close it using the <a href=https://lonami.dev/blog/woce-1/closehandle><code>CloseHandle</code></a> function.</blockquote><p>This sounds to me like the perfect time to introduce a custom <code>struct Process</code> with an <code>impl Drop</code>! We're using <code>Drop</code> to cleanup resources, not behaviour, so it's fine. <a href=https://internals.rust-lang.org/t/pre-rfc-leave-auto-trait-for-reliable-destruction/13825>Using <code>Drop</code> to cleanup behaviour is a bad idea</a>. But anyway, let's get back to the code:<pre><code class=language-rust data-lang=rust>use std::ptr::NonNull;
+use winapi::ctypes::c_void;
+
+pub struct Process {
+    pid: u32,
+    handle: NonNull&LTc_void>,
+}
+
+impl Process {
+    pub fn open(pid: u32) -> io::Result&LTSelf> {
+        todo!()
+    }
+}
+
+impl Drop for Process {
+    fn drop(&mut self) {
+        todo!()
+    }
+}
+</code></pre><p>For <code>open</code>, we'll want to use <code>OpenProcess</code> (and we also need to add the <code>processthreadsapi</code> feature to the <code>winapi</code> dependency in <code>Cargo.toml</code>). It returns a <code>HANDLE</code>, which is a nullable mutable pointer to <code>c_void</code>. If it's null, the call failed, and if it's non-null, it succeeded and we have a valid handle. This is why we use Rust's <a href=https://doc.rust-lang.org/stable/std/ptr/struct.NonNull.html><code>NonNull</code></a>:<pre><code class=language-rust data-lang=rust>// SAFETY: the call doesn't have dangerous side-effects.
+NonNull::new(unsafe { winapi::um::processthreadsapi::OpenProcess(0, FALSE, pid) })
+    .map(|handle| Self { pid, handle })
+    .ok_or_else(io::Error::last_os_error)
+</code></pre><p><code>NonNull</code> will return <code>Some</code> if the pointer is non-null. We map the non-null pointer to a <code>Process</code> instance with <code>Self { .. }</code>. <code>ok_or_else</code> converts the <code>Option</code> to a <code>Result</code> with the error builder function we provide if it was <code>None</code>.<p>The first parameter is a bitflag of permissions we want to have. For now, we can leave it as zero (all bits unset, no specific permissions granted). The second one is whether we want to inherit the handle, which we don't, and the third one is the process identifier. Let's close the resource handle on <code>Drop</code> (after adding <code>handleapi</code> to the crate features):<pre><code class=language-rust data-lang=rust>// SAFETY: the handle is valid and non-null.
+unsafe { winapi::um::handleapi::CloseHandle(self.handle.as_mut()) };
+</code></pre><p><code>CloseHandle</code> can actually fail (for example, on double-close), but given our invariants, it won't. You could add an <code>assert!</code> to panic if this is not the case.<p>We can now open processes, and they will be automatically closed on <code>Drop</code>. Does any of this work though?<pre><code class=language-rust data-lang=rust>fn main() {
+    let mut success = 0;
+    let mut failed = 0;
+    enum_proc().unwrap().into_iter().for_each(|pid| match Process::open(pid) {
+        Ok(_) => success += 1,
+        Err(_) => failed += 1,
+    });
+
+    eprintln!("Successfully opened {}/{} processes", success, success + failed);
+}
+</code></pre><pre><code>>cargo run
+   Compiling memo v0.1.0
+    Finished dev [unoptimized + debuginfo] target(s) in 0.36s
+     Running `target\debug\memo.exe`
+Successfully opened 0/191 processes
+</code></pre><p>…nope. Maybe the documentation for <code>OpenProcess</code> says something?<blockquote><p><code>dwDesiredAccess</code><p>The access to the process object. This access right is checked against the security descriptor for the process. This parameter can be <strong>one or more</strong> of the process access rights.</blockquote><p>One or more, but we're setting zero permissions. I told you, reading the documentation is important! The <a href=https://docs.microsoft.com/en-us/windows/win32/procthread/process-security-and-access-rights>Process Security and Access Rights</a> page lists all possible values we could use. <code>PROCESS_QUERY_INFORMATION</code> seems to be appropriated:<blockquote><p>Required to retrieve certain information about a process, such as its token, exit code, and priority class</blockquote><pre><code class=language-rust data-lang=rust>OpenProcess(winapi::um::winnt::PROCESS_QUERY_INFORMATION, ...)
+</code></pre><p>Does this fix it?<pre><code class=language-rust data-lang=rust>>cargo run
+   Compiling memo v0.1.0
+    Finished dev [unoptimized + debuginfo] target(s) in 0.36s
+     Running `target\debug\memo.exe`
+Successfully opened 69/188 processes
+</code></pre><p><em>Nice</em>. It does solve it. But why did we only open 69 processes out of 188? Does it help if we run our code as administrator? Let's search for <code>cmd</code> in the Windows menu and right click to Run as administrator, then <code>cd</code> into our project and try again:<pre><code>>cargo run
+    Finished dev [unoptimized + debuginfo] target(s) in 0.01s
+     Running `target\debug\memo.exe`
+Successfully opened 77/190 processes
+</code></pre><p>We're able to open a few more, so it does help. In general, we'll want to run as administrator, so normal programs can't sniff on what we're doing, and so that we have permission to do more things.<h2 id=getting-the-name-of-a-process>Getting the name of a process</h2><p>We're not done enumerating things just yet. To get the "name" of a process, we need to enumerate the modules that it has loaded, and only then can we get the module base name. The first module is the program itself, so we don't need to enumerate <em>all</em> modules, just the one is enough.<p>For this we want <a href=https://docs.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-enumprocessmodules><code>EnumProcessModules</code></a> and <a href=https://docs.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getmodulebasenamea><code>GetModuleBaseNameA</code></a>. I'm using the ASCII variant of <code>GetModuleBaseName</code> because I'm too lazy to deal with UTF-16 of the <code>W</code> (wide, unicode) variants.<pre><code class=language-rust data-lang=rust>use std::mem::MaybeUninit;
+use winapi::shared::minwindef::HMODULE;
+
+pub fn name(&self) -> io::Result&LTString> {
+    let mut module = MaybeUninit::&LTHMODULE>::uninit();
+    let mut size = 0;
+    // SAFETY: the pointer is valid and the size is correct.
+    if unsafe {
+        winapi::um::psapi::EnumProcessModules(
+            self.handle.as_ptr(),
+            module.as_mut_ptr(),
+            mem::size_of::&LTHMODULE>() as u32,
+            &mut size,
+        )
+    } == FALSE
+    {
+        return Err(io::Error::last_os_error());
+    }
+
+    // SAFETY: the call succeeded, so module is initialized.
+    let module = unsafe { module.assume_init() };
+    todo!()
+}
+</code></pre><p><code>EnumProcessModules</code> takes a pointer to an array of <code>HMODULE</code>. We could use a <code>Vec</code> of capacity one to hold the single module, but in memory, a pointer a single item can be seen as a pointer to an array of items. <code>MaybeUninit</code> helps us reserve enough memory for the one item we need.<p>With the module handle, we can retrieve its base name:<pre><code class=language-rust data-lang=rust>let mut buffer = Vec::&LTu8>::with_capacity(64);
+// SAFETY: the handle, module and buffer are all valid.
+let length = unsafe {
+    winapi::um::psapi::GetModuleBaseNameA(
+        self.handle.as_ptr(),
+        module,
+        buffer.as_mut_ptr().cast(),
+        buffer.capacity() as u32,
+    )
+};
+if length == 0 {
+    return Err(io::Error::last_os_error());
+}
+
+// SAFETY: the call succeeded and length represents bytes.
+unsafe { buffer.set_len(length as usize) };
+Ok(String::from_utf8(buffer).unwrap())
+</code></pre><p>Similar to how we did with <code>EnumProcesses</code>, we create a buffer that will hold the ASCII string of the module's base name. The call wants us to pass a pointer to a mutable buffer of <code>i8</code>, but Rust's <code>String::from_utf8</code> wants a <code>Vec&LTu8></code>, so instead we declare a buffer of <code>u8</code> and <code>.cast()</code> the pointer in the call. You could also do this with <code>as _</code>, and Rust would infer the right type, but <code>cast</code> is neat.<p>We <code>unwrap</code> the creation of the UTF-8 string because the buffer should contain only ASCII characters (which are also valid UTF-8). We could use the <code>unsafe</code> variant to create the string, but what if somehow it contains non-ASCII characters? The less <code>unsafe</code>, the better.<p>Let's see it in action:<pre><code class=language-rust data-lang=rust>fn main() {
+    enum_proc()
+        .unwrap()
+        .into_iter()
+        .for_each(|pid| match Process::open(pid) {
+            Ok(proc) => match proc.name() {
+                Ok(name) => println!("{}: {}", pid, name),
+                Err(e) => println!("{}: (failed to get name: {})", pid, e),
+            },
+            Err(e) => eprintln!("failed to open {}: {}", pid, e),
+        });
+}
+</code></pre><pre><code>>cargo run
+   Compiling memo v0.1.0
+    Finished dev [unoptimized + debuginfo] target(s) in 0.32s
+     Running `target\debug\memo.exe`
+failed to open 0: The parameter is incorrect. (os error 87)
+failed to open 4: Access is denied. (os error 5)
+...
+failed to open 5940: Access is denied. (os error 5)
+5608: (failed to get name: Access is denied. (os error 5))
+...
+1704: (failed to get name: Access is denied. (os error 5))
+failed to open 868: Access is denied. (os error 5)
+...
+</code></pre><p>That's not good. What's up with that? Maybe…<blockquote><p>The handle must have the <code>PROCESS_QUERY_INFORMATION</code> and <code>PROCESS_VM_READ</code> access rights.</blockquote><p>…I should've read the documentation. Okay, fine:<pre><code class=language-rust data-lang=rust>use winapi::um::winnt;
+OpenProcess(winnt::PROCESS_QUERY_INFORMATION | winnt::PROCESS_VM_READ, ...)
+</code></pre><pre><code>>cargo run
+   Compiling memo v0.1.0 (C:\Users\L\Desktop\memo)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.35s
+     Running `target\debug\memo.exe`
+failed to open 0: The parameter is incorrect. (os error 87)
+failed to open 4: Access is denied. (os error 5)
+...
+9348: cheatengine-x86_64.exe
+3288: Tutorial-x86_64.exe
+8396: cmd.exe
+4620: firefox.exe
+7964: cargo.exe
+10052: cargo.exe
+5756: memo.exe
+</code></pre><p>Hooray 🎉! There's some processes we can't open, but that's because they're system processes. Security works!<h2 id=finale>Finale</h2><p>That was a fairly long post when all we did was print a bunch of pids and their corresponding name. But in all fairness, we also laid out a good foundation for what's coming next.<p>You can <a href=https://github.com/lonami/memo>obtain the code for this post</a> over at my GitHub. At the end of every post, the last commit will be tagged, so you can <code>git checkout step1</code> to see the final code for any blog post.<p>In the next post, we'll tackle the second step of the tutorial: Exact Value scanning.</main><footer><div><p>Share your thoughts, or simply come hang with me <a href=https://t.me/LonamiWebs><img src=img/telegram.svg alt=Telegram></a> <a href=mailto:totufals@hotmail.com><img src=img/mail.svg alt=Mail></a></div></footer></article><p class=abyss>Glaze into the abyss… Oh hi there!

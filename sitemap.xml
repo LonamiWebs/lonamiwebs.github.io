@@ -193,6 +193,10 @@
         <lastmod>2020-07-03</lastmod>
     </url>
     <url>
+        <loc>https://lonami.dev/blog/woce-1/</loc>
+        <lastmod>2021-02-07</lastmod>
+    </url>
+    <url>
         <loc>https://lonami.dev/blog/world-edit/</loc>
         <lastmod>2018-07-11</lastmod>
     </url>
@@ -268,6 +272,9 @@
         <loc>https://lonami.dev/tags/graphs/</loc>
     </url>
     <url>
+        <loc>https://lonami.dev/tags/hacking/</loc>
+    </url>
+    <url>
         <loc>https://lonami.dev/tags/minecraft/</loc>
     </url>
     <url>
@@ -281,6 +288,9 @@
     </url>
     <url>
         <loc>https://lonami.dev/tags/python/</loc>
+    </url>
+    <url>
+        <loc>https://lonami.dev/tags/rust/</loc>
     </url>
     <url>
         <loc>https://lonami.dev/tags/series/</loc>

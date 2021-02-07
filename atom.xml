@@ -4,8 +4,291 @@
 	<link href="https://lonami.dev/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://lonami.dev"/>
 	<generator uri="https://www.getzola.org/">Zola</generator>
-	<updated>2020-10-03T00:00:00+00:00</updated>
+	<updated>2021-02-07T00:00:00+00:00</updated>
 	<id>https://lonami.dev/atom.xml</id>
+	<entry xml:lang="en">
+		<title>Writing our own Cheat Engine: Introduction</title>
+		<published>2021-02-07T00:00:00+00:00</published>
+		<updated>2021-02-07T00:00:00+00:00</updated>
+		<link href="https://lonami.dev/blog/woce-1/" type="text/html"/>
+		<id>https://lonami.dev/blog/woce-1/</id>
+		<content type="html">&lt;p&gt;This is part 1 on the &lt;em&gt;Writing our own Cheat Engine&lt;&#x2F;em&gt; series.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;cheatengine.org&#x2F;&quot;&gt;Cheat Engine&lt;&#x2F;a&gt; is a tool designed to modify single player games and contains other useful tools within itself that enable its users to debug games or other applications. It comes with a memory scanner, (dis)assembler, inspection tools and a handful other things. In this series, we will be writing our own tiny Cheat Engine capable of solving all steps of the tutorial, and diving into how it all works underneath.&lt;&#x2F;p&gt;
+&lt;p&gt;Needless to say, we&#x27;re doing this for private and educational purposes only. One has to make sure to not violate the EULA or ToS of the specific application we&#x27;re attaching to. This series, much like cheatengine.org, does not condone the illegal use of the code shared.&lt;&#x2F;p&gt;
+&lt;p&gt;Cheat Engine is a tool for Windows, so we will be developing for Windows as well. However, you can also &lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;q&#x2F;12977179&#x2F;4759433&quot;&gt;read memory from Linux-like systems&lt;&#x2F;a&gt;. &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;scanmem&#x2F;scanmem&quot;&gt;GameConqueror&lt;&#x2F;a&gt; is a popular alternative to Cheat Engine on Linux systems, so if you feel adventurous, you could definitely follow along too! The techniques shown in this series apply regardless of how we read memory from a process. You will learn a fair bit about doing FFI in Rust too.&lt;&#x2F;p&gt;
+&lt;p&gt;We will be developing the application in Rust, because it enables us to interface with the Windows API easily, is memory safe (as long as we&#x27;re careful with &lt;code&gt;unsafe&lt;&#x2F;code&gt;!), and is speedy (we will need this for later steps in the Cheat Engine tutorial). You could use any language of your choice though. For example, &lt;a href=&quot;https:&#x2F;&#x2F;lonami.dev&#x2F;blog&#x2F;ctypes-and-windows&#x2F;&quot;&gt;Python also makes it relatively easy to use the Windows API&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;cheat-engine&#x2F;cheat-engine&#x2F;&quot;&gt;Cheat Engine&#x27;s source code&lt;&#x2F;a&gt; is mostly written in Pascal and C. And it&#x27;s &lt;em&gt;a lot&lt;&#x2F;em&gt; of code, with a very flat project structure, and files ranging in the thousand lines of code each. It&#x27;s daunting. It&#x27;s a mature project, with a lot of knowledge encoded in the code base, and a lot of features like distributed scanning or an entire disassembler. Unfortunately, there&#x27;s not a lot of comments. For these reasons, I&#x27;ll do some guesswork when possible as to how it&#x27;s working underneath, rather than actually digging into what Cheat Engine is actually doing.&lt;&#x2F;p&gt;
+&lt;p&gt;With that out of the way, let&#x27;s get started!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;welcome-to-the-cheat-engine-tutorial&quot;&gt;Welcome to the Cheat Engine Tutorial&lt;&#x2F;h2&gt;
+&lt;details open&gt;&lt;summary&gt;Cheat Engine Tutorial: Step 1&lt;&#x2F;summary&gt;
+&lt;blockquote&gt;
+&lt;p&gt;This tutorial will teach you the basics of cheating in video games. It will also show you foundational aspects of using Cheat Engine (or CE for short). Follow the steps below to get started.&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Open Cheat Engine if it currently isn&#x27;t running.&lt;&#x2F;li&gt;
+&lt;li&gt;Click on the &amp;quot;Open Process&amp;quot; icon (it&#x27;s the top-left icon with the computer on it, below &amp;quot;File&amp;quot;.).&lt;&#x2F;li&gt;
+&lt;li&gt;With the Process List window now open, look for this tutorial&#x27;s process in the list. It will look something like &amp;gt; &amp;quot;00001F98-Tutorial-x86_64.exe&amp;quot; or &amp;quot;0000047C-Tutorial-i386.exe&amp;quot;. (The first 8 numbers&#x2F;letters will probably be different.)&lt;&#x2F;li&gt;
+&lt;li&gt;Once you&#x27;ve found the process, click on it to select it, then click the &amp;quot;Open&amp;quot; button. (Don&#x27;t worry about all the &amp;gt; other buttons right now. You can learn about them later if you&#x27;re interested.)&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;Congratulations! If you did everything correctly, the process window should be gone with Cheat Engine now attached to the &amp;gt; tutorial (you will see the process name towards the top-center of CE).&lt;&#x2F;p&gt;
+&lt;p&gt;Click the &amp;quot;Next&amp;quot; button below to continue, or fill in the password and click the &amp;quot;OK&amp;quot; button to proceed to that step.)&lt;&#x2F;p&gt;
+&lt;p&gt;If you&#x27;re having problems, simply head over to forum.cheatengine.org, then click on &amp;quot;Tutorials&amp;quot; to view beginner-friendly &amp;gt; guides!&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;&#x2F;details&gt;
+&lt;h2 id=&quot;enumerating-processes&quot;&gt;Enumerating processes&lt;&#x2F;h2&gt;
+&lt;p&gt;Our first step is attaching to the process we want to work with. But we need a way to find that process in the first place! Having to open the task manager, look for the process we care about, noting down the process ID (PID), and slapping it in the source code is not satisfying at all. Instead, let&#x27;s enumerate all the processes from within the program, and let the user select one by typing its name.&lt;&#x2F;p&gt;
+&lt;p&gt;From a quick &lt;a href=&quot;https:&#x2F;&#x2F;ddg.gg&#x2F;winapi%20enumerate%20all%20processes&quot;&gt;DuckDuckGo search&lt;&#x2F;a&gt;, we find an official tutorial for &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;psapi&#x2F;enumerating-all-processes&quot;&gt;Enumerating All Processes&lt;&#x2F;a&gt;, which leads to the &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;psapi&#x2F;nf-psapi-enumprocesses&quot;&gt;&lt;code&gt;EnumProcesses&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; call. Cool! Let&#x27;s slap in the &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;winapi&quot;&gt;&lt;code&gt;winapi&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; crate on &lt;code&gt;Cargo.toml&lt;&#x2F;code&gt;, because I don&#x27;t want to write all the definitions by myself:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;[dependencies]
+winapi = { version = &amp;quot;0.3.9&amp;quot;, features = [&amp;quot;psapi&amp;quot;] }
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Because &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;psapi&#x2F;nf-psapi-enumprocesses&quot;&gt;&lt;code&gt;EnumProcesses&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; is in &lt;code&gt;Psapi.h&lt;&#x2F;code&gt; (you can see this in the online page of its documentation), we know we&#x27;ll need the &lt;code&gt;psapi&lt;&#x2F;code&gt; crate feature. Another option is to search for it in the &lt;a href=&quot;https:&#x2F;&#x2F;docs.rs&#x2F;winapi&#x2F;&quot;&gt;&lt;code&gt;winapi&lt;&#x2F;code&gt; documentation&lt;&#x2F;a&gt; and noting down the parent module where its stored.&lt;&#x2F;p&gt;
+&lt;p&gt;The documentation for the method has the following remark:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;It is a good idea to use a large array, because it is hard to predict how many processes there will be at the time you call &lt;strong&gt;EnumProcesses&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;&lt;em&gt;Sidenote: reading the documentation for the methods we&#x27;ll use from the Windows API is extremely important. There&#x27;s a lot of gotchas involved, so we need to make sure we&#x27;re extra careful.&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;1024 is a pretty big number, so let&#x27;s go with that:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;use std::io;
+use std::mem;
+use winapi::shared::minwindef::{DWORD, FALSE};
+
+pub fn enum_proc() -&amp;gt; io::Result&amp;lt;Vec&amp;lt;u32&amp;gt;&amp;gt; {
+    let mut pids = Vec::&amp;lt;DWORD&amp;gt;::with_capacity(1024);
+    let mut size = 0;
+    &#x2F;&#x2F; SAFETY: the pointer is valid and the size matches the capacity.
+    if unsafe {
+        winapi::um::psapi::EnumProcesses(
+            pids.as_mut_ptr(),
+            (pids.capacity() * mem::size_of::&amp;lt;DWORD&amp;gt;()) as u32,
+            &amp;amp;mut size,
+        )
+    } == FALSE
+    {
+        return Err(io::Error::last_os_error());
+    }
+
+    todo!()
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;We allocate enough space for 1024 &lt;code&gt;pids&lt;&#x2F;code&gt; in a vector, and pass a mutable pointer to the contents to &lt;code&gt;EnumProcesses&lt;&#x2F;code&gt;. Note that the size of the array is in &lt;em&gt;bytes&lt;&#x2F;em&gt;, not items, so we need to multiply the capacity by the size of &lt;code&gt;DWORD&lt;&#x2F;code&gt;. The API likes to use &lt;code&gt;u32&lt;&#x2F;code&gt; for sizes, unlike Rust which uses &lt;code&gt;usize&lt;&#x2F;code&gt;, so we need a cast.&lt;&#x2F;p&gt;
+&lt;p&gt;Last, we need another mutable variable where the amount of bytes written is stored, &lt;code&gt;size&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;If the function fails, the return value is zero. To get extended error information, call &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;errhandlingapi&#x2F;nf-errhandlingapi-getlasterror&quot;&gt;&lt;code&gt;GetLastError&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;That&#x27;s precisely what we do. If it returns false (zero), we return the last OS error. Rust provides us with &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;std&#x2F;io&#x2F;struct.Error.html#method.last_os_error&quot;&gt;&lt;code&gt;std::io::Error::last_os_error&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;, which essentially makes that same call but returns a proper &lt;code&gt;io::Error&lt;&#x2F;code&gt; instance. Cool!&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;To determine how many processes were enumerated, divide the &lt;em&gt;lpcbNeeded&lt;&#x2F;em&gt; value by &lt;code&gt;sizeof(DWORD)&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Easy enough:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let count = size as usize &#x2F; mem::size_of::&amp;lt;DWORD&amp;gt;();
+&#x2F;&#x2F; SAFETY: the call succeeded and count equals the right amount of items.
+unsafe { pids.set_len(count) };
+Ok(pids)
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Rust doesn&#x27;t know that the memory for &lt;code&gt;count&lt;&#x2F;code&gt; items were initialized by the call, but we do, so we make use of the &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;std&#x2F;vec&#x2F;struct.Vec.html#method.set_len&quot;&gt;&lt;code&gt;Vec::set_len&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; call to indicate this. The Rust documentation even includes a FFI similar to our code!&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s give it a ride:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;fn main() {
+    dbg!(enum_proc().unwrap().len());
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;&amp;gt;cargo run
+   Compiling memo v0.1.0
+    Finished dev [unoptimized + debuginfo] target(s) in 0.20s
+     Running `target\debug\memo.exe`
+[src\main.rs:27] enum_proc().unwrap().len() = 178
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It works! But currently we only have a bunch of process identifiers, with no way of knowing which process they refer to.&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;To obtain process handles for the processes whose identifiers you have just obtained, call the &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;processthreadsapi&#x2F;nf-processthreadsapi-openprocess&quot;&gt;&lt;code&gt;OpenProcess&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; function.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Oh!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;opening-a-process&quot;&gt;Opening a process&lt;&#x2F;h2&gt;
+&lt;p&gt;The documentation for &lt;code&gt;OpenProcess&lt;&#x2F;code&gt; also contains the following:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;When you are finished with the handle, be sure to close it using the &lt;a href=&quot;https:&#x2F;&#x2F;lonami.dev&#x2F;blog&#x2F;woce-1&#x2F;closehandle&quot;&gt;&lt;code&gt;CloseHandle&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; function.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;This sounds to me like the perfect time to introduce a custom &lt;code&gt;struct Process&lt;&#x2F;code&gt; with an &lt;code&gt;impl Drop&lt;&#x2F;code&gt;! We&#x27;re using &lt;code&gt;Drop&lt;&#x2F;code&gt; to cleanup resources, not behaviour, so it&#x27;s fine. &lt;a href=&quot;https:&#x2F;&#x2F;internals.rust-lang.org&#x2F;t&#x2F;pre-rfc-leave-auto-trait-for-reliable-destruction&#x2F;13825&quot;&gt;Using &lt;code&gt;Drop&lt;&#x2F;code&gt; to cleanup behaviour is a bad idea&lt;&#x2F;a&gt;. But anyway, let&#x27;s get back to the code:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;use std::ptr::NonNull;
+use winapi::ctypes::c_void;
+
+pub struct Process {
+    pid: u32,
+    handle: NonNull&amp;lt;c_void&amp;gt;,
+}
+
+impl Process {
+    pub fn open(pid: u32) -&amp;gt; io::Result&amp;lt;Self&amp;gt; {
+        todo!()
+    }
+}
+
+impl Drop for Process {
+    fn drop(&amp;amp;mut self) {
+        todo!()
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;For &lt;code&gt;open&lt;&#x2F;code&gt;, we&#x27;ll want to use &lt;code&gt;OpenProcess&lt;&#x2F;code&gt; (and we also need to add the &lt;code&gt;processthreadsapi&lt;&#x2F;code&gt; feature to the &lt;code&gt;winapi&lt;&#x2F;code&gt; dependency in &lt;code&gt;Cargo.toml&lt;&#x2F;code&gt;). It returns a &lt;code&gt;HANDLE&lt;&#x2F;code&gt;, which is a nullable mutable pointer to &lt;code&gt;c_void&lt;&#x2F;code&gt;. If it&#x27;s null, the call failed, and if it&#x27;s non-null, it succeeded and we have a valid handle. This is why we use Rust&#x27;s &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;std&#x2F;ptr&#x2F;struct.NonNull.html&quot;&gt;&lt;code&gt;NonNull&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&#x2F;&#x2F; SAFETY: the call doesn&#x27;t have dangerous side-effects.
+NonNull::new(unsafe { winapi::um::processthreadsapi::OpenProcess(0, FALSE, pid) })
+    .map(|handle| Self { pid, handle })
+    .ok_or_else(io::Error::last_os_error)
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;NonNull&lt;&#x2F;code&gt; will return &lt;code&gt;Some&lt;&#x2F;code&gt; if the pointer is non-null. We map the non-null pointer to a &lt;code&gt;Process&lt;&#x2F;code&gt; instance with &lt;code&gt;Self { .. }&lt;&#x2F;code&gt;. &lt;code&gt;ok_or_else&lt;&#x2F;code&gt; converts the &lt;code&gt;Option&lt;&#x2F;code&gt; to a &lt;code&gt;Result&lt;&#x2F;code&gt; with the error builder function we provide if it was &lt;code&gt;None&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;The first parameter is a bitflag of permissions we want to have. For now, we can leave it as zero (all bits unset, no specific permissions granted). The second one is whether we want to inherit the handle, which we don&#x27;t, and the third one is the process identifier. Let&#x27;s close the resource handle on &lt;code&gt;Drop&lt;&#x2F;code&gt; (after adding &lt;code&gt;handleapi&lt;&#x2F;code&gt; to the crate features):&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&#x2F;&#x2F; SAFETY: the handle is valid and non-null.
+unsafe { winapi::um::handleapi::CloseHandle(self.handle.as_mut()) };
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;CloseHandle&lt;&#x2F;code&gt; can actually fail (for example, on double-close), but given our invariants, it won&#x27;t. You could add an &lt;code&gt;assert!&lt;&#x2F;code&gt; to panic if this is not the case.&lt;&#x2F;p&gt;
+&lt;p&gt;We can now open processes, and they will be automatically closed on &lt;code&gt;Drop&lt;&#x2F;code&gt;. Does any of this work though?&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;fn main() {
+    let mut success = 0;
+    let mut failed = 0;
+    enum_proc().unwrap().into_iter().for_each(|pid| match Process::open(pid) {
+        Ok(_) =&amp;gt; success += 1,
+        Err(_) =&amp;gt; failed += 1,
+    });
+
+    eprintln!(&amp;quot;Successfully opened {}&#x2F;{} processes&amp;quot;, success, success + failed);
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;&amp;gt;cargo run
+   Compiling memo v0.1.0
+    Finished dev [unoptimized + debuginfo] target(s) in 0.36s
+     Running `target\debug\memo.exe`
+Successfully opened 0&#x2F;191 processes
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;…nope. Maybe the documentation for &lt;code&gt;OpenProcess&lt;&#x2F;code&gt; says something?&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;dwDesiredAccess&lt;&#x2F;code&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The access to the process object. This access right is checked against the security descriptor for the process. This parameter can be &lt;strong&gt;one or more&lt;&#x2F;strong&gt; of the process access rights.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;One or more, but we&#x27;re setting zero permissions. I told you, reading the documentation is important! The &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;procthread&#x2F;process-security-and-access-rights&quot;&gt;Process Security and Access Rights&lt;&#x2F;a&gt; page lists all possible values we could use. &lt;code&gt;PROCESS_QUERY_INFORMATION&lt;&#x2F;code&gt; seems to be appropriated:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Required to retrieve certain information about a process, such as its token, exit code, and priority class&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;OpenProcess(winapi::um::winnt::PROCESS_QUERY_INFORMATION, ...)
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Does this fix it?&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&amp;gt;cargo run
+   Compiling memo v0.1.0
+    Finished dev [unoptimized + debuginfo] target(s) in 0.36s
+     Running `target\debug\memo.exe`
+Successfully opened 69&#x2F;188 processes
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;em&gt;Nice&lt;&#x2F;em&gt;. It does solve it. But why did we only open 69 processes out of 188? Does it help if we run our code as administrator? Let&#x27;s search for &lt;code&gt;cmd&lt;&#x2F;code&gt; in the Windows menu and right click to Run as administrator, then &lt;code&gt;cd&lt;&#x2F;code&gt; into our project and try again:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;gt;cargo run
+    Finished dev [unoptimized + debuginfo] target(s) in 0.01s
+     Running `target\debug\memo.exe`
+Successfully opened 77&#x2F;190 processes
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;We&#x27;re able to open a few more, so it does help. In general, we&#x27;ll want to run as administrator, so normal programs can&#x27;t sniff on what we&#x27;re doing, and so that we have permission to do more things.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;getting-the-name-of-a-process&quot;&gt;Getting the name of a process&lt;&#x2F;h2&gt;
+&lt;p&gt;We&#x27;re not done enumerating things just yet. To get the &amp;quot;name&amp;quot; of a process, we need to enumerate the modules that it has loaded, and only then can we get the module base name. The first module is the program itself, so we don&#x27;t need to enumerate &lt;em&gt;all&lt;&#x2F;em&gt; modules, just the one is enough.&lt;&#x2F;p&gt;
+&lt;p&gt;For this we want &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;psapi&#x2F;nf-psapi-enumprocessmodules&quot;&gt;&lt;code&gt;EnumProcessModules&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; and &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;psapi&#x2F;nf-psapi-getmodulebasenamea&quot;&gt;&lt;code&gt;GetModuleBaseNameA&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;. I&#x27;m using the ASCII variant of &lt;code&gt;GetModuleBaseName&lt;&#x2F;code&gt; because I&#x27;m too lazy to deal with UTF-16 of the &lt;code&gt;W&lt;&#x2F;code&gt; (wide, unicode) variants.&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;use std::mem::MaybeUninit;
+use winapi::shared::minwindef::HMODULE;
+
+pub fn name(&amp;amp;self) -&amp;gt; io::Result&amp;lt;String&amp;gt; {
+    let mut module = MaybeUninit::&amp;lt;HMODULE&amp;gt;::uninit();
+    let mut size = 0;
+    &#x2F;&#x2F; SAFETY: the pointer is valid and the size is correct.
+    if unsafe {
+        winapi::um::psapi::EnumProcessModules(
+            self.handle.as_ptr(),
+            module.as_mut_ptr(),
+            mem::size_of::&amp;lt;HMODULE&amp;gt;() as u32,
+            &amp;amp;mut size,
+        )
+    } == FALSE
+    {
+        return Err(io::Error::last_os_error());
+    }
+
+    &#x2F;&#x2F; SAFETY: the call succeeded, so module is initialized.
+    let module = unsafe { module.assume_init() };
+    todo!()
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;EnumProcessModules&lt;&#x2F;code&gt; takes a pointer to an array of &lt;code&gt;HMODULE&lt;&#x2F;code&gt;. We could use a &lt;code&gt;Vec&lt;&#x2F;code&gt; of capacity one to hold the single module, but in memory, a pointer a single item can be seen as a pointer to an array of items. &lt;code&gt;MaybeUninit&lt;&#x2F;code&gt; helps us reserve enough memory for the one item we need.&lt;&#x2F;p&gt;
+&lt;p&gt;With the module handle, we can retrieve its base name:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let mut buffer = Vec::&amp;lt;u8&amp;gt;::with_capacity(64);
+&#x2F;&#x2F; SAFETY: the handle, module and buffer are all valid.
+let length = unsafe {
+    winapi::um::psapi::GetModuleBaseNameA(
+        self.handle.as_ptr(),
+        module,
+        buffer.as_mut_ptr().cast(),
+        buffer.capacity() as u32,
+    )
+};
+if length == 0 {
+    return Err(io::Error::last_os_error());
+}
+
+&#x2F;&#x2F; SAFETY: the call succeeded and length represents bytes.
+unsafe { buffer.set_len(length as usize) };
+Ok(String::from_utf8(buffer).unwrap())
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Similar to how we did with &lt;code&gt;EnumProcesses&lt;&#x2F;code&gt;, we create a buffer that will hold the ASCII string of the module&#x27;s base name. The call wants us to pass a pointer to a mutable buffer of &lt;code&gt;i8&lt;&#x2F;code&gt;, but Rust&#x27;s &lt;code&gt;String::from_utf8&lt;&#x2F;code&gt; wants a &lt;code&gt;Vec&amp;lt;u8&amp;gt;&lt;&#x2F;code&gt;, so instead we declare a buffer of &lt;code&gt;u8&lt;&#x2F;code&gt; and &lt;code&gt;.cast()&lt;&#x2F;code&gt; the pointer in the call. You could also do this with &lt;code&gt;as _&lt;&#x2F;code&gt;, and Rust would infer the right type, but &lt;code&gt;cast&lt;&#x2F;code&gt; is neat.&lt;&#x2F;p&gt;
+&lt;p&gt;We &lt;code&gt;unwrap&lt;&#x2F;code&gt; the creation of the UTF-8 string because the buffer should contain only ASCII characters (which are also valid UTF-8). We could use the &lt;code&gt;unsafe&lt;&#x2F;code&gt; variant to create the string, but what if somehow it contains non-ASCII characters? The less &lt;code&gt;unsafe&lt;&#x2F;code&gt;, the better.&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s see it in action:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;fn main() {
+    enum_proc()
+        .unwrap()
+        .into_iter()
+        .for_each(|pid| match Process::open(pid) {
+            Ok(proc) =&amp;gt; match proc.name() {
+                Ok(name) =&amp;gt; println!(&amp;quot;{}: {}&amp;quot;, pid, name),
+                Err(e) =&amp;gt; println!(&amp;quot;{}: (failed to get name: {})&amp;quot;, pid, e),
+            },
+            Err(e) =&amp;gt; eprintln!(&amp;quot;failed to open {}: {}&amp;quot;, pid, e),
+        });
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;&amp;gt;cargo run
+   Compiling memo v0.1.0
+    Finished dev [unoptimized + debuginfo] target(s) in 0.32s
+     Running `target\debug\memo.exe`
+failed to open 0: The parameter is incorrect. (os error 87)
+failed to open 4: Access is denied. (os error 5)
+...
+failed to open 5940: Access is denied. (os error 5)
+5608: (failed to get name: Access is denied. (os error 5))
+...
+1704: (failed to get name: Access is denied. (os error 5))
+failed to open 868: Access is denied. (os error 5)
+...
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;That&#x27;s not good. What&#x27;s up with that? Maybe…&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The handle must have the &lt;code&gt;PROCESS_QUERY_INFORMATION&lt;&#x2F;code&gt; and &lt;code&gt;PROCESS_VM_READ&lt;&#x2F;code&gt; access rights.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;…I should&#x27;ve read the documentation. Okay, fine:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;use winapi::um::winnt;
+OpenProcess(winnt::PROCESS_QUERY_INFORMATION | winnt::PROCESS_VM_READ, ...)
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;&amp;gt;cargo run
+   Compiling memo v0.1.0 (C:\Users\L\Desktop\memo)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.35s
+     Running `target\debug\memo.exe`
+failed to open 0: The parameter is incorrect. (os error 87)
+failed to open 4: Access is denied. (os error 5)
+...
+9348: cheatengine-x86_64.exe
+3288: Tutorial-x86_64.exe
+8396: cmd.exe
+4620: firefox.exe
+7964: cargo.exe
+10052: cargo.exe
+5756: memo.exe
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Hooray 🎉! There&#x27;s some processes we can&#x27;t open, but that&#x27;s because they&#x27;re system processes. Security works!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;finale&quot;&gt;Finale&lt;&#x2F;h2&gt;
+&lt;p&gt;That was a fairly long post when all we did was print a bunch of pids and their corresponding name. But in all fairness, we also laid out a good foundation for what&#x27;s coming next.&lt;&#x2F;p&gt;
+&lt;p&gt;You can &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lonami&#x2F;memo&quot;&gt;obtain the code for this post&lt;&#x2F;a&gt; over at my GitHub. At the end of every post, the last commit will be tagged, so you can &lt;code&gt;git checkout step1&lt;&#x2F;code&gt; to see the final code for any blog post.&lt;&#x2F;p&gt;
+&lt;p&gt;In the next post, we&#x27;ll tackle the second step of the tutorial: Exact Value scanning.&lt;&#x2F;p&gt;
+</content>
+	</entry>
 	<entry xml:lang="en">
 		<title>Making a Difference</title>
 		<published>2020-08-24T00:00:00+00:00</published>
@@ -614,133 +897,6 @@ exception	1
 &lt;p&gt;Rows are split in different tablets based on the row keys, which simplifies determining an appropriated server for them. The keys can be up to 64KB big, although most commonly they range 10-100 bytes.&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;conclusions&quot;&gt;Conclusions&lt;&#x2F;h2&gt;
 &lt;p&gt;BigTable is Google’s way to deal with large amounts of data on many of their services, and the ideas behind it are not too complex to understand.&lt;&#x2F;p&gt;
-</content>
-	</entry>
-	<entry xml:lang="en">
-		<title>A practical example with Hadoop</title>
-		<published>2020-03-30T01:00:00+00:00</published>
-		<updated>2020-04-18T13:25:43+00:00</updated>
-		<link href="https://lonami.dev/blog/mdad/a-practical-example-with-hadoop/" type="text/html"/>
-		<id>https://lonami.dev/blog/mdad/a-practical-example-with-hadoop/</id>
-		<content type="html">&lt;p&gt;In our &lt;a href=&quot;&#x2F;blog&#x2F;mdad&#x2F;introduction-to-hadoop-and-its-mapreduce&#x2F;&quot;&gt;previous Hadoop post&lt;&#x2F;a&gt;, we learnt what it is, how it originated, and how it works, from a theoretical standpoint. Here we will instead focus on a more practical example with Hadoop.&lt;&#x2F;p&gt;
-&lt;p&gt;This post will reproduce the example on Chapter 2 of the book &lt;a href=&quot;http:&#x2F;&#x2F;www.hadoopbook.com&#x2F;&quot;&gt;Hadoop: The Definitive Guide, Fourth Edition&lt;&#x2F;a&gt; (&lt;a href=&quot;http:&#x2F;&#x2F;grut-computing.com&#x2F;HadoopBook.pdf&quot;&gt;pdf,&lt;&#x2F;a&gt;&lt;a href=&quot;http:&#x2F;&#x2F;www.hadoopbook.com&#x2F;code.html&quot;&gt;code&lt;&#x2F;a&gt;), that is, finding the maximum global-wide temperature for a given year.&lt;&#x2F;p&gt;
-&lt;h2 id=&quot;installation&quot;&gt;Installation&lt;&#x2F;h2&gt;
-&lt;p&gt;Before running any piece of software, its executable code must first be downloaded into our computers so that we can run it. Head over to &lt;a href=&quot;http:&#x2F;&#x2F;hadoop.apache.org&#x2F;releases.html&quot;&gt;Apache Hadoop’s releases&lt;&#x2F;a&gt; and download the &lt;a href=&quot;https:&#x2F;&#x2F;www.apache.org&#x2F;dyn&#x2F;closer.cgi&#x2F;hadoop&#x2F;common&#x2F;hadoop-3.2.1&#x2F;hadoop-3.2.1.tar.gz&quot;&gt;latest binary version&lt;&#x2F;a&gt; at the time of writing (3.2.1).&lt;&#x2F;p&gt;
-&lt;p&gt;We will be using the &lt;a href=&quot;https:&#x2F;&#x2F;linuxmint.com&#x2F;&quot;&gt;Linux Mint&lt;&#x2F;a&gt; distribution because I love its simplicity, although the process shown here should work just fine on any similar Linux distribution such as &lt;a href=&quot;https:&#x2F;&#x2F;ubuntu.com&#x2F;&quot;&gt;Ubuntu&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
-&lt;p&gt;Once the archive download is complete, extract it with any tool of your choice (graphical or using the terminal) and execute it. Make sure you have a version of Java installed, such as &lt;a href=&quot;https:&#x2F;&#x2F;openjdk.java.net&#x2F;&quot;&gt;OpenJDK&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
-&lt;p&gt;Here are all the three steps in the command line:&lt;&#x2F;p&gt;
-&lt;pre&gt;&lt;code&gt;wget https:&#x2F;&#x2F;apache.brunneis.com&#x2F;hadoop&#x2F;common&#x2F;hadoop-3.2.1&#x2F;hadoop-3.2.1.tar.gz
-tar xf hadoop-3.2.1.tar.gz
-hadoop-3.2.1&#x2F;bin&#x2F;hadoop version
-&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;We will be using the two example data files that they provide in &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;tomwhite&#x2F;hadoop-book&#x2F;tree&#x2F;master&#x2F;input&#x2F;ncdc&#x2F;all&quot;&gt;their GitHub repository&lt;&#x2F;a&gt;, although the full dataset is offered by the &lt;a href=&quot;https:&#x2F;&#x2F;www.ncdc.noaa.gov&#x2F;&quot;&gt;National Climatic Data Center&lt;&#x2F;a&gt; (NCDC).&lt;&#x2F;p&gt;
-&lt;p&gt;We will also unzip and concatenate both files into a single text file, to make it easier to work with. As a single command pipeline:&lt;&#x2F;p&gt;
-&lt;pre&gt;&lt;code&gt;curl https:&#x2F;&#x2F;raw.githubusercontent.com&#x2F;tomwhite&#x2F;hadoop-book&#x2F;master&#x2F;input&#x2F;ncdc&#x2F;all&#x2F;190{1,2}.gz | gunzip &amp;gt; 190x
-&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;This should create a &lt;code&gt;190x&lt;&#x2F;code&gt; text file in the current directory, which will be our input data.&lt;&#x2F;p&gt;
-&lt;h2 id=&quot;processing-data&quot;&gt;Processing data&lt;&#x2F;h2&gt;
-&lt;p&gt;To take advantage of Hadoop, we have to design our code to work in the MapReduce model. Both the map and reduce phase work on key-value pairs as input and output, and both have a programmer-defined function.&lt;&#x2F;p&gt;
-&lt;p&gt;We will use Java, because it’s a dependency that we already have anyway, so might as well.&lt;&#x2F;p&gt;
-&lt;p&gt;Our map function needs to extract the year and air temperature, which will prepare the data for later use (finding the maximum temperature for each year). We will also drop bad records here (if the temperature is missing, suspect or erroneous).&lt;&#x2F;p&gt;
-&lt;p&gt;Copy or reproduce the following code in a file called &lt;code&gt;MaxTempMapper.java&lt;&#x2F;code&gt;, using any text editor of your choice:&lt;&#x2F;p&gt;
-&lt;pre&gt;&lt;code&gt;import java.io.IOException;
-
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper;
-
-public class MaxTempMapper extends Mapper&amp;lt;LongWritable, Text, Text, IntWritable&amp;gt; {
-    private static final int TEMP_MISSING = 9999;
-    private static final String GOOD_QUALITY_RE = &amp;quot;[01459]&amp;quot;;
-
-    @Override
-    public void map(LongWritable key, Text value, Context context)
-            throws IOException, InterruptedException {
-        String line = value.toString();
-        String year = line.substring(15, 19);
-        String temp = line.substring(87, 92).replaceAll(&amp;quot;^\\+&amp;quot;, &amp;quot;&amp;quot;);
-        String quality = line.substring(92, 93);
-
-        int airTemperature = Integer.parseInt(temp);
-        if (airTemperature != TEMP_MISSING &amp;amp;&amp;amp; quality.matches(GOOD_QUALITY_RE)) {
-            context.write(new Text(year), new IntWritable(airTemperature));
-        }
-    }
-}
-&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;Now, let’s create the &lt;code&gt;MaxTempReducer.java&lt;&#x2F;code&gt; file. Its job is to reduce the data from multiple values into just one. We do that by keeping the maximum out of all the values we receive:&lt;&#x2F;p&gt;
-&lt;pre&gt;&lt;code&gt;import java.io.IOException;
-import java.util.Iterator;
-
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Reducer;
-
-public class MaxTempReducer extends Reducer&amp;lt;Text, IntWritable, Text, IntWritable&amp;gt; {
-    @Override
-    public void reduce(Text key, Iterable&amp;lt;IntWritable&amp;gt; values, Context context)
-            throws IOException, InterruptedException {
-        Iterator&amp;lt;IntWritable&amp;gt; iter = values.iterator();
-        if (iter.hasNext()) {
-            int maxValue = iter.next().get();
-            while (iter.hasNext()) {
-                maxValue = Math.max(maxValue, iter.next().get());
-            }
-            context.write(key, new IntWritable(maxValue));
-        }
-    }
-}
-&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;Except for some Java weirdness (…why can’t we just iterate over an &lt;code&gt;Iterator&lt;&#x2F;code&gt;? Or why can’t we just manually call &lt;code&gt;next()&lt;&#x2F;code&gt; on an &lt;code&gt;Iterable&lt;&#x2F;code&gt;?), our code is correct. There can’t be a maximum if there are no elements, and we want to avoid dummy values such as &lt;code&gt;Integer.MIN_VALUE&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
-&lt;p&gt;We can also take a moment to appreciate how absolutely tiny this code is, and it’s Java! Hadoop’s API is really awesome and lets us write such concise code to achieve what we need.&lt;&#x2F;p&gt;
-&lt;p&gt;Last, let’s write the &lt;code&gt;main&lt;&#x2F;code&gt; method, or else we won’t be able to run it. In our new file &lt;code&gt;MaxTemp.java&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
-&lt;pre&gt;&lt;code&gt;import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-
-public class MaxTemp {
-    public static void main(String[] args) throws Exception {
-        if (args.length != 2) {
-            System.err.println(&amp;quot;usage: java MaxTemp &amp;lt;input path&amp;gt; &amp;lt;output path&amp;gt;&amp;quot;);
-            System.exit(-1);
-        }
-
-        Job job = Job.getInstance();
-
-        job.setJobName(&amp;quot;Max temperature&amp;quot;);
-        job.setJarByClass(MaxTemp.class);
-        job.setMapperClass(MaxTempMapper.class);
-        job.setReducerClass(MaxTempReducer.class);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(IntWritable.class);
-
-        FileInputFormat.addInputPath(job, new Path(args[0]));
-        FileOutputFormat.setOutputPath(job, new Path(args[1]));
-
-        boolean result = job.waitForCompletion(true);
-
-        System.exit(result ? 0 : 1);
-    }
-}
-&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;And compile by including the required &lt;code&gt;.jar&lt;&#x2F;code&gt; dependencies in Java’s classpath with the &lt;code&gt;-cp&lt;&#x2F;code&gt; switch:&lt;&#x2F;p&gt;
-&lt;pre&gt;&lt;code&gt;javac -cp &amp;quot;hadoop-3.2.1&#x2F;share&#x2F;hadoop&#x2F;common&#x2F;*:hadoop-3.2.1&#x2F;share&#x2F;hadoop&#x2F;mapreduce&#x2F;*&amp;quot; *.java
-&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;At last, we can run it (also specifying the dependencies in the classpath, this one’s a mouthful):&lt;&#x2F;p&gt;
-&lt;pre&gt;&lt;code&gt;java -cp &amp;quot;.:hadoop-3.2.1&#x2F;share&#x2F;hadoop&#x2F;common&#x2F;*:hadoop-3.2.1&#x2F;share&#x2F;hadoop&#x2F;common&#x2F;lib&#x2F;*:hadoop-3.2.1&#x2F;share&#x2F;hadoop&#x2F;mapreduce&#x2F;*:hadoop-3.2.1&#x2F;share&#x2F;hadoop&#x2F;mapreduce&#x2F;lib&#x2F;*:hadoop-3.2.1&#x2F;share&#x2F;hadoop&#x2F;yarn&#x2F;*:hadoop-3.2.1&#x2F;share&#x2F;hadoop&#x2F;yarn&#x2F;lib&#x2F;*:hadoop-3.2.1&#x2F;share&#x2F;hadoop&#x2F;hdfs&#x2F;*:hadoop-3.2.1&#x2F;share&#x2F;hadoop&#x2F;hdfs&#x2F;lib&#x2F;*&amp;quot; MaxTemp 190x results
-&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;Hooray! We should have a new &lt;code&gt;results&#x2F;&lt;&#x2F;code&gt; folder along with the following files:&lt;&#x2F;p&gt;
-&lt;pre&gt;&lt;code&gt;$ ls results
-part-r-00000  _SUCCESS
-$ cat results&#x2F;part-r-00000
-1901	317
-1902	244
-&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;It worked! Now this example was obviously tiny, but hopefully enough to demonstrate how to get the basics running on real world data.&lt;&#x2F;p&gt;
 </content>
 	</entry>
 </feed>
