@@ -16,7 +16,7 @@ Cheat Engine is a tool for Windows, so we will be developing for Windows as well
 
 We will be developing the application in Rust, because it enables us to interface with the Windows API easily, is memory safe (as long as we're careful with `unsafe`!), and is speedy (we will need this for later steps in the Cheat Engine tutorial). You could use any language of your choice though. For example, [Python also makes it relatively easy to use the Windows API][python-ctypes].
 
-[Cheat Engine's source code][ce-code] is mostly written in Pascal and C. And it's *a lot* of code, with a very flat project structure, and files ranging in the thousand lines of code each. It's daunting. It's a mature project, with a lot of knowledge encoded in the code base, and a lot of features like distributed scanning or an entire disassembler. Unfortunately, there's not a lot of comments. For these reasons, I'll do some guesswork when possible as to how it's working underneath, rather than actually digging into what Cheat Engine is actually doing.
+[Cheat Engine's source code][ce-code] is mostly written in Pascal and C. And it's *a lot* of code, with a very flat project structure, and files ranging in the thousand lines of code each. It's daunting[^1]. It's a mature project, with a lot of knowledge encoded in the code base, and a lot of features like distributed scanning or an entire disassembler. Unfortunately, there's not a lot of comments. For these reasons, I'll do some guesswork when possible as to how it's working underneath, rather than actually digging into what Cheat Engine is actually doing.
 
 With that out of the way, let's get started!
 
@@ -84,7 +84,7 @@ pub fn enum_proc() -> io::Result<Vec<u32>> {
 }
 ```
 
-We allocate enough space for 1024 `pids` in a vector, and pass a mutable pointer to the contents to `EnumProcesses`. Note that the size of the array is in *bytes*, not items, so we need to multiply the capacity by the size of `DWORD`. The API likes to use `u32` for sizes, unlike Rust which uses `usize`, so we need a cast.
+We allocate enough space[^2] for 1024 `pids` in a vector[^3], and pass a mutable pointer to the contents to `EnumProcesses`. Note that the size of the array is in *bytes*, not items, so we need to multiply the capacity by the size of `DWORD`. The API likes to use `u32` for sizes, unlike Rust which uses `usize`, so we need a cast.
 
 Last, we need another mutable variable where the amount of bytes written is stored, `size`.
 
@@ -206,7 +206,7 @@ Successfully opened 0/191 processes
 >
 > The access to the process object. This access right is checked against the security descriptor for the process. This parameter can be **one or more** of the process access rights.
 
-One or more, but we're setting zero permissions. I told you, reading the documentation is important! The [Process Security and Access Rights][proc-rights] page lists all possible values we could use. `PROCESS_QUERY_INFORMATION` seems to be appropriated:
+One or more, but we're setting zero permissions. I told you, reading the documentation is important[^4]! The [Process Security and Access Rights][proc-rights] page lists all possible values we could use. `PROCESS_QUERY_INFORMATION` seems to be appropriated:
 
 > Required to retrieve certain information about a process, such as its token, exit code, and priority class
 
@@ -291,7 +291,7 @@ unsafe { buffer.set_len(length as usize) };
 Ok(String::from_utf8(buffer).unwrap())
 ```
 
-Similar to how we did with `EnumProcesses`, we create a buffer that will hold the ASCII string of the module's base name. The call wants us to pass a pointer to a mutable buffer of `i8`, but Rust's `String::from_utf8` wants a `Vec<u8>`, so instead we declare a buffer of `u8` and `.cast()` the pointer in the call. You could also do this with `as _`, and Rust would infer the right type, but `cast` is neat.
+Similar to how we did with `EnumProcesses`, we create a buffer that will hold the ASCII string of the module's base name[^5]. The call wants us to pass a pointer to a mutable buffer of `i8`, but Rust's `String::from_utf8` wants a `Vec<u8>`, so instead we declare a buffer of `u8` and `.cast()` the pointer in the call. You could also do this with `as _`, and Rust would infer the right type, but `cast` is neat.
 
 We `unwrap` the creation of the UTF-8 string because the buffer should contain only ASCII characters (which are also valid UTF-8). We could use the `unsafe` variant to create the string, but what if somehow it contains non-ASCII characters? The less `unsafe`, the better.
 
@@ -366,6 +366,18 @@ You can [obtain the code for this post][code] over at my GitHub. At the end of e
 
 In the next post, we'll tackle the second step of the tutorial: Exact Value scanning.
 
+### Footnotes
+
+[^1]: You could say I simply love reinventing the wheel, which I do, but in this case, the codebase contains *far* more features than we're interested in. The (apparent) lack of structure and documentation regarding the code, along with the unfortunate [lack of license][lack-license] for the source code, make it a no-go. There's a license, but I think that's for the distributed program itself.
+
+[^2]: If it turns out that there are more than 1024 processes, our code will be unaware of those extra processes. The documentation suggests to perform the call again with a larger buffer if `count == provided capacity`, but given I have under 200 processes on my system, it seems unlikely we'll reach this limit. If you're worried about hitting this limit, simply use a larger limit or retry with a larger vector.
+
+[^3]: C code would likely use [`GlobalAlloc`][global-alloc] here, but Rust's `Vec` handles the allocation for us, making the code both simpler and more idiomatic. In general, if you see calls to `GlobalAlloc` when porting some code to Rust, you can probably replace it with a `Vec`.
+
+[^4]: This will be a recurring theme.
+
+[^5]: …and similar to `EnumProcesses`, if the name doesn't fit in our buffer, the result will be truncated.
+
 [ce]: https://cheatengine.org/
 [python-ctypes]: https://lonami.dev/blog/ctypes-and-windows/
 [ce-code]: https://github.com/cheat-engine/cheat-engine/
@@ -387,3 +399,5 @@ In the next post, we'll tackle the second step of the tutorial: Exact Value scan
 [mod-enumproc]: https://docs.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-enumprocessmodules
 [mod-name]: https://docs.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getmodulebasenamea
 [code]: https://github.com/lonami/memo
+[lack-license]: https://github.com/cheat-engine/cheat-engine/issues/60
+[global-alloc]: https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-globalalloc
