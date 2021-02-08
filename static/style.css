@@ -23,7 +23,8 @@ main {
 /* navigation */
 nav.sections {
     padding-top: 20px;
-    display: block;
+    display: flex;
+    justify-content: space-between;
 }
 
 nav.sections ul {
@@ -40,15 +41,27 @@ nav.sections li {
     font-size: 1.3em;
 }
 
-nav.sections a {
+nav.sections .left a {
     color: #787878;
     border-bottom: solid 2px #A8A8A8;
     padding: 0 16px;
 }
 
-nav.sections a.selected, nav.sections a:hover {
+nav.sections .left a.selected, nav.sections .left a:hover {
     color: #000000;
     border-bottom: solid 2px #444444;
+}
+
+nav.sections img {
+    margin: 0 4px;
+}
+
+.left {
+    justify-self: flex-start;
+}
+
+.right {
+    justify-self: flex-end;
 }
 
 /* footer */
