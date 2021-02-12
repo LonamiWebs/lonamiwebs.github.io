@@ -1,6 +1,7 @@
 +++
 title = "Writing our own Cheat Engine: Introduction"
 date = 2021-02-07
+updated = 2021-02-12
 [taxonomies]
 category = ["sw"]
 tags = ["windows", "rust", "hacking"]
@@ -364,7 +365,7 @@ That was a fairly long post when all we did was print a bunch of pids and their 
 
 You can [obtain the code for this post][code] over at my GitHub. At the end of every post, the last commit will be tagged, so you can `git checkout step1` to see the final code for any blog post.
 
-In the next post, we'll tackle the second step of the tutorial: Exact Value scanning.
+In the [next post](/blog/woce-2), we'll tackle the second step of the tutorial: Exact Value scanning.
 
 ### Footnotes
 
