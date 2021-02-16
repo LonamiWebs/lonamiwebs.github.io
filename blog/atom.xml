@@ -4,16 +4,19 @@
 	<link href="https://lonami.dev/blog/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://lonami.dev/blog/"/>
 	<generator uri="https://www.getzola.org/">Zola</generator>
-	<updated>2021-02-12T00:00:00+00:00</updated>
+	<updated>2021-02-16T00:00:00+00:00</updated>
 	<id>https://lonami.dev/blog/atom.xml</id>
 	<entry xml:lang="en">
 		<title>Writing our own Cheat Engine: Exact Value scanning</title>
 		<published>2021-02-12T00:00:00+00:00</published>
-		<updated>2021-02-12T00:00:00+00:00</updated>
+		<updated>2021-02-16T00:00:00+00:00</updated>
 		<link href="https://lonami.dev/blog/woce-2/" type="text/html"/>
 		<id>https://lonami.dev/blog/woce-2/</id>
-		<content type="html">&lt;p&gt;This is part 2 on the &lt;em&gt;Writing our own Cheat Engine&lt;&#x2F;em&gt; series.&lt;&#x2F;p&gt;
-&lt;p&gt;New around here? Skim over &lt;a href=&quot;&#x2F;blog&#x2F;woce-1&quot;&gt;part 1&lt;&#x2F;a&gt; to learn what this series is all about.&lt;&#x2F;p&gt;
+		<content type="html">&lt;p&gt;This is part 2 on the &lt;em&gt;Writing our own Cheat Engine&lt;&#x2F;em&gt; series:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-1&quot;&gt;Part 1: Introduction&lt;&#x2F;a&gt; (start here if you&#x27;re new to the series!)&lt;&#x2F;li&gt;
+&lt;li&gt;Part 2: Exact Value scanning&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
 &lt;p&gt;In the introduction, we spent a good deal of time enumerating all running processes just so we could find out the pid we cared about. With the pid now in our hands, we can do pretty much anything to its corresponding process.&lt;&#x2F;p&gt;
 &lt;p&gt;It&#x27;s now time to read the process&#x27; memory and write to it. If our process was a single-player game, this would enable us to do things like setting a very high value on the player&#x27;s current health pool, making us invencible. This technique will often not work for multi-player games, because the server likely knows your true current health (the most you could probably do is make the client render an incorrect value). However, if the server is crappy and it trusts the client, then you&#x27;re still free to mess around with your current health.&lt;&#x2F;p&gt;
 &lt;p&gt;Even if we don&#x27;t want to write to the process&#x27; memory, reading is still very useful. Maybe you could enhance your experience by making a custom overlay that displays useful information, or something that makes noise if it detects the life is too low, or even simulating a keyboard event to automatically recover some mana when you&#x27;re running low.&lt;&#x2F;p&gt;
@@ -381,6 +384,7 @@ Written 4 bytes to [15d8b90]
 &lt;p&gt;This post somehow ended up being longer than part one, but look at what we&#x27;ve achieved! We completed a step of the Cheat Engine Tutorial &lt;em&gt;without using Cheat Engine&lt;&#x2F;em&gt;. Just pure Rust. Figuring out how a program works and reimplementing it yourself is a great way to learn what it&#x27;s doing behind the scenes. And now that this code is yours, you can extend it as much as you like, without being constrained by Cheat Engine&#x27;s UI. You can automate it as much as you want.&lt;&#x2F;p&gt;
 &lt;p&gt;And we&#x27;re not even done. The current tutorial has nine steps, and three additional graphical levels.&lt;&#x2F;p&gt;
 &lt;p&gt;In the next post, we&#x27;ll tackle the third step of the tutorial: Unknown initial value. This will pose a challenge, because with just 2 MiB of memory, storing all the 4-byte aligned locations would require 524288 addresses (&lt;code&gt;usize&lt;&#x2F;code&gt;, 8 bytes). This adds up to twice as much memory as the original program (4 MiB), but that&#x27;s not our main concern, having to perform over five hundred thousand API calls is!&lt;&#x2F;p&gt;
+&lt;p&gt;Remember that you can &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lonami&#x2F;memo&quot;&gt;obtain the code for this post&lt;&#x2F;a&gt; over at my GitHub. You can run &lt;code&gt;git checkout step2&lt;&#x2F;code&gt; after cloning the repository to get the right version of the code.&lt;&#x2F;p&gt;
 &lt;h3 id=&quot;footnotes&quot;&gt;Footnotes&lt;&#x2F;h3&gt;
 &lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
 &lt;p&gt;I did in fact use an online tool to spell it out for me.&lt;&#x2F;p&gt;
@@ -414,10 +418,14 @@ Written 4 bytes to [15d8b90]
 	<entry xml:lang="en">
 		<title>Writing our own Cheat Engine: Introduction</title>
 		<published>2021-02-07T00:00:00+00:00</published>
-		<updated>2021-02-12T00:00:00+00:00</updated>
+		<updated>2021-02-16T00:00:00+00:00</updated>
 		<link href="https://lonami.dev/blog/woce-1/" type="text/html"/>
 		<id>https://lonami.dev/blog/woce-1/</id>
-		<content type="html">&lt;p&gt;This is part 1 on the &lt;em&gt;Writing our own Cheat Engine&lt;&#x2F;em&gt; series.&lt;&#x2F;p&gt;
+		<content type="html">&lt;p&gt;This is part 1 on the &lt;em&gt;Writing our own Cheat Engine&lt;&#x2F;em&gt; series:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Part 1: Introduction&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-2&quot;&gt;Part 2: Exact Value scanning&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
 &lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;cheatengine.org&#x2F;&quot;&gt;Cheat Engine&lt;&#x2F;a&gt; is a tool designed to modify single player games and contains other useful tools within itself that enable its users to debug games or other applications. It comes with a memory scanner, (dis)assembler, inspection tools and a handful other things. In this series, we will be writing our own tiny Cheat Engine capable of solving all steps of the tutorial, and diving into how it all works underneath.&lt;&#x2F;p&gt;
 &lt;p&gt;Needless to say, we&#x27;re doing this for private and educational purposes only. One has to make sure to not violate the EULA or ToS of the specific application we&#x27;re attaching to. This series, much like cheatengine.org, does not condone the illegal use of the code shared.&lt;&#x2F;p&gt;
 &lt;p&gt;Cheat Engine is a tool for Windows, so we will be developing for Windows as well. However, you can also &lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;q&#x2F;12977179&#x2F;4759433&quot;&gt;read memory from Linux-like systems&lt;&#x2F;a&gt;. &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;scanmem&#x2F;scanmem&quot;&gt;GameConqueror&lt;&#x2F;a&gt; is a popular alternative to Cheat Engine on Linux systems, so if you feel adventurous, you could definitely follow along too! The techniques shown in this series apply regardless of how we read memory from a process. You will learn a fair bit about doing FFI in Rust too.&lt;&#x2F;p&gt;
