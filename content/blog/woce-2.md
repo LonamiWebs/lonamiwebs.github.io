@@ -1,14 +1,16 @@
 +++
 title = "Writing our own Cheat Engine: Exact Value scanning"
 date = 2021-02-12
+updated = 2021-02-16
 [taxonomies]
 category = ["sw"]
 tags = ["windows", "rust", "hacking"]
 +++
 
-This is part 2 on the *Writing our own Cheat Engine* series.
+This is part 2 on the *Writing our own Cheat Engine* series:
 
-New around here? Skim over [part 1](/blog/woce-1) to learn what this series is all about.
+* [Part 1: Introduction](/blog/woce-1) (start here if you're new to the series!)
+* Part 2: Exact Value scanning
 
 In the introduction, we spent a good deal of time enumerating all running processes just so we could find out the pid we cared about. With the pid now in our hands, we can do pretty much anything to its corresponding process.
 
@@ -505,6 +507,8 @@ And we're not even done. The current tutorial has nine steps, and three addition
 
 In the next post, we'll tackle the third step of the tutorial: Unknown initial value. This will pose a challenge, because with just 2 MiB of memory, storing all the 4-byte aligned locations would require 524288 addresses (`usize`, 8 bytes). This adds up to twice as much memory as the original program (4 MiB), but that's not our main concern, having to perform over five hundred thousand API calls is!
 
+Remember that you can [obtain the code for this post][code] over at my GitHub. You can run `git checkout step2` after cloning the repository to get the right version of the code.
+
 ### Footnotes
 
 [^1]: I did in fact use an online tool to spell it out for me.
@@ -537,3 +541,4 @@ In the next post, we'll tackle the third step of the tutorial: Unknown initial v
 [stepby]: https://doc.rust-lang.org/stable/std/iter/trait.Iterator.html#method.step_by
 [writemem]: https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-writeprocessmemory
 [completion]: https://user-images.githubusercontent.com/6297805/107829541-3f4f2d00-6d8a-11eb-87c4-e2f2d505afbc.png
+[code]: https://github.com/lonami/memo
