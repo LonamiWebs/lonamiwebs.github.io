@@ -95,7 +95,7 @@ if unsafe {
 }
 ```
 
-Great! But the address space is somewhat large. 64 bits large. Eighteen quintillion, four hundred forty-six quadrillion, seven hundred forty-four trillion, seventy-three billion, seven hundred nine million, five hundred fifty-one thousand, six hundred sixteen[^1] large. You gave up reading that, didn't you? Anyway, 18'446'744'073'709'551'616 is a *big* number.
+Great! But the address space is somewhat large. 64 bits large. Eighteen quintillion, four hundred and forty-six quadrillion, seven hundred and forty-four trillion, seventy-three billion, seven hundred and nine million, five hundred and fifty-one thousand, six hundred and sixteen[^1] large. You gave up reading that, didn't you? Anyway, 18'446'744'073'709'551'616 is a *big* number.
 
 I am not willing to wait for the program to scan over so many values. I don't even have 16 [exbibytes] of RAM installed on my laptop yet[^2]! What's up with that?
 
@@ -302,7 +302,7 @@ Hey, that's close to the value shown by the Task Manager! A handfull of megabyte
 
 ## Actually running our First Scan
 
-Okay, we have all the memory regions from which the program can read, write, and execute. Now we also can read the memory in these regions:
+Okay, we have all the memory regions from which the program can read, write, or execute. Now we also can read the memory in these regions:
 
 ```rust
 let regions = process
@@ -330,9 +330,10 @@ All that's left is for us to scan for a target value. To do this, we want to ite
 let target: i32 = ...;
 let target = target.to_ne_bytes();
 
-...
+// -snip-
 
-memory
+// inside the Ok match, replacing the todo!() -- this is where the first scan happens
+Ok(memory) => memory
     .windows(target.len())
     .enumerate()
     .for_each(|(offset, window)| {
@@ -386,10 +387,19 @@ For example, let's say we're scanning our current health of `100` in a game. Thi
 Let's do that:
 
 ```rust
+// new vector to hold the locations, before getting into `memory.windows(target.len())`
 let mut locations = Vec::with_capacity(regions.len());
+
 // -snip-
-locations.push(region.BaseAddress as usize + offset);
+
+// updating the `println!("Found exact value...")` to store the location instead.
+if window == target {
+    locations.push(region.BaseAddress as usize + offset);
+}
+
 // -snip-
+
+// performing a second scan on the locations the first scan found.
 let target: i32 = ...;
 let target = target.to_ne_bytes();
 locations.retain(|addr| match process.read_memory(*addr, target.len()) {
