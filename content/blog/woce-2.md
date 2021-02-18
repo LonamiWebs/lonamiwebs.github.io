@@ -387,7 +387,7 @@ For example, let's say we're scanning our current health of `100` in a game. Thi
 Let's do that:
 
 ```rust
-// new vector to hold the locations, before getting into `memory.windows(target.len())`
+// new vector to hold the locations, before getting into `memory.windows`' for-each
 let mut locations = Vec::with_capacity(regions.len());
 
 // -snip-
