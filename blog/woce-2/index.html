@@ -21,7 +21,7 @@ if unsafe {
     unsafe { buffer.set_len(read as usize) };
     Ok(buffer)
 }
-</code></pre><p>Great! But the address space is somewhat large. 64 bits large. Eighteen quintillion, four hundred forty-six quadrillion, seven hundred forty-four trillion, seventy-three billion, seven hundred nine million, five hundred fifty-one thousand, six hundred sixteen<sup class=footnote-reference><a href=#1>1</a></sup> large. You gave up reading that, didn't you? Anyway, 18'446'744'073'709'551'616 is a <em>big</em> number.<p>I am not willing to wait for the program to scan over so many values. I don't even have 16 <a href=https://en.wikipedia.org/wiki/Orders_of_magnitude_(data)>exbibytes</a> of RAM installed on my laptop yet<sup class=footnote-reference><a href=#2>2</a></sup>! What's up with that?<h2 id=memory-regions>Memory regions</h2><p>The program does not actually have all that memory allocated (surprise!). Random-guessing an address is extremely likely to point out to invalid memory. Reading from the start of the address space all the way to the end would not be any better. And we <strong>need</strong> to do better.<p>We need to query for the memory regions allocated to the program. For this purpose we can use <a href=https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualqueryex><code>VirtualQueryEx</code></a>.<blockquote><p>Retrieves information about a range of pages within the virtual address space of a specified process.</blockquote><p>We have enumerated things before, and this function is not all that different.<pre><code class=language-rust data-lang=rust>fn memory_regions(&self) -> io::Result&LTwinapi::um::winnt::MEMORY_BASIC_INFORMATION> {
+</code></pre><p>Great! But the address space is somewhat large. 64 bits large. Eighteen quintillion, four hundred and forty-six quadrillion, seven hundred and forty-four trillion, seventy-three billion, seven hundred and nine million, five hundred and fifty-one thousand, six hundred and sixteen<sup class=footnote-reference><a href=#1>1</a></sup> large. You gave up reading that, didn't you? Anyway, 18'446'744'073'709'551'616 is a <em>big</em> number.<p>I am not willing to wait for the program to scan over so many values. I don't even have 16 <a href=https://en.wikipedia.org/wiki/Orders_of_magnitude_(data)>exbibytes</a> of RAM installed on my laptop yet<sup class=footnote-reference><a href=#2>2</a></sup>! What's up with that?<h2 id=memory-regions>Memory regions</h2><p>The program does not actually have all that memory allocated (surprise!). Random-guessing an address is extremely likely to point out to invalid memory. Reading from the start of the address space all the way to the end would not be any better. And we <strong>need</strong> to do better.<p>We need to query for the memory regions allocated to the program. For this purpose we can use <a href=https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualqueryex><code>VirtualQueryEx</code></a>.<blockquote><p>Retrieves information about a range of pages within the virtual address space of a specified process.</blockquote><p>We have enumerated things before, and this function is not all that different.<pre><code class=language-rust data-lang=rust>fn memory_regions(&self) -> io::Result&LTwinapi::um::winnt::MEMORY_BASIC_INFORMATION> {
     let mut info = MaybeUninit::uninit();
 
     // SAFETY: the info structure points to valid memory.
@@ -135,7 +135,7 @@ dbg!(process
     .map(|p| p.RegionSize)
     .sum::&LTusize>());
 </code></pre><p>Each memory protection level has its own bit, so we can OR them all together to have a single mask. When ANDing this mask with the protection level, if any bit is set, it will be non-zero, meaning we want to keep this region.<p>Don't ask me why there isn't a specific bit for "write", "read", "execute", and there are only bits for combinations. I guess this way Windows forbids certain combinations.<pre><code>2580480
-</code></pre><p>Hey, that's close to the value shown by the Task Manager! A handfull of megabytes is a lot more manageable than 4 entire gigabytes.<h2 id=actually-running-our-first-scan>Actually running our First Scan</h2><p>Okay, we have all the memory regions from which the program can read, write, and execute. Now we also can read the memory in these regions:<pre><code class=language-rust data-lang=rust>let regions = process
+</code></pre><p>Hey, that's close to the value shown by the Task Manager! A handfull of megabytes is a lot more manageable than 4 entire gigabytes.<h2 id=actually-running-our-first-scan>Actually running our First Scan</h2><p>Okay, we have all the memory regions from which the program can read, write, or execute. Now we also can read the memory in these regions:<pre><code class=language-rust data-lang=rust>let regions = process
     .memory_regions()
     .into_iter()
     .filter(|p| (p.Protect & mask) != 0)
@@ -155,9 +155,10 @@ regions.into_iter().for_each(|region| {
 </code></pre><p>All that's left is for us to scan for a target value. To do this, we want to iterate over all the <a href=https://doc.rust-lang.org/stable/std/primitive.slice.html#method.windows><code>slice::windows</code></a> of size equal to the size of our scan type.<pre><code class=language-rust data-lang=rust>let target: i32 = ...;
 let target = target.to_ne_bytes();
 
-...
+// -snip-
 
-memory
+// inside the Ok match, replacing the todo!() -- this is where the first scan happens
+Ok(memory) => memory
     .windows(target.len())
     .enumerate()
     .for_each(|(offset, window)| {
@@ -182,10 +183,19 @@ Found exact value at [0x7ff8fb381000+4023]
     .enumerate()
     .step_by(4)
     .for_each(...)
-</code></pre><p>As a bonus, over half the addresses are gone, so we have less results to worry about<sup class=footnote-reference><a href=#6>6</a></sup>.<h2 id=next-scan>Next Scan</h2><p>The first scan gave us way too many results. We have no way to tell which is the correct one, as they all have the same value. What we need to do is a <em>second</em> scan at the <em>locations we just found</em>. This way, we can get a second reading, and compare it against a new value. If it's the same, we're on good track, and if not, we can discard a location. Repeating this process lets us cut the hundreds of potential addresses to just a handful of them.<p>For example, let's say we're scanning our current health of <code>100</code> in a game. This gives us over a hundred addresses that point to the value of <code>100</code>. If we go in-game and get hit<sup class=footnote-reference><a href=#7>7</a></sup> by some enemy and get our health down to, say, <code>99</code> (we have a lot of defense), we can then read the memory at the hundred memory locations we found before. If this second reading is not <code>99</code>, we know the address does not actually point to our health pool and it just happened to also contain a <code>100</code> on the first scan. This address can be removed from the list of potential addresses pointing to our health.<p>Let's do that:<pre><code class=language-rust data-lang=rust>let mut locations = Vec::with_capacity(regions.len());
+</code></pre><p>As a bonus, over half the addresses are gone, so we have less results to worry about<sup class=footnote-reference><a href=#6>6</a></sup>.<h2 id=next-scan>Next Scan</h2><p>The first scan gave us way too many results. We have no way to tell which is the correct one, as they all have the same value. What we need to do is a <em>second</em> scan at the <em>locations we just found</em>. This way, we can get a second reading, and compare it against a new value. If it's the same, we're on good track, and if not, we can discard a location. Repeating this process lets us cut the hundreds of potential addresses to just a handful of them.<p>For example, let's say we're scanning our current health of <code>100</code> in a game. This gives us over a hundred addresses that point to the value of <code>100</code>. If we go in-game and get hit<sup class=footnote-reference><a href=#7>7</a></sup> by some enemy and get our health down to, say, <code>99</code> (we have a lot of defense), we can then read the memory at the hundred memory locations we found before. If this second reading is not <code>99</code>, we know the address does not actually point to our health pool and it just happened to also contain a <code>100</code> on the first scan. This address can be removed from the list of potential addresses pointing to our health.<p>Let's do that:<pre><code class=language-rust data-lang=rust>// new vector to hold the locations, before getting into `memory.windows`' for-each
+let mut locations = Vec::with_capacity(regions.len());
+
 // -snip-
-locations.push(region.BaseAddress as usize + offset);
+
+// updating the `println!("Found exact value...")` to store the location instead.
+if window == target {
+    locations.push(region.BaseAddress as usize + offset);
+}
+
 // -snip-
+
+// performing a second scan on the locations the first scan found.
 let target: i32 = ...;
 let target = target.to_ne_bytes();
 locations.retain(|addr| match process.read_memory(*addr, target.len()) {

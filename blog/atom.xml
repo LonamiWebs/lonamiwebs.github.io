@@ -71,7 +71,7 @@ if unsafe {
     Ok(buffer)
 }
 &lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;Great! But the address space is somewhat large. 64 bits large. Eighteen quintillion, four hundred forty-six quadrillion, seven hundred forty-four trillion, seventy-three billion, seven hundred nine million, five hundred fifty-one thousand, six hundred sixteen&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; large. You gave up reading that, didn&#x27;t you? Anyway, 18&#x27;446&#x27;744&#x27;073&#x27;709&#x27;551&#x27;616 is a &lt;em&gt;big&lt;&#x2F;em&gt; number.&lt;&#x2F;p&gt;
+&lt;p&gt;Great! But the address space is somewhat large. 64 bits large. Eighteen quintillion, four hundred and forty-six quadrillion, seven hundred and forty-four trillion, seventy-three billion, seven hundred and nine million, five hundred and fifty-one thousand, six hundred and sixteen&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; large. You gave up reading that, didn&#x27;t you? Anyway, 18&#x27;446&#x27;744&#x27;073&#x27;709&#x27;551&#x27;616 is a &lt;em&gt;big&lt;&#x2F;em&gt; number.&lt;&#x2F;p&gt;
 &lt;p&gt;I am not willing to wait for the program to scan over so many values. I don&#x27;t even have 16 &lt;a href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Orders_of_magnitude_(data)&quot;&gt;exbibytes&lt;&#x2F;a&gt; of RAM installed on my laptop yet&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;! What&#x27;s up with that?&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;memory-regions&quot;&gt;Memory regions&lt;&#x2F;h2&gt;
 &lt;p&gt;The program does not actually have all that memory allocated (surprise!). Random-guessing an address is extremely likely to point out to invalid memory. Reading from the start of the address space all the way to the end would not be any better. And we &lt;strong&gt;need&lt;&#x2F;strong&gt; to do better.&lt;&#x2F;p&gt;
@@ -230,7 +230,7 @@ dbg!(process
 &lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
 &lt;p&gt;Hey, that&#x27;s close to the value shown by the Task Manager! A handfull of megabytes is a lot more manageable than 4 entire gigabytes.&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;actually-running-our-first-scan&quot;&gt;Actually running our First Scan&lt;&#x2F;h2&gt;
-&lt;p&gt;Okay, we have all the memory regions from which the program can read, write, and execute. Now we also can read the memory in these regions:&lt;&#x2F;p&gt;
+&lt;p&gt;Okay, we have all the memory regions from which the program can read, write, or execute. Now we also can read the memory in these regions:&lt;&#x2F;p&gt;
 &lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let regions = process
     .memory_regions()
     .into_iter()
@@ -253,9 +253,10 @@ regions.into_iter().for_each(|region| {
 &lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let target: i32 = ...;
 let target = target.to_ne_bytes();
 
-...
+&#x2F;&#x2F; -snip-
 
-memory
+&#x2F;&#x2F; inside the Ok match, replacing the todo!() -- this is where the first scan happens
+Ok(memory) =&amp;gt; memory
     .windows(target.len())
     .enumerate()
     .for_each(|(offset, window)| {
@@ -293,10 +294,19 @@ Found exact value at [0x7ff8fb381000+4023]
 &lt;p&gt;The first scan gave us way too many results. We have no way to tell which is the correct one, as they all have the same value. What we need to do is a &lt;em&gt;second&lt;&#x2F;em&gt; scan at the &lt;em&gt;locations we just found&lt;&#x2F;em&gt;. This way, we can get a second reading, and compare it against a new value. If it&#x27;s the same, we&#x27;re on good track, and if not, we can discard a location. Repeating this process lets us cut the hundreds of potential addresses to just a handful of them.&lt;&#x2F;p&gt;
 &lt;p&gt;For example, let&#x27;s say we&#x27;re scanning our current health of &lt;code&gt;100&lt;&#x2F;code&gt; in a game. This gives us over a hundred addresses that point to the value of &lt;code&gt;100&lt;&#x2F;code&gt;. If we go in-game and get hit&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#7&quot;&gt;7&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; by some enemy and get our health down to, say, &lt;code&gt;99&lt;&#x2F;code&gt; (we have a lot of defense), we can then read the memory at the hundred memory locations we found before. If this second reading is not &lt;code&gt;99&lt;&#x2F;code&gt;, we know the address does not actually point to our health pool and it just happened to also contain a &lt;code&gt;100&lt;&#x2F;code&gt; on the first scan. This address can be removed from the list of potential addresses pointing to our health.&lt;&#x2F;p&gt;
 &lt;p&gt;Let&#x27;s do that:&lt;&#x2F;p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let mut locations = Vec::with_capacity(regions.len());
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&#x2F;&#x2F; new vector to hold the locations, before getting into `memory.windows`&#x27; for-each
+let mut locations = Vec::with_capacity(regions.len());
+
 &#x2F;&#x2F; -snip-
-locations.push(region.BaseAddress as usize + offset);
+
+&#x2F;&#x2F; updating the `println!(&amp;quot;Found exact value...&amp;quot;)` to store the location instead.
+if window == target {
+    locations.push(region.BaseAddress as usize + offset);
+}
+
 &#x2F;&#x2F; -snip-
+
+&#x2F;&#x2F; performing a second scan on the locations the first scan found.
 let target: i32 = ...;
 let target = target.to_ne_bytes();
 locations.retain(|addr| match process.read_memory(*addr, target.len()) {
