@@ -14,7 +14,7 @@ This is part 2 on the *Writing our own Cheat Engine* series:
 
 In the introduction, we spent a good deal of time enumerating all running processes just so we could find out the pid we cared about. With the pid now in our hands, we can do pretty much anything to its corresponding process.
 
-It's now time to read the process' memory and write to it. If our process was a single-player game, this would enable us to do things like setting a very high value on the player's current health pool, making us invencible. This technique will often not work for multi-player games, because the server likely knows your true current health (the most you could probably do is make the client render an incorrect value). However, if the server is crappy and it trusts the client, then you're still free to mess around with your current health.
+It's now time to read the process' memory and write to it. If our process was a single-player game, this would enable us to do things like setting a very high value on the player's current health pool, making us invincible. This technique will often not work for multi-player games, because the server likely knows your true current health (the most you could probably do is make the client render an incorrect value). However, if the server is crappy and it trusts the client, then you're still free to mess around with your current health.
 
 Even if we don't want to write to the process' memory, reading is still very useful. Maybe you could enhance your experience by making a custom overlay that displays useful information, or something that makes noise if it detects the life is too low, or even simulating a keyboard event to automatically recover some mana when you're running low.
 
