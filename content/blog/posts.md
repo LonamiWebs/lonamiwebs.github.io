@@ -56,6 +56,7 @@ Food for Thought
 * http://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/. What Color is Your Function? Spoiler: can we approach asynchronous IO better?
 * https://hackernoon.com/im-harvesting-credit-card-numbers-and-passwords-from-your-site-here-s-how-9a8cb347c5b5. I'm harvesting credit card numbers and passwords from your site. A word of warning when mindlessly adding dependencies.
 * https://medium.com/message/everything-is-broken-81e5f33a24e1. Everything Is Broken. Some of the (probable) truths about our world.
+* http://johnsalvatier.org/blog/2017/reality-has-a-surprising-amount-of-detail. Reality has a surprising amount of detail.
 
 
 Funny
