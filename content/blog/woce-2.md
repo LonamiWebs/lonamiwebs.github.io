@@ -436,7 +436,7 @@ while locations.len() != 1 {
 
 ## Modifying memory
 
-Now that we have very likely locations pointing to our current health in memory, all that's left is writing our new desired value to gain infinite health[^9]. Much like there's a call to `ReadProcessMemory`, there's a different one to [`WriteProcessMemory`][writemem]. Its usage is straightforward:
+Now that we have very likely locations pointing to our current health in memory, all that's left is writing our new desired value to gain infinite health[^9]. Much like how we're able to read memory with `ReadProcessMemory`, we can write to it with [`WriteProcessMemory`][writemem]. Its usage is straightforward:
 
 ```rust
 pub fn write_memory(&self, addr: usize, value: &[u8]) -> io::Result<usize> {
