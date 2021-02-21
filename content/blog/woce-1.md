@@ -1,7 +1,7 @@
 +++
 title = "Writing our own Cheat Engine: Introduction"
 date = 2021-02-07
-updated = 2021-02-16
+updated = 2021-02-19
 [taxonomies]
 category = ["sw"]
 tags = ["windows", "rust", "hacking"]
@@ -11,6 +11,7 @@ This is part 1 on the *Writing our own Cheat Engine* series:
 
 * Part 1: Introduction
 * [Part 2: Exact Value scanning](/blog/woce-2)
+* [Part 3: Unknown initial value](/blog/woce-3)
 
 [Cheat Engine][ce] is a tool designed to modify single player games and contains other useful tools within itself that enable its users to debug games or other applications. It comes with a memory scanner, (dis)assembler, inspection tools and a handful other things. In this series, we will be writing our own tiny Cheat Engine capable of solving all steps of the tutorial, and diving into how it all works underneath.
 

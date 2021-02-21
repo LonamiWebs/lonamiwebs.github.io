@@ -1,7 +1,7 @@
 +++
 title = "Writing our own Cheat Engine: Exact Value scanning"
 date = 2021-02-12
-updated = 2021-02-16
+updated = 2021-02-19
 [taxonomies]
 category = ["sw"]
 tags = ["windows", "rust", "hacking"]
@@ -11,6 +11,7 @@ This is part 2 on the *Writing our own Cheat Engine* series:
 
 * [Part 1: Introduction](/blog/woce-1) (start here if you're new to the series!)
 * Part 2: Exact Value scanning
+* [Part 3: Unknown initial value](/blog/woce-3)
 
 In the introduction, we spent a good deal of time enumerating all running processes just so we could find out the pid we cared about. With the pid now in our hands, we can do pretty much anything to its corresponding process.
 
