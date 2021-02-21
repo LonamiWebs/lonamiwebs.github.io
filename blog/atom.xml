@@ -4,18 +4,372 @@
 	<link href="https://lonami.dev/blog/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://lonami.dev/blog/"/>
 	<generator uri="https://www.getzola.org/">Zola</generator>
-	<updated>2021-02-16T00:00:00+00:00</updated>
+	<updated>2021-02-19T00:00:00+00:00</updated>
 	<id>https://lonami.dev/blog/atom.xml</id>
+	<entry xml:lang="en">
+		<title>Writing our own Cheat Engine: Unknown initial value</title>
+		<published>2021-02-19T00:00:00+00:00</published>
+		<updated>2021-02-19T00:00:00+00:00</updated>
+		<link href="https://lonami.dev/blog/woce-3/" type="text/html"/>
+		<id>https://lonami.dev/blog/woce-3/</id>
+		<content type="html">&lt;p&gt;This is part 3 on the &lt;em&gt;Writing our own Cheat Engine&lt;&#x2F;em&gt; series:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-1&quot;&gt;Part 1: Introduction&lt;&#x2F;a&gt; (start here if you&#x27;re new to the series!)&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-2&quot;&gt;Part 2: Exact Value scanning&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Part 3: Unknown initial value&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;In part 2 we left off with a bit of a cliff-hanger. Our little program is now able to scan for an exact value, remember the couple hundred addresses pointing to said value, and perform subsequent scans to narrow the list of addresses down until we&#x27;re left with a handful of them.&lt;&#x2F;p&gt;
+&lt;p&gt;However, it is not always the case that you have an exact value to work with. The best you can do in these cases is guess what the software might be storing. For example, it could be a floating point for your current movement speed in a game, or an integer for your current health.&lt;&#x2F;p&gt;
+&lt;p&gt;The problem with this is that there are far too many possible locations storing our desired value. If you count misaligned locations, this means there is a different location to address every single byte in memory. A program with one megabyte of memory already has a &lt;em&gt;million&lt;&#x2F;em&gt; of addresses. Clearly, we need to do better than performing one million memory reads&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;This post will shift focus a bit from using &lt;code&gt;winapi&lt;&#x2F;code&gt; to possible techniques to perform the various scans.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;unknown-initial-value&quot;&gt;Unknown initial value&lt;&#x2F;h2&gt;
+&lt;details open&gt;&lt;summary&gt;Cheat Engine Tutorial: Step 3&lt;&#x2F;summary&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Ok, seeing that you&#x27;ve figured out how to find a value using exact value let&#x27;s move on to the next step.&lt;&#x2F;p&gt;
+&lt;p&gt;First things first though. Since you are doing a new scan, you have to click on New Scan first, to start a new scan. (You may think this is straighforward, but you&#x27;d be surprised how many people get stuck on that step) I won&#x27;t be explaining this step again, so keep this in mind
+Now that you&#x27;ve started a new scan, let&#x27;s continue&lt;&#x2F;p&gt;
+&lt;p&gt;In the previous test we knew the initial value so we could do a exact value, but now we have a status bar where we don&#x27;t know the starting value.
+We only know that the value is between 0 and 500. And each time you click &#x27;hit me&#x27; you lose some health. The amount you lose each time is shown above the status bar.&lt;&#x2F;p&gt;
+&lt;p&gt;Again there are several different ways to find the value. (like doing a decreased value by... scan), but I&#x27;ll only explain the easiest. &amp;quot;Unknown initial value&amp;quot;, and decreased value.
+Because you don&#x27;t know the value it is right now, a exact value wont do any good, so choose as scantype &#x27;Unknown initial value&#x27;, again, the value type is 4-bytes. (most windows apps use 4-bytes)click first scan and wait till it&#x27;s done.&lt;&#x2F;p&gt;
+&lt;p&gt;When it is done click &#x27;hit me&#x27;. You&#x27;ll lose some of your health. (the amount you lost shows for a few seconds and then disappears, but you don&#x27;t need that)
+Now go to Cheat Engine, and choose &#x27;Decreased Value&#x27; and click &#x27;Next Scan&#x27;
+When that scan is done, click hit me again, and repeat the above till you only find a few.&lt;&#x2F;p&gt;
+&lt;p&gt;We know the value is between 0 and 500, so pick the one that is most likely the address we need, and add it to the list.
+Now change the health to 5000, to proceed to the next step.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;&#x2F;details&gt;
+&lt;h2 id=&quot;dense-memory-locations&quot;&gt;Dense memory locations&lt;&#x2F;h2&gt;
+&lt;p&gt;The key thing to notice here is that, when we read memory from another process, we do so over &lt;em&gt;entire regions&lt;&#x2F;em&gt;. A memory region is represented by a starting offset, a size, and a bunch of other things like protection level.&lt;&#x2F;p&gt;
+&lt;p&gt;When running the first scan for an unknown value, all we need to remember is the starting offset and size for every single region. All the candidate locations that could point to our value fall within this range, so it is enough for us to store the range definition, and not every location within it.&lt;&#x2F;p&gt;
+&lt;p&gt;To gain a better understanding of what this means, let&#x27;s come up with a more specific scenario. With our current approach of doing things, we store an address (&lt;code&gt;usize&lt;&#x2F;code&gt;) for every location pointing to our desired value. In the case of unknown values, all locations are equally valid, since we don&#x27;t know what value they should point to yet, and any value they point to is good. With this representation, we would end up with a very large vector:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let locations = vec![0x2000, 0x2001, ..., 0x20ff, 0x2100];
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This representation is dense. Every single number in the range &lt;code&gt;0x2000..=0x2100&lt;&#x2F;code&gt; is present. So why bother storing the values individually when the range is enough?:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let locations = EntireRegion { range: 0x2000..=0x2100 };
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Much better! With two &lt;code&gt;usize&lt;&#x2F;code&gt;, one for the starting location and another for the end, we can indicate that we care about all the locations falling in that range.&lt;&#x2F;p&gt;
+&lt;p&gt;In fact, some accessible memory regions immediately follow eachother, so we could even compact this further and merge regions which are together. But due to their potential differences with regards to protection levels, we will not attempt to merge regions.&lt;&#x2F;p&gt;
+&lt;p&gt;We don&#x27;t want to get rid of the old way of storing locations, because once we start narrowing them down, we will want to go back to storing just a few candidates. To keep things tidy, let&#x27;s introduce a new &lt;code&gt;enum&lt;&#x2F;code&gt; representing either possibility:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;use std::ops::Range;
+
+pub enum CandidateLocations {
+    Discrete {
+        locations: Vec&amp;lt;usize&amp;gt;,
+    },
+    Dense {
+        range: Range&amp;lt;usize&amp;gt;,
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Let&#x27;s also introduce another &lt;code&gt;enum&lt;&#x2F;code&gt; to perform the different scan types. For the time being, we will only worry about looking for &lt;code&gt;i32&lt;&#x2F;code&gt; in memory:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub enum Scan {
+    Exact(i32),
+    Unknown,
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;storing-scanned-values&quot;&gt;Storing scanned values&lt;&#x2F;h2&gt;
+&lt;p&gt;When scanning for exact values, it&#x27;s not necessary to store the value found. We already know they&#x27;re all the same, for example, value &lt;code&gt;42&lt;&#x2F;code&gt;. However, if the value is unknown, we do need to store it so that we can compare it in a subsequent scan to see if the value is the same or it changed. This means the value can be &amp;quot;any within&amp;quot; the read memory chunk:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub enum Value {
+    Exact(i32),
+    AnyWithin(Vec&amp;lt;u8&amp;gt;),
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;For every region in memory, there will be some candidate locations and a value (or value range) we need to compare against in subsequent scans:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub struct Region {
+    pub info: winapi::um::winnt::MEMORY_BASIC_INFORMATION,
+    pub locations: CandidateLocations,
+    pub value: Value,
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;With all the data structures needed setup, we can finally refactor our old scanning code into a new method capable of dealing with all these cases. For brevity, I will omit the exact scan, as it remains mostly unchanged:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;use winapi::um::winnt::MEMORY_BASIC_INFORMATION;
+
+...
+
+&#x2F;&#x2F; inside `impl Process`
+pub fn scan_regions(&amp;amp;self, regions: &amp;amp;[MEMORY_BASIC_INFORMATION], scan: Scan) -&amp;gt; Vec&amp;lt;Region&amp;gt; {
+    regions
+        .iter()
+        .flat_map(|region| match scan {
+            Scan::Exact(n) =&amp;gt; todo!(&amp;quot;old scan implementation&amp;quot;),
+            Scan::Unknown =&amp;gt; {
+                let base = region.BaseAddress as usize;
+                match self.read_memory(region.BaseAddress as _, region.RegionSize) {
+                    Ok(memory) =&amp;gt; Some(Region {
+                        info: region.clone(),
+                        locations: CandidateLocations::Dense {
+                            range: base..base + region.RegionSize,
+                        },
+                        value: Value::AnyWithin(memory),
+                    }),
+                    Err(_) =&amp;gt; None,
+                }
+            }
+        })
+        .collect()
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Time to try it out!&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;impl CandidateLocations {
+    pub fn len(&amp;amp;self) -&amp;gt; usize {
+        match self {
+            CandidateLocations::Discrete { locations } =&amp;gt; locations.len(),
+            CandidateLocations::Dense { range } =&amp;gt; range.len(),
+        }
+    }
+}
+
+...
+
+fn main() {
+    &#x2F;&#x2F; -snip-
+
+    println!(&amp;quot;Scanning {} memory regions&amp;quot;, regions.len());
+    let last_scan = process.scan_regions(&amp;amp;regions, Scan::Unknown);
+    println!(
+        &amp;quot;Found {} locations&amp;quot;,
+        last_scan.iter().map(|r| r.locations.len()).sum::&amp;lt;usize&amp;gt;()
+    );
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;Scanning 88 memory regions
+Found 3014656 locations
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;If we consider misaligned locations, there is a lot of potential addresses where we could look for. Running the same scan on Cheat Engine yields &lt;code&gt;2,449,408&lt;&#x2F;code&gt; addresses, which is pretty close. It&#x27;s probably skipping some additional regions that we are considering. Emulating Cheat Engine to perfection is not a concern for us at the moment, so I&#x27;m not going to investigate what regions it actually uses.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;comparing-scanned-values&quot;&gt;Comparing scanned values&lt;&#x2F;h2&gt;
+&lt;p&gt;Now that we have performed the initial scan and have stored all the &lt;code&gt;CandidateLocations&lt;&#x2F;code&gt; and &lt;code&gt;Value&lt;&#x2F;code&gt;, we can re-implement the &amp;quot;next scan&amp;quot; step to handle any variant of our &lt;code&gt;Scan&lt;&#x2F;code&gt; enum. This enables us to mix-and-match any &lt;code&gt;Scan&lt;&#x2F;code&gt; mode in any order. For example, one could perform an exact scan, then one for decreased values, or start with unknown scan and scan for unchanged values.&lt;&#x2F;p&gt;
+&lt;p&gt;The tutorial suggests using &amp;quot;decreased value&amp;quot; scan, so let&#x27;s start with that:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub enum Scan {
+    Exact(i32),
+    Unknown,
+    Decreased, &#x2F;&#x2F; new!
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Other scanning modes, such as decreased by a known amount rather than any decrease, increased, unchanged, changed and so on, are not very different from the &amp;quot;decreased&amp;quot; scan, so I won&#x27;t bore you with the details.&lt;&#x2F;p&gt;
+&lt;p&gt;I will use a different method to perform a &amp;quot;rescan&amp;quot;, since the first one is a bit more special in that it doesn&#x27;t start with any previous values:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub fn rescan_regions(&amp;amp;self, regions: &amp;amp;[Region], scan: Scan) -&amp;gt; Vec&amp;lt;Region&amp;gt; {
+    regions
+        .iter()
+        .flat_map(|region| match scan {
+            Scan::Decreased =&amp;gt; {
+                let mut locations = Vec::new();
+                match region.locations {
+                    CandidateLocations::Dense { range } =&amp;gt; {
+                        match self.read_memory(range.start, range.end - range.start) {
+                            Ok(memory) =&amp;gt; match region.value {
+                                Value::AnyWithin(previous) =&amp;gt; {
+                                    memory
+                                        .windows(4)
+                                        .zip(previous.windows(4))
+                                        .enumerate()
+                                        .step_by(4)
+                                        .for_each(|(offset, (new, old))| {
+                                            let new = i32::from_ne_bytes([
+                                                new[0], new[1], new[2], new[3],
+                                            ]);
+                                            let old = i32::from_ne_bytes([
+                                                old[0], old[1], old[2], old[3],
+                                            ]);
+                                            if new &amp;lt; old {
+                                                locations.push(range.start + offset);
+                                            }
+                                        });
+
+                                    Some(Region {
+                                        info: region.info.clone(),
+                                        locations: CandidateLocations::Discrete { locations },
+                                        value: Value::AnyWithin(memory),
+                                    })
+                                }
+                                _ =&amp;gt; todo!(),
+                            },
+                            _ =&amp;gt; todo!(),
+                        }
+                    }
+                    _ =&amp;gt; todo!(),
+                }
+            }
+            _ =&amp;gt; todo!(),
+        })
+        .collect()
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;If you&#x27;ve skimmed over that, I do not blame you. Here&#x27;s the summary: for every existing region, when executing the scan mode &amp;quot;decreased&amp;quot;, if the previous locations were dense, read the entire memory region. On success, if the previous values were a chunk of memory, iterate over the current and old memory at the same time, and for every aligned &lt;code&gt;i32&lt;&#x2F;code&gt;, if the new value is less, store it.&lt;&#x2F;p&gt;
+&lt;p&gt;It&#x27;s also making me ill. Before I leave a mess on the floor, does it work?&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;std::thread::sleep(std::time::Duration::from_secs(10));
+let last_scan = process.rescan_regions(&amp;amp;last_scan, Scan::Decreased);
+println!(
+    &amp;quot;Found {} locations&amp;quot;,
+    last_scan.iter().map(|r| r.locations.len()).sum::&amp;lt;usize&amp;gt;()
+);
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;Found 3014656 locations
+Found 177 locations
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Okay, great, let&#x27;s clean up this mess…&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;refactoring&quot;&gt;Refactoring&lt;&#x2F;h2&gt;
+&lt;p&gt;Does it also make you uncomfortable to be writing something that you know will end up &lt;em&gt;huge&lt;&#x2F;em&gt; unless you begin refactoring other parts right now? I definitely feel that way. But I think it&#x27;s good discipline to push through with something that works first, even if it&#x27;s nasty, before going on a tangent. Now that we have the basic implementation working, let&#x27;s take on this monster before it eats us alive.&lt;&#x2F;p&gt;
+&lt;p&gt;First things first, that method is inside an &lt;code&gt;impl&lt;&#x2F;code&gt; block. The deepest nesting level is 13. I almost have to turn around my chair to read the entire thing out!&lt;&#x2F;p&gt;
+&lt;p&gt;Second, we&#x27;re nesting four matches. Three of them we care about: scan, candidate location, and value. If each of these &lt;code&gt;enum&lt;&#x2F;code&gt; has &lt;code&gt;S&lt;&#x2F;code&gt;, &lt;code&gt;C&lt;&#x2F;code&gt; and &lt;code&gt;V&lt;&#x2F;code&gt; variants respectively, writing each of these by hand will require &lt;code&gt;S * C * V&lt;&#x2F;code&gt; different implementations! Cheat Engine offers 10 different scans, I can think of at least 3 different ways to store candidate locations, and another 3 ways to store the values found. That&#x27;s &lt;code&gt;10 * 3 * 3 = 90&lt;&#x2F;code&gt; different combinations. I am not willing to write out all these&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;, so we need to start introducing some abstractions. Just imagine what a monster function you would end with! The horror!&lt;&#x2F;p&gt;
+&lt;p&gt;Third, why is the scan being executed in the process? This is something that should be done in the &lt;code&gt;impl Scan&lt;&#x2F;code&gt; instead!&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s begin the cleanup:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub fn rescan_regions(&amp;amp;self, regions: &amp;amp;[Region], scan: Scan) -&amp;gt; Vec&amp;lt;Region&amp;gt; {
+    todo!()
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I already feel ten times better.&lt;&#x2F;p&gt;
+&lt;p&gt;Now, this method will unconditionally read the entire memory region, even if the scan or the previous candidate locations don&#x27;t need it&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#3&quot;&gt;3&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. In the worst case with a single discrete candidate location, we will be reading a very large chunk of memory when we could have read just the 4 bytes needed for the &lt;code&gt;i32&lt;&#x2F;code&gt;. On the bright side, if there &lt;em&gt;are&lt;&#x2F;em&gt; more locations in this memory region, we will get read of them at the same time&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#4&quot;&gt;4&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. So even if we&#x27;re moving more memory around all the time, it isn&#x27;t &lt;em&gt;too&lt;&#x2F;em&gt; bad.&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;regions
+    .iter()
+    .flat_map(
+        |region| match self.read_memory(region.info.BaseAddress as _, region.info.RegionSize) {
+            Ok(memory) =&amp;gt; todo!(),
+            Err(err) =&amp;gt; {
+                eprintln!(
+                    &amp;quot;Failed to read {} bytes at {:?}: {}&amp;quot;,
+                    region.info.RegionSize, region.info.BaseAddress, err,
+                );
+                None
+            }
+        },
+    )
+    .collect()
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Great! If reading memory succeeds, we want to rerun the scan:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;Ok(memory) =&amp;gt; Some(scan.rerun(region, memory)),
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The rerun will live inside &lt;code&gt;impl Scan&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub fn rerun(&amp;amp;self, region: &amp;amp;Region, memory: Vec&amp;lt;u8&amp;gt;) -&amp;gt; Region {
+    match self {
+        Scan::Exact(_) =&amp;gt; self.run(region.info.clone(), memory),
+        Scan::Unknown =&amp;gt; region.clone(),
+        Scan::Decreased =&amp;gt; todo!(),
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;An exact scan doesn&#x27;t care about any previous values, so it behaves like a first scan. The first scan is done by the &lt;code&gt;run&lt;&#x2F;code&gt; function (it contains the implementation factored out of the &lt;code&gt;Process::scan_regions&lt;&#x2F;code&gt; method), which only needs the region information and the current memory chunk we just read.&lt;&#x2F;p&gt;
+&lt;p&gt;The unknown scan leaves the region unchanged: any value stored is still valid, because it is unknown what we&#x27;re looking for.&lt;&#x2F;p&gt;
+&lt;p&gt;The decreased scan will have to iterate over all the candidate locations, and compare them with the current memory chunk. But this time, we&#x27;ll abstract this iteration too:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;impl Region {
+    fn iter_locations&amp;lt;&#x27;a&amp;gt;(
+        &amp;amp;&#x27;a self,
+        new_memory: &amp;amp;&#x27;a [u8],
+    ) -&amp;gt; impl Iterator&amp;lt;Item = (usize, i32, i32)&amp;gt; + &#x27;a {
+        match &amp;amp;self.locations {
+            CandidateLocations::Dense { range } =&amp;gt; range.clone().step_by(4).map(move |addr| {
+                let old = self.value_at(addr);
+                let new = i32::from_ne_bytes([
+                    new_memory[0],
+                    new_memory[1],
+                    new_memory[2],
+                    new_memory[3],
+                ]);
+                (addr, old, new)
+            }),
+            _ =&amp;gt; todo!(),
+        }
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;For a dense candidate location, we iterate over all the 4-aligned addresses (fast scan for &lt;code&gt;i32&lt;&#x2F;code&gt; values), and yield &lt;code&gt;(current address, old value, new value)&lt;&#x2F;code&gt;. This way, the &lt;code&gt;Scan&lt;&#x2F;code&gt; can do anything it wants with the old and new values, and if it finds a match, it can use the address.&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;code&gt;value_at&lt;&#x2F;code&gt; method will deal with all the &lt;code&gt;Value&lt;&#x2F;code&gt; variants:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;fn value_at(&amp;amp;self, addr: usize) -&amp;gt; i32 {
+    match &amp;amp;self.value {
+        Value::AnyWithin(chunk) =&amp;gt; {
+            let base = addr - self.info.BaseAddress as usize;
+            let bytes = &amp;amp;chunk[base..base + 4];
+            i32::from_ne_bytes([bytes[0], bytes[1], bytes[2], bytes[3]])
+        }
+        _ =&amp;gt; todo!(),
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This way, &lt;code&gt;iter_locations&lt;&#x2F;code&gt; can easily use any value type. With this, we have all &lt;code&gt;enum&lt;&#x2F;code&gt; covered: &lt;code&gt;Scan&lt;&#x2F;code&gt; in &lt;code&gt;rerun&lt;&#x2F;code&gt;, &lt;code&gt;CandidateLocation&lt;&#x2F;code&gt; in &lt;code&gt;iter_locations&lt;&#x2F;code&gt;, and &lt;code&gt;Value&lt;&#x2F;code&gt; in &lt;code&gt;value_at&lt;&#x2F;code&gt;. Now we can add as many variants as we want, and we will only need to update a single &lt;code&gt;match&lt;&#x2F;code&gt; arm for each of them. Let&#x27;s implement &lt;code&gt;Scan::Decreased&lt;&#x2F;code&gt; and try it out:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub fn rerun(&amp;amp;self, region: &amp;amp;Region, memory: Vec&amp;lt;u8&amp;gt;) -&amp;gt; Region {
+    match self {
+        Scan::Decreased =&amp;gt; Region {
+            info: region.info.clone(),
+            locations: CandidateLocations::Discrete {
+                locations: region
+                    .iter_locations(&amp;amp;memory)
+                    .flat_map(|(addr, old, new)| if new &amp;lt; old { Some(addr) } else { None })
+                    .collect(),
+            },
+            value: Value::AnyWithin(memory),
+        },,
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;Found 3014656 locations
+Found 223791 locations
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Hmm… before we went down from &lt;code&gt;3014656&lt;&#x2F;code&gt; to &lt;code&gt;177&lt;&#x2F;code&gt; locations, and now we went down to &lt;code&gt;223791&lt;&#x2F;code&gt;. Where did we go wrong?&lt;&#x2F;p&gt;
+&lt;p&gt;After spending several hours on this, I can tell you where we went wrong. &lt;code&gt;iter_locations&lt;&#x2F;code&gt; is always accessing the memory range &lt;code&gt;0..4&lt;&#x2F;code&gt;, and not the right address. Here&#x27;s the fix:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;CandidateLocations::Dense { range } =&amp;gt; range.clone().step_by(4).map(move |addr| {
+    let old = self.value_at(addr);
+    let base = addr - self.info.BaseAddress as usize;
+    let bytes = &amp;amp;new_memory[base..base + 4];
+    let new = i32::from_ne_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
+    (addr, old, new)
+}),
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;going-beyond&quot;&gt;Going beyond&lt;&#x2F;h2&gt;
+&lt;p&gt;Let&#x27;s take a look at other possible &lt;code&gt;Scan&lt;&#x2F;code&gt; types. Cheat Engine supports the following initial scan types:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Exact Value&lt;&#x2F;li&gt;
+&lt;li&gt;Bigger than…&lt;&#x2F;li&gt;
+&lt;li&gt;Smaller than…&lt;&#x2F;li&gt;
+&lt;li&gt;Value between…&lt;&#x2F;li&gt;
+&lt;li&gt;Unknown initial value&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;&amp;quot;Bigger than&amp;quot; and &amp;quot;Smaller than&amp;quot; can both be represented by &amp;quot;Value between&amp;quot;, so it&#x27;s pretty much just three.&lt;&#x2F;p&gt;
+&lt;p&gt;For subsequent scans, in addition to the scan types described above, we find:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Increased value&lt;&#x2F;li&gt;
+&lt;li&gt;Increased value by…&lt;&#x2F;li&gt;
+&lt;li&gt;Decreased value&lt;&#x2F;li&gt;
+&lt;li&gt;Decreased value by…&lt;&#x2F;li&gt;
+&lt;li&gt;Changed value&lt;&#x2F;li&gt;
+&lt;li&gt;Unchanged value&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Not only does Cheat Engine provide all of these scans, but all of them can also be negated. For example, &amp;quot;find values that were not increased by 7&amp;quot;. One could imagine to also support things like &amp;quot;increased value by range&amp;quot;. For the increased and decreased scans, Cheat Engine also supports &amp;quot;at least xx%&amp;quot;, so that if the value changed within the specified percentage interval, it will be considered.&lt;&#x2F;p&gt;
+&lt;p&gt;What about &lt;code&gt;CandidateLocations&lt;&#x2F;code&gt;? I can&#x27;t tell you how Cheat Engine stores these, but I can tell you that &lt;code&gt;CandidateLocations::Discrete&lt;&#x2F;code&gt; can still be quite inefficient. Imagine you&#x27;ve started with a scan for unknown values and then ran a scan for unchanged valueus. Most values in memory will have been unchanged, but with our current implementation, we are now storing an entire &lt;code&gt;usize&lt;&#x2F;code&gt; address for each of these. One option would be to introduce &lt;code&gt;CandidateLocations::Sparse&lt;&#x2F;code&gt;, which would be a middle ground. You could implement it like &lt;code&gt;Dense&lt;&#x2F;code&gt; and include a vector of booleans telling you which values to consider, or go smaller and use a bitstring or bit vector. You could use a sparse vector data structure.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;code&gt;Value&lt;&#x2F;code&gt; is very much like &lt;code&gt;CandidateLocations&lt;&#x2F;code&gt;, except that it stores a value to compare against and not an address. Here we can either have an exact value, or an older copy of the memory. Again, keeping a copy of the entire memory chunk when all we need is a handful of values is inefficient. You could keep a mapping from addresses to values if you don&#x27;t have too many. Or you could shrink and fragment the copied memory in a more optimal way. There&#x27;s a lot of room for improvement!&lt;&#x2F;p&gt;
+&lt;p&gt;What if, despite all of the efforts above, we still don&#x27;t have enough RAM to store all this information? The Cheat Engine Tutorial doesn&#x27;t use a lot of memory, but as soon as you try scanning bigger programs, like games, you may find yourself needing several gigabytes worth of memory to remember all the found values in order to compare them in subsequent scans. You may even need to consider dumping all the regions to a file and read from it to run the comparisons. For example, running a scan for &amp;quot;unknown value&amp;quot; in Cheat Engine brings its memory up by the same amount of memory used by the process scanned (which makes sense), but as soon as I ran a scan for &amp;quot;unchanged value&amp;quot; over the misaligned values, Cheat Engine&#x27;s disk usage skyrocketed to 1GB&#x2F;s (!) for several seconds on my SSD. After it finished, memory usage went down to normal. It was very likely writing out all candidate locations to disk.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;finale&quot;&gt;Finale&lt;&#x2F;h2&gt;
+&lt;p&gt;There is a lot of things to learn from Cheat Engine just by observing its behaviour, and we&#x27;re only scratching its surface.&lt;&#x2F;p&gt;
+&lt;p&gt;In the next post, we&#x27;ll tackle the fourth step of the tutorial: Floating points. So far, we have only been working with &lt;code&gt;i32&lt;&#x2F;code&gt; for simplicity. We will need to update our code to be able to account for different data types, which will make it easy to support other types like &lt;code&gt;i16&lt;&#x2F;code&gt;, &lt;code&gt;i64&lt;&#x2F;code&gt;, or even strings, represented as an arbitrary sequence of bytes.&lt;&#x2F;p&gt;
+&lt;p&gt;As usual, you can &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lonami&#x2F;memo&quot;&gt;obtain the code for this post&lt;&#x2F;a&gt; over at my GitHub. You can run &lt;code&gt;git checkout step3&lt;&#x2F;code&gt; after cloning the repository to get the right version of the code. This version is a bit cleaner than the one presented in the blog, and contains some of the things described in the &lt;a href=&quot;https:&#x2F;&#x2F;lonami.dev&#x2F;blog&#x2F;woce-3&#x2F;#going-beyond&quot;&gt;Going beyond&lt;&#x2F;a&gt; section. Until next time!&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;footnotes&quot;&gt;Footnotes&lt;&#x2F;h3&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;Well, technically, we will perform a million memory reads&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#5&quot;&gt;5&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. The issue here is the million calls to &lt;code&gt;ReadProcessMemory&lt;&#x2F;code&gt;, not reading memory per se.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;2&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;2&lt;&#x2F;sup&gt;
+&lt;p&gt;Not currently. After a basic implementation works, writing each implementation by hand and fine-tuning them by treating each of them as a special case could yield significant speed improvements. So although it would be a lot of work, this option shouldn&#x27;t be ruled out completely.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;3&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;3&lt;&#x2F;sup&gt;
+&lt;p&gt;You could ask the candidate locations where one should read, which would still keep the code reasonably simple.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;4&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;4&lt;&#x2F;sup&gt;
+&lt;p&gt;You could also optimize for this case by determining both the smallest and largest address, and reading enough to cover them both. Or apply additional heuristics to only do so if the ratio of the size you&#x27;re reading compared to the size you need isn&#x27;t too large and abort the joint read otherwise. There is a lot of room for optimization here.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;5&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;5&lt;&#x2F;sup&gt;
+&lt;p&gt;(A footnote in a footnote?) The machine registers, memory cache and compiler will all help lower this cost, so the generated executable might not actually need that many reads from RAM. But that&#x27;s getting way too deep into the details now.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+</content>
+	</entry>
 	<entry xml:lang="en">
 		<title>Writing our own Cheat Engine: Exact Value scanning</title>
 		<published>2021-02-12T00:00:00+00:00</published>
-		<updated>2021-02-16T00:00:00+00:00</updated>
+		<updated>2021-02-19T00:00:00+00:00</updated>
 		<link href="https://lonami.dev/blog/woce-2/" type="text/html"/>
 		<id>https://lonami.dev/blog/woce-2/</id>
 		<content type="html">&lt;p&gt;This is part 2 on the &lt;em&gt;Writing our own Cheat Engine&lt;&#x2F;em&gt; series:&lt;&#x2F;p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-1&quot;&gt;Part 1: Introduction&lt;&#x2F;a&gt; (start here if you&#x27;re new to the series!)&lt;&#x2F;li&gt;
 &lt;li&gt;Part 2: Exact Value scanning&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-3&quot;&gt;Part 3: Unknown initial value&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In the introduction, we spent a good deal of time enumerating all running processes just so we could find out the pid we cared about. With the pid now in our hands, we can do pretty much anything to its corresponding process.&lt;&#x2F;p&gt;
 &lt;p&gt;It&#x27;s now time to read the process&#x27; memory and write to it. If our process was a single-player game, this would enable us to do things like setting a very high value on the player&#x27;s current health pool, making us invincible. This technique will often not work for multi-player games, because the server likely knows your true current health (the most you could probably do is make the client render an incorrect value). However, if the server is crappy and it trusts the client, then you&#x27;re still free to mess around with your current health.&lt;&#x2F;p&gt;
@@ -334,7 +688,7 @@ Now have 1 locations
 }
 &lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
 &lt;h2 id=&quot;modifying-memory&quot;&gt;Modifying memory&lt;&#x2F;h2&gt;
-&lt;p&gt;Now that we have very likely locations pointing to our current health in memory, all that&#x27;s left is writing our new desired value to gain infinite health&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#9&quot;&gt;9&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. Much like there&#x27;s a call to &lt;code&gt;ReadProcessMemory&lt;&#x2F;code&gt;, there&#x27;s a different one to &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;memoryapi&#x2F;nf-memoryapi-writeprocessmemory&quot;&gt;&lt;code&gt;WriteProcessMemory&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;. Its usage is straightforward:&lt;&#x2F;p&gt;
+&lt;p&gt;Now that we have very likely locations pointing to our current health in memory, all that&#x27;s left is writing our new desired value to gain infinite health&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#9&quot;&gt;9&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. Much like how we&#x27;re able to read memory with &lt;code&gt;ReadProcessMemory&lt;&#x2F;code&gt;, we can write to it with &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;memoryapi&#x2F;nf-memoryapi-writeprocessmemory&quot;&gt;&lt;code&gt;WriteProcessMemory&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;. Its usage is straightforward:&lt;&#x2F;p&gt;
 &lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub fn write_memory(&amp;amp;self, addr: usize, value: &amp;amp;[u8]) -&amp;gt; io::Result&amp;lt;usize&amp;gt; {
     let mut written = 0;
 
@@ -428,13 +782,14 @@ Written 4 bytes to [15d8b90]
 	<entry xml:lang="en">
 		<title>Writing our own Cheat Engine: Introduction</title>
 		<published>2021-02-07T00:00:00+00:00</published>
-		<updated>2021-02-16T00:00:00+00:00</updated>
+		<updated>2021-02-19T00:00:00+00:00</updated>
 		<link href="https://lonami.dev/blog/woce-1/" type="text/html"/>
 		<id>https://lonami.dev/blog/woce-1/</id>
 		<content type="html">&lt;p&gt;This is part 1 on the &lt;em&gt;Writing our own Cheat Engine&lt;&#x2F;em&gt; series:&lt;&#x2F;p&gt;
 &lt;ul&gt;
 &lt;li&gt;Part 1: Introduction&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-2&quot;&gt;Part 2: Exact Value scanning&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-3&quot;&gt;Part 3: Unknown initial value&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;cheatengine.org&#x2F;&quot;&gt;Cheat Engine&lt;&#x2F;a&gt; is a tool designed to modify single player games and contains other useful tools within itself that enable its users to debug games or other applications. It comes with a memory scanner, (dis)assembler, inspection tools and a handful other things. In this series, we will be writing our own tiny Cheat Engine capable of solving all steps of the tutorial, and diving into how it all works underneath.&lt;&#x2F;p&gt;
 &lt;p&gt;Needless to say, we&#x27;re doing this for private and educational purposes only. One has to make sure to not violate the EULA or ToS of the specific application we&#x27;re attaching to. This series, much like cheatengine.org, does not condone the illegal use of the code shared.&lt;&#x2F;p&gt;
@@ -1984,94 +2339,95 @@ Then we just pass that list to &lt;code&gt;asyncio.wait&lt;&#x2F;code&gt;:&lt;&#
 	<entry xml:lang="en">
 		<title>Atemporal Blog Posts</title>
 		<published>2018-02-03T00:00:00+00:00</published>
-		<updated>2018-02-03T00:00:00+00:00</updated>
+		<updated>2021-02-19T00:00:00+00:00</updated>
 		<link href="https://lonami.dev/blog/posts/" type="text/html"/>
 		<id>https://lonami.dev/blog/posts/</id>
 		<content type="html">&lt;p&gt;These are some interesting posts and links I&#x27;ve found around the web. I believe they are quite interesting and nice reads, so if you have the time, I encourage you to check some out.&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;algorithms&quot;&gt;Algorithms&lt;&#x2F;h2&gt;
 &lt;ul&gt;
-&lt;li&gt;http:&#x2F;&#x2F;www.tannerhelland.com&#x2F;4660&#x2F;dithering-eleven-algorithms-source-code&#x2F;. Image Dithering: Eleven Algorithms and Source Code. What does it mean and how to achieve it?&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;cristian.io&#x2F;post&#x2F;bloom-filters&#x2F;. Idempotence layer on bloom filters. What are they and how can they help?&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Huffman_coding. Huffman coding. This encoding is a simple yet interesting way of compressing information.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;github.com&#x2F;mxgmn&#x2F;WaveFunctionCollapse. Wave Function Collapse. Bitmap &amp;amp; tilemap generation from a single example with the help of ideas from quantum mechanics.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;blog.nelhage.com&#x2F;2015&#x2F;02&#x2F;regular-expression-search-with-suffix-arrays&#x2F;. Regular Expression Search with Suffix Arrays. A way to efficiently search large amounts of text.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;www.tannerhelland.com&#x2F;4660&#x2F;dithering-eleven-algorithms-source-code&#x2F;&quot;&gt;Image Dithering: Eleven Algorithms and Source Code&lt;&#x2F;a&gt;. What does it mean and how to achieve it?&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;cristian.io&#x2F;post&#x2F;bloom-filters&#x2F;&quot;&gt;Idempotence layer on bloom filters&lt;&#x2F;a&gt;. What are they and how can they help?&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Huffman_coding&quot;&gt;Huffman coding&lt;&#x2F;a&gt;. This encoding is a simple yet interesting way of compressing information.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;mxgmn&#x2F;WaveFunctionCollapse&quot;&gt;Wave Function Collapse&lt;&#x2F;a&gt;. Bitmap &amp;amp; tilemap generation from a single example with the help of ideas from quantum mechanics.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.nelhage.com&#x2F;2015&#x2F;02&#x2F;regular-expression-search-with-suffix-arrays&#x2F;&quot;&gt;Regular Expression Search with Suffix Arrays&lt;&#x2F;a&gt;. A way to efficiently search large amounts of text.&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;h2 id=&quot;culture&quot;&gt;Culture&lt;&#x2F;h2&gt;
 &lt;ul&gt;
-&lt;li&gt;https:&#x2F;&#x2F;www.wired.com&#x2F;story&#x2F;ideas-joi-ito-robot-overlords&#x2F;. Why Westerners Fear Robots and the Japanese Do Not. Explains some possible reasons for this case.&lt;&#x2F;li&gt;
-&lt;li&gt;http:&#x2F;&#x2F;catb.org&#x2F;~esr&#x2F;faqs&#x2F;smart-questions.html. How To Ask Questions The Smart Way. Some bits of hacker culture and amazing tips on how to ask a question.&lt;&#x2F;li&gt;
-&lt;li&gt;http:&#x2F;&#x2F;apenwarr.ca&#x2F;log&#x2F;?m=201809#14. XML, blockchains, and the strange shapes of progress. Some of history about XML and blockchain.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;czep.net&#x2F;17&#x2F;legion-of-lobotomized-unices.html. Legion of lobotomized unices. A time where computers are treated a lot more nicely.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;eli.thegreenplace.net&#x2F;2016&#x2F;the-expression-problem-and-its-solutions&#x2F;.  The Expression Problem and its solutions. What is it and what can we do to solve it?&lt;&#x2F;li&gt;
-&lt;li&gt;http:&#x2F;&#x2F;allendowney.blogspot.com&#x2F;2015&#x2F;08&#x2F;the-inspection-paradox-is-everywhere.html. The Inspection Paradox is Everywhere. Interesting and very common phenomena.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;github.com&#x2F;ChrisKnott&#x2F;Algojammer. An experimental code editor for writing algorithms. Contains several links to different tools for reverse debugging.&lt;&#x2F;li&gt;
-&lt;li&gt;http:&#x2F;&#x2F;habitatchronicles.com&#x2F;2017&#x2F;05&#x2F;what-are-capabilities&#x2F;. What Are Capabilities? Good ideas with great security implications.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;blog.aurynn.com&#x2F;2015&#x2F;12&#x2F;16-contempt-culture. Contempt Culture. Or why you should not speak crap about your non-favourite programming languages.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;www.lesswrong.com&#x2F;posts&#x2F;tscc3e5eujrsEeFN4&#x2F;well-kept-gardens-die-by-pacifism. Well-Kept Gardens Die By Pacifism. Risks any online community can run into.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;ncase.me&#x2F;. It&#x27;s Nicky Case! They make some cool things worth checking out, I really like &amp;quot;we become what we behold&amp;quot;.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.wired.com&#x2F;story&#x2F;ideas-joi-ito-robot-overlords&#x2F;&quot;&gt;Why Westerners Fear Robots and the Japanese Do Not&lt;&#x2F;a&gt;. Explains some possible reasons for this case.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;catb.org&#x2F;%7Eesr&#x2F;faqs&#x2F;smart-questions.html&quot;&gt;How To Ask Questions The Smart Way&lt;&#x2F;a&gt;. Some bits of hacker culture and amazing tips on how to ask a question.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;apenwarr.ca&#x2F;log&#x2F;?m=201809#14&quot;&gt;XML, blockchains, and the strange shapes of progress&lt;&#x2F;a&gt;. Some of history about XML and blockchain.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;czep.net&#x2F;17&#x2F;legion-of-lobotomized-unices.html&quot;&gt;Legion of lobotomized unices&lt;&#x2F;a&gt;. A time where computers are treated a lot more nicely.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;eli.thegreenplace.net&#x2F;2016&#x2F;the-expression-problem-and-its-solutions&#x2F;&quot;&gt;The Expression Problem and its solutions&lt;&#x2F;a&gt;. What is it and what can we do to solve it?&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;allendowney.blogspot.com&#x2F;2015&#x2F;08&#x2F;the-inspection-paradox-is-everywhere.html&quot;&gt;The Inspection Paradox is Everywhere&lt;&#x2F;a&gt;. Interesting and very common phenomena.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;ChrisKnott&#x2F;Algojammer&quot;&gt;An experimental code editor for writing algorithms&lt;&#x2F;a&gt;. Contains several links to different tools for reverse debugging.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;habitatchronicles.com&#x2F;2017&#x2F;05&#x2F;what-are-capabilities&#x2F;&quot;&gt;What Are Capabilities?&lt;&#x2F;a&gt; Good ideas with great security implications.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.aurynn.com&#x2F;2015&#x2F;12&#x2F;16-contempt-culture&quot;&gt;Contempt Culture&lt;&#x2F;a&gt;. Or why you should not speak crap about your non-favourite programming languages.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.lesswrong.com&#x2F;posts&#x2F;tscc3e5eujrsEeFN4&#x2F;well-kept-gardens-die-by-pacifism&quot;&gt;Well-Kept Gardens Die By Pacifism&lt;&#x2F;a&gt;. Risks any online community can run into.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;ncase.me&#x2F;&quot;&gt;It&#x27;s Nicky Case!&lt;&#x2F;a&gt; They make some cool things worth checking out, I really like &amp;quot;we become what we behold&amp;quot;.&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;h2 id=&quot;debate&quot;&gt;Debate&lt;&#x2F;h2&gt;
 &lt;ul&gt;
-&lt;li&gt;https:&#x2F;&#x2F;steemit.com&#x2F;opensource&#x2F;@crell&#x2F;open-source-is-awful. Open Source is awful. Has some points about why is it bad and how it could improve.&lt;&#x2F;li&gt;
-&lt;li&gt;http:&#x2F;&#x2F;www.mondo2000.com&#x2F;2018&#x2F;01&#x2F;17&#x2F;pink-lexical-goop-dark-side-autocorrect&#x2F;. Pink Lexical Goop: The Dark Side of Autocorrect. It can shape how you think.&lt;&#x2F;li&gt;
-&lt;li&gt;http:&#x2F;&#x2F;blog.ploeh.dk&#x2F;2015&#x2F;08&#x2F;03&#x2F;idiomatic-or-idiosyncratic&#x2F;. Idiomatic or idiosyncratic? Can porting code constructs from other languages have a positive effect?&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;gamasutra.com&#x2F;view&#x2F;news&#x2F;169296&#x2F;Indepth_Functional_programming_in_C.php. In-depth: Functional programming in C++. Is it useful to bother with functional concepts in a language like C++?&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;vorpus.org&#x2F;blog&#x2F;notes-on-structured-concurrency-or-go-statement-considered-harmful&#x2F;. Notes on structured concurrency, or: Go statement considered harmful.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;queue.acm.org&#x2F;detail.cfm?id=3212479. C Is Not a Low-level Language. Could there be alternative programming models designed for more specialized CPUs?&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;steemit.com&#x2F;opensource&#x2F;@crell&#x2F;open-source-is-awful&quot;&gt;Open Source is awful&lt;&#x2F;a&gt;. Has some points about why is it bad and how it could improve.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;www.mondo2000.com&#x2F;2018&#x2F;01&#x2F;17&#x2F;pink-lexical-goop-dark-side-autocorrect&#x2F;&quot;&gt;Pink Lexical Goop: The Dark Side of Autocorrect&lt;&#x2F;a&gt;. It can shape how you think.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;blog.ploeh.dk&#x2F;2015&#x2F;08&#x2F;03&#x2F;idiomatic-or-idiosyncratic&#x2F;&quot;&gt;Idiomatic or idiosyncratic?&lt;&#x2F;a&gt; Can porting code constructs from other languages have a positive effect?&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;gamasutra.com&#x2F;view&#x2F;news&#x2F;169296&#x2F;Indepth_Functional_programming_in_C.php&quot;&gt;In-depth: Functional programming in C++&lt;&#x2F;a&gt;. Is it useful to bother with functional concepts in a language like C++?&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;vorpus.org&#x2F;blog&#x2F;notes-on-structured-concurrency-or-go-statement-considered-harmful&#x2F;&quot;&gt;Notes on structured concurrency, or: Go statement considered harmful&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;queue.acm.org&#x2F;detail.cfm?id=3212479&quot;&gt;C Is Not a Low-level Language&lt;&#x2F;a&gt;. Could there be alternative programming models designed for more specialized CPUs?&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;h2 id=&quot;food-for-thought&quot;&gt;Food for Thought&lt;&#x2F;h2&gt;
 &lt;ul&gt;
-&lt;li&gt;https:&#x2F;&#x2F;www.hillelwayne.com&#x2F;post&#x2F;divide-by-zero&#x2F;. 1&#x2F;0 = 0. Explores why it makes sense to redefine mathemathics under some circumstances, and why it is possible to do so.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;jeremykun.com&#x2F;2018&#x2F;04&#x2F;13&#x2F;for-mathematicians-does-not-mean-equality&#x2F;. For mathematicians, = does not mean equality. What other definitions does the equal sign have?&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;www.lesswrong.com&#x2F;posts&#x2F;2MD3NMLBPCqPfnfre&#x2F;cached-thoughts. Cached Thoughts. How is it possible that our brains work at all?&lt;&#x2F;li&gt;
-&lt;li&gt;http:&#x2F;&#x2F;tonsky.me&#x2F;blog&#x2F;disenchantment&#x2F;. Software disenchantment. Faster hardware and slower software is a trend.
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.hillelwayne.com&#x2F;post&#x2F;divide-by-zero&#x2F;&quot;&gt;1&#x2F;0 = 0&lt;&#x2F;a&gt;. Explores why it makes sense to redefine mathemathics under some circumstances, and why it is possible to do so.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;jeremykun.com&#x2F;2018&#x2F;04&#x2F;13&#x2F;for-mathematicians-does-not-mean-equality&#x2F;&quot;&gt;For mathematicians, = does not mean equality&lt;&#x2F;a&gt;. What other definitions does the equal sign have?&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.lesswrong.com&#x2F;posts&#x2F;2MD3NMLBPCqPfnfre&#x2F;cached-thoughts&quot;&gt;Cached Thoughts&lt;&#x2F;a&gt;. How is it possible that our brains work at all?&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;tonsky.me&#x2F;blog&#x2F;disenchantment&#x2F;&quot;&gt;Software disenchantment&lt;&#x2F;a&gt;. Faster hardware and slower software is a trend.
 &lt;ul&gt;
-&lt;li&gt;https:&#x2F;&#x2F;blackhole12.com&#x2F;blog&#x2F;software-engineering-is-bad-but-it-s-not-that-bad&#x2F;. Software Engineering Is Bad, But That&#x27;s Not Why. This post has some good counterpoints to Software disenchantment.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blackhole12.com&#x2F;blog&#x2F;software-engineering-is-bad-but-it-s-not-that-bad&#x2F;&quot;&gt;Software Engineering Is Bad, But That&#x27;s Not Why&lt;&#x2F;a&gt;. This post has some good counterpoints to Software disenchantment.&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;&#x2F;li&gt;
-&lt;li&gt;http:&#x2F;&#x2F;journal.stuffwithstuff.com&#x2F;2015&#x2F;02&#x2F;01&#x2F;what-color-is-your-function&#x2F;. What Color is Your Function? Spoiler: can we approach asynchronous IO better?&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;hackernoon.com&#x2F;im-harvesting-credit-card-numbers-and-passwords-from-your-site-here-s-how-9a8cb347c5b5. I&#x27;m harvesting credit card numbers and passwords from your site. A word of warning when mindlessly adding dependencies.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;medium.com&#x2F;message&#x2F;everything-is-broken-81e5f33a24e1. Everything Is Broken. Some of the (probable) truths about our world.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;journal.stuffwithstuff.com&#x2F;2015&#x2F;02&#x2F;01&#x2F;what-color-is-your-function&#x2F;&quot;&gt;What Color is Your Function?&lt;&#x2F;a&gt;. Spoiler: can we approach asynchronous IO better?&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;hackernoon.com&#x2F;im-harvesting-credit-card-numbers-and-passwords-from-your-site-here-s-how-9a8cb347c5b5&quot;&gt;I&#x27;m harvesting credit card numbers and passwords from your site&lt;&#x2F;a&gt;. A word of warning when mindlessly adding dependencies.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;medium.com&#x2F;message&#x2F;everything-is-broken-81e5f33a24e1&quot;&gt;Everything Is Broken&lt;&#x2F;a&gt;. Some of the (probable) truths about our world.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;johnsalvatier.org&#x2F;blog&#x2F;2017&#x2F;reality-has-a-surprising-amount-of-detail&quot;&gt;Reality has a surprising amount of detail&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;h2 id=&quot;funny&quot;&gt;Funny&lt;&#x2F;h2&gt;
 &lt;ul&gt;
-&lt;li&gt;http:&#x2F;&#x2F;thedailywtf.com&#x2F;articles&#x2F;We-Use-BobX. We Use BobX. BobX.&lt;&#x2F;li&gt;
-&lt;li&gt;http:&#x2F;&#x2F;thedailywtf.com&#x2F;articles&#x2F;the-inner-json-effect. The Inner JSON Effect. For some reason, custom languages are in.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;thedailywtf.com&#x2F;articles&#x2F;exponential-backup. Exponential Backup. Far better than git.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;thedailywtf.com&#x2F;articles&#x2F;ITAPPMONROBOT. ITAPPMONROBOT. Solving software problems with hardware.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;thedailywtf.com&#x2F;articles&#x2F;a-tapestry-of-threads. A Tapestry of Threads.More threads must mean faster code, right?&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;medium.com&#x2F;commitlog&#x2F;a-brief-totally-accurate-history-of-programming-languages-cd93ec806124. A Brief Totally Accurate History Of Programming Languages. Don&#x27;t take offense for it!&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;thedailywtf.com&#x2F;articles&#x2F;We-Use-BobX&quot;&gt;We Use BobX&lt;&#x2F;a&gt;. BobX.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;thedailywtf.com&#x2F;articles&#x2F;the-inner-json-effect&quot;&gt;The Inner JSON Effect&lt;&#x2F;a&gt;. For some reason, custom languages are in.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;thedailywtf.com&#x2F;articles&#x2F;exponential-backup&quot;&gt;Exponential Backup&lt;&#x2F;a&gt;. Far better than git.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;thedailywtf.com&#x2F;articles&#x2F;ITAPPMONROBOT&quot;&gt;ITAPPMONROBOT&lt;&#x2F;a&gt;. Solving software problems with hardware.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;thedailywtf.com&#x2F;articles&#x2F;a-tapestry-of-threads&quot;&gt;A Tapestry of Threads&lt;&#x2F;a&gt;. More threads must mean faster code, right?&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;medium.com&#x2F;commitlog&#x2F;a-brief-totally-accurate-history-of-programming-languages-cd93ec806124&quot;&gt;A Brief Totally Accurate History Of Programming Languages&lt;&#x2F;a&gt;. Don&#x27;t take offense for it!&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;h2 id=&quot;graphics&quot;&gt;Graphics&lt;&#x2F;h2&gt;
 &lt;ul&gt;
-&lt;li&gt;http:&#x2F;&#x2F;shaunlebron.github.io&#x2F;visualizing-projections&#x2F;. Visualizing Projections. Small post about different projection methods.&lt;&#x2F;li&gt;
-&lt;li&gt;http:&#x2F;&#x2F;www.iquilezles.org&#x2F;www&#x2F;index.htm. A &lt;em&gt;lot&lt;&#x2F;em&gt; of useful and quality articles regarding computer graphics.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;shaunlebron.github.io&#x2F;visualizing-projections&#x2F;&quot;&gt;Visualizing Projections&lt;&#x2F;a&gt;. Small post about different projection methods.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;www.iquilezles.org&#x2F;www&#x2F;index.htm&quot;&gt;Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more&lt;&#x2F;a&gt; A &lt;em&gt;lot&lt;&#x2F;em&gt; of useful and quality articles regarding computer graphics.&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;h2 id=&quot;history&quot;&gt;History&lt;&#x2F;h2&gt;
 &lt;ul&gt;
-&lt;li&gt;https:&#x2F;&#x2F;twobithistory.org&#x2F;2018&#x2F;08&#x2F;18&#x2F;ada-lovelace-note-g.html. What Did Ada Lovelace&#x27;s Program Actually Do?. And other characters that took part in the beginning&#x27;s of programming.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;chrisdown.name&#x2F;2018&#x2F;01&#x2F;02&#x2F;in-defence-of-swap.html. In defence of swap: common misconceptions. Swap is still an useful concept.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;www.pacifict.com&#x2F;Story&#x2F;. The Graphing Calculator Story. A great classic Apple tale.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;twobithistory.org&#x2F;2018&#x2F;10&#x2F;14&#x2F;lisp.html. How Lisp Became God&#x27;s Own Programming Language. Lisp as a foundational programming language.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;twobithistory.org&#x2F;2018&#x2F;08&#x2F;18&#x2F;ada-lovelace-note-g.html&quot;&gt;What Did Ada Lovelace&#x27;s Program Actually Do?&lt;&#x2F;a&gt;. And other characters that took part in the beginning&#x27;s of programming.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;chrisdown.name&#x2F;2018&#x2F;01&#x2F;02&#x2F;in-defence-of-swap.html&quot;&gt;In defence of swap: common misconceptions&lt;&#x2F;a&gt;. Swap is still an useful concept.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.pacifict.com&#x2F;Story&#x2F;&quot;&gt;The Graphing Calculator Story&lt;&#x2F;a&gt;. A great classic Apple tale.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;twobithistory.org&#x2F;2018&#x2F;10&#x2F;14&#x2F;lisp.html&quot;&gt;How Lisp Became God&#x27;s Own Programming Language&lt;&#x2F;a&gt;. Lisp as a foundational programming language.&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;h2 id=&quot;motivational&quot;&gt;Motivational&lt;&#x2F;h2&gt;
 &lt;ul&gt;
-&lt;li&gt;https:&#x2F;&#x2F;www.joelonsoftware.com&#x2F;2002&#x2F;01&#x2F;06&#x2F;fire-and-motion&#x2F;. Fire And Motion. What does actually take to get things done?&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;realmensch.org&#x2F;2017&#x2F;08&#x2F;25&#x2F;the-parable-of-the-two-programmers&#x2F;. The Parable of the Two Programmers. This tale is about two different types of programmer and their respective endings in a company, illustrating how the one you wouldn&#x27;t expect to actually ends in a better situation.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;byorgey.wordpress.com&#x2F;2018&#x2F;05&#x2F;06&#x2F;conversations-with-a-six-year-old-on-functional-programming&#x2F;. Conversations with a six-year-old on functional programming. Little kids today can be really interested in technological topics.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;bulletproofmusician.com&#x2F;how-many-hours-a-day-should-you-practice&#x2F;. How Many Hours a Day Should You Practice?. While the article is about music, it applies to any other areas.&lt;&#x2F;li&gt;
-&lt;li&gt;http:&#x2F;&#x2F;nathanmarz.com&#x2F;blog&#x2F;suffering-oriented-programming.html. Suffering-oriented programming. A possibly new approach on how you could tackle your new projects.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;www.joelonsoftware.com&#x2F;2000&#x2F;04&#x2F;06&#x2F;things-you-should-never-do-part-i&#x2F;. Things You Should Never Do, Part I. There is no need to rewrite your code.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.joelonsoftware.com&#x2F;2002&#x2F;01&#x2F;06&#x2F;fire-and-motion&#x2F;&quot;&gt;Fire And Motion&lt;&#x2F;a&gt;. What does actually take to get things done?&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;realmensch.org&#x2F;2017&#x2F;08&#x2F;25&#x2F;the-parable-of-the-two-programmers&#x2F;&quot;&gt;The Parable of the Two Programmers&lt;&#x2F;a&gt;. This tale is about two different types of programmer and their respective endings in a company, illustrating how the one you wouldn&#x27;t expect to actually ends in a better situation.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;byorgey.wordpress.com&#x2F;2018&#x2F;05&#x2F;06&#x2F;conversations-with-a-six-year-old-on-functional-programming&#x2F;&quot;&gt;Conversations with a six-year-old on functional programming&lt;&#x2F;a&gt;. Little kids today can be really interested in technological topics.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;bulletproofmusician.com&#x2F;how-many-hours-a-day-should-you-practice&#x2F;&quot;&gt;How Many Hours a Day Should You Practice?&lt;&#x2F;a&gt;. While the article is about music, it applies to any other areas.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;nathanmarz.com&#x2F;blog&#x2F;suffering-oriented-programming.html&quot;&gt;Suffering-oriented programming&lt;&#x2F;a&gt;. A possibly new approach on how you could tackle your new projects.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.joelonsoftware.com&#x2F;2000&#x2F;04&#x2F;06&#x2F;things-you-should-never-do-part-i&#x2F;&quot;&gt;Things You Should Never Do, Part I&lt;&#x2F;a&gt;. There is no need to rewrite your code.&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;h2 id=&quot;optimization&quot;&gt;Optimization&lt;&#x2F;h2&gt;
 &lt;ul&gt;
-&lt;li&gt;http:&#x2F;&#x2F;blog.llvm.org&#x2F;2011&#x2F;05&#x2F;what-every-c-programmer-should-know.html. What Every C Programmer Should Know About Undefined Behavior #1&#x2F;3. Explains what undefined behaviour is and why it makes sense.&lt;&#x2F;li&gt;
-&lt;li&gt;http:&#x2F;&#x2F;ridiculousfish.com&#x2F;blog&#x2F;posts&#x2F;labor-of-division-episode-i.html. Labor of Division (Episode I). Some tricks to divide without division.&lt;&#x2F;li&gt;
-&lt;li&gt;http:&#x2F;&#x2F;blog.moertel.com&#x2F;posts&#x2F;2013-12-14-great-old-timey-game-programming-hack.html. A Great Old-Timey Game-Programming Hack. Abusing instructions to make games playable even on the slowest hardware.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;web.archive.org&#x2F;web&#x2F;20191213224640&#x2F;https:&#x2F;&#x2F;people.eecs.berkeley.edu&#x2F;~sangjin&#x2F;2012&#x2F;12&#x2F;21&#x2F;epoll-vs-kqueue.html. Scalable Event Multiplexing: epoll vs kqueue. How good OS primitives can really help performance and scability.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;adamdrake.com&#x2F;command-line-tools-can-be-235x-faster-than-your-hadoop-cluster.html. Command-line Tools can be 235x Faster than your Hadoop Cluster. Or how to use the right tool for the right job.&lt;&#x2F;li&gt;
-&lt;li&gt;https:&#x2F;&#x2F;nullprogram.com&#x2F;blog&#x2F;2018&#x2F;05&#x2F;27&#x2F;. When FFI Function Calls Beat Native C. How lua beat C at it and the explanation behind it.&lt;&#x2F;li&gt;
-&lt;li&gt;http:&#x2F;&#x2F;igoro.com&#x2F;archive&#x2F;gallery-of-processor-cache-effects&#x2F;. Gallery of Processor Cache Effects. Knowing a few things about the cache can make a big difference.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;blog.llvm.org&#x2F;2011&#x2F;05&#x2F;what-every-c-programmer-should-know.html&quot;&gt;What Every C Programmer Should Know About Undefined Behavior #1&#x2F;3&lt;&#x2F;a&gt;. Explains what undefined behaviour is and why it makes sense.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;ridiculousfish.com&#x2F;blog&#x2F;posts&#x2F;labor-of-division-episode-i.html&quot;&gt;Labor of Division (Episode I)&lt;&#x2F;a&gt;. Some tricks to divide without division.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;blog.moertel.com&#x2F;posts&#x2F;2013-12-14-great-old-timey-game-programming-hack.html&quot;&gt;A Great Old-Timey Game-Programming Hack&lt;&#x2F;a&gt;. Abusing instructions to make games playable even on the slowest hardware.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;web.archive.org&#x2F;web&#x2F;20191213224640&#x2F;https:&#x2F;&#x2F;people.eecs.berkeley.edu&#x2F;%7Esangjin&#x2F;2012&#x2F;12&#x2F;21&#x2F;epoll-vs-kqueue.html&quot;&gt;Scalable Event Multiplexing: epoll vs kqueue&lt;&#x2F;a&gt;. How good OS primitives can really help performance and scability.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;adamdrake.com&#x2F;command-line-tools-can-be-235x-faster-than-your-hadoop-cluster.html&quot;&gt;Command-line Tools can be 235x Faster than your Hadoop Cluster&lt;&#x2F;a&gt;. Or how to use the right tool for the right job.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;nullprogram.com&#x2F;blog&#x2F;2018&#x2F;05&#x2F;27&#x2F;&quot;&gt;When FFI Function Calls Beat Native C&lt;&#x2F;a&gt;. How lua beat C at it and the explanation behind it.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;http:&#x2F;&#x2F;igoro.com&#x2F;archive&#x2F;gallery-of-processor-cache-effects&#x2F;&quot;&gt;Gallery of Processor Cache Effects&lt;&#x2F;a&gt;. Knowing a few things about the cache can make a big difference.&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 </content>
 	</entry>
