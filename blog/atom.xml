@@ -4,8 +4,421 @@
 	<link href="https://lonami.dev/blog/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://lonami.dev/blog/"/>
 	<generator uri="https://www.getzola.org/">Zola</generator>
-	<updated>2021-02-19T00:00:00+00:00</updated>
+	<updated>2021-02-22T00:00:00+00:00</updated>
 	<id>https://lonami.dev/blog/atom.xml</id>
+	<entry xml:lang="en">
+		<title>Writing our own Cheat Engine: Floating points</title>
+		<published>2021-02-22T00:00:00+00:00</published>
+		<updated>2021-02-22T00:00:00+00:00</updated>
+		<link href="https://lonami.dev/blog/woce-4/" type="text/html"/>
+		<id>https://lonami.dev/blog/woce-4/</id>
+		<content type="html">&lt;p&gt;This is part 4 on the &lt;em&gt;Writing our own Cheat Engine&lt;&#x2F;em&gt; series:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-1&quot;&gt;Part 1: Introduction&lt;&#x2F;a&gt; (start here if you&#x27;re new to the series!)&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-2&quot;&gt;Part 2: Exact Value scanning&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-3&quot;&gt;Part 3: Unknown initial value&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Part 4: Floating points&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;In part 3 we did a fair amount of plumbing in order to support scan modes beyond the trivial &amp;quot;exact value scan&amp;quot;. As a result, we have abstracted away the &lt;code&gt;Scan&lt;&#x2F;code&gt;, &lt;code&gt;CandidateLocations&lt;&#x2F;code&gt; and &lt;code&gt;Value&lt;&#x2F;code&gt; types as a separate &lt;code&gt;enum&lt;&#x2F;code&gt; each. Scanning for changed memory regions in an opened process can now be achieved with three lines of code:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let regions = process.memory_regions();
+let first_scan = process.scan_regions(&amp;amp;regions, Scan::InRange(0, 500));
+let second_scan = process.rescan_regions(&amp;amp;first_scan, Scan::DecreasedBy(7));
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;How&#x27;s that for programmability? No need to fire up Cheat Engine&#x27;s GUI anymore!&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;code&gt;first_scan&lt;&#x2F;code&gt; in the example above remembers all the found &lt;code&gt;Value&lt;&#x2F;code&gt; within the range specified by &lt;code&gt;Scan&lt;&#x2F;code&gt;. Up until now, we have only worked with &lt;code&gt;i32&lt;&#x2F;code&gt;, so that&#x27;s the type the scans expect and what they work with.&lt;&#x2F;p&gt;
+&lt;p&gt;Now it&#x27;s time to introduce support for different types, like &lt;code&gt;f32&lt;&#x2F;code&gt;, &lt;code&gt;i64&lt;&#x2F;code&gt;, or even more atypical ones, like arbitrary sequences of bytes (think of strings) or even numbers in big-endian.&lt;&#x2F;p&gt;
+&lt;p&gt;Tighten your belt, because this post is quite the ride. Let&#x27;s get right into it!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;floating-points&quot;&gt;Floating points&lt;&#x2F;h2&gt;
+&lt;details open&gt;&lt;summary&gt;Cheat Engine Tutorial: Step 4&lt;&#x2F;summary&gt;
+&lt;blockquote&gt;
+&lt;p&gt;In the previous tutorial we used bytes to scan, but some games store information in so called &#x27;floating point&#x27; notations.
+(probably to prevent simple memory scanners from finding it the easy way). A floating point is a value with some digits behind the point. (like 5.12 or 11321.1)&lt;&#x2F;p&gt;
+&lt;p&gt;Below you see your health and ammo. Both are stored as Floating point notations, but health is stored as a float and ammo is stored as a double.
+Click on hit me to lose some health, and on shoot to decrease your ammo with 0.5&lt;&#x2F;p&gt;
+&lt;p&gt;You have to set BOTH values to 5000 or higher to proceed.&lt;&#x2F;p&gt;
+&lt;p&gt;Exact value scan will work fine here, but you may want to experiment with other types too.&lt;&#x2F;p&gt;
+&lt;p&gt;Hint: It is recommended to disable &amp;quot;Fast Scan&amp;quot; for type double&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;&#x2F;details&gt;
+&lt;h2 id=&quot;generic-values&quot;&gt;Generic values&lt;&#x2F;h2&gt;
+&lt;p&gt;The &lt;code&gt;Value&lt;&#x2F;code&gt; enumeration holds scanned values, and is currently hardcoded to store &lt;code&gt;i32&lt;&#x2F;code&gt;. The &lt;code&gt;Scan&lt;&#x2F;code&gt; type also holds a value, the value we want to scan for. Changing it to support other types is trivial:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub enum Scan&amp;lt;T&amp;gt; {
+    Exact(T),
+    Unknown,
+    Decreased,
+    &#x2F;&#x2F; ...other variants...
+}
+
+pub enum Value&amp;lt;T&amp;gt; {
+    Exact(T),
+    AnyWithin(Vec&amp;lt;u8&amp;gt;),
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;AnyWithin&lt;&#x2F;code&gt; is the raw memory, and &lt;code&gt;T&lt;&#x2F;code&gt; can be interpreted from any sequence of bytes thanks to our friend &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;std&#x2F;mem&#x2F;fn.transmute.html&quot;&gt;&lt;code&gt;mem::transmute&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;. This change alone is enough to store an arbitrary &lt;code&gt;T&lt;&#x2F;code&gt;! So we&#x27;re done now? Not really, no.&lt;&#x2F;p&gt;
+&lt;p&gt;First of all, we need to update all the places where &lt;code&gt;Scan&lt;&#x2F;code&gt; or &lt;code&gt;Value&lt;&#x2F;code&gt; are used. Our first stop is the scanned &lt;code&gt;Region&lt;&#x2F;code&gt;, which holds the found &lt;code&gt;Value&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub struct Region&amp;lt;T&amp;gt; {
+    pub info: MEMORY_BASIC_INFORMATION,
+    pub locations: CandidateLocations,
+    pub value: Value&amp;lt;T&amp;gt;,
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Then, we need to update everywhere &lt;code&gt;Region&lt;&#x2F;code&gt; is used, and on and on… All in all this process is just repeating &lt;code&gt;cargo check&lt;&#x2F;code&gt;, letting the compiler vent on you, and taking good care of it by fixing the errors. It&#x27;s quite reassuring to know you will not miss a single place. Thank you, compiler!&lt;&#x2F;p&gt;
+&lt;p&gt;But wait, how could scanning for a decreased value work for any &lt;code&gt;T&lt;&#x2F;code&gt;? The type is not &lt;code&gt;Ord&lt;&#x2F;code&gt;, we should add some trait bounds. And also, what happens if the type is not &lt;code&gt;Copy&lt;&#x2F;code&gt;? It could implement &lt;code&gt;Drop&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;, and we will be transmuting from raw bytes, which would trigger the &lt;code&gt;Drop&lt;&#x2F;code&gt; implementation when we&#x27;re done with the value! Not memory safe at all! And how could we possibly cast raw memory to the type without knowing its siz– oh nevermind, &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;std&#x2F;marker&#x2F;trait.Sized.html&quot;&gt;&lt;code&gt;T&lt;&#x2F;code&gt; is already &lt;code&gt;Sized&lt;&#x2F;code&gt; by default&lt;&#x2F;a&gt;. But anyway, we need the other bounds.&lt;&#x2F;p&gt;
+&lt;p&gt;In order to not repeat ourselves, we will implement a new &lt;code&gt;trait&lt;&#x2F;code&gt;, let&#x27;s say &lt;code&gt;Scannable&lt;&#x2F;code&gt;, which requires all other bounds:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub trait Scannable: Copy + PartialEq + PartialOrd {}
+
+impl&amp;lt;T: Copy + PartialEq + PartialOrd&amp;gt; Scannable for T {}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;And fix our definitions:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub enum Scan&amp;lt;T: Scannable&amp;gt; { ... }
+pub enum Value&amp;lt;T: Scannable&amp;gt; { ... }
+pub struct Region&amp;lt;T: Scannable&amp;gt; { ... }
+
+&#x2F;&#x2F; ...and the many other places referring to T
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Every type which is &lt;code&gt;Copy&lt;&#x2F;code&gt;, &lt;code&gt;PartialEq&lt;&#x2F;code&gt; and &lt;code&gt;PartialOrd&lt;&#x2F;code&gt; can be scanned over&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;, because we &lt;code&gt;impl Scan for T&lt;&#x2F;code&gt; where the bounds are met. Unfortunately, we cannot require &lt;code&gt;Eq&lt;&#x2F;code&gt; or &lt;code&gt;Ord&lt;&#x2F;code&gt; because the floating point types do not implement it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;transmuting-memory&quot;&gt;Transmuting memory&lt;&#x2F;h2&gt;
+&lt;p&gt;Also known as reinterpreting a bunch of bytes as something else, or perhaps it stands for &amp;quot;summoning the demon&amp;quot;:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;transmute&lt;&#x2F;code&gt; is &lt;strong&gt;incredibly&lt;&#x2F;strong&gt; unsafe. There are a vast number of ways to cause &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;reference&#x2F;behavior-considered-undefined.html&quot;&gt;undefined behavior&lt;&#x2F;a&gt; with this function. &lt;code&gt;transmute&lt;&#x2F;code&gt; should be the absolute last resort.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Types like &lt;code&gt;i32&lt;&#x2F;code&gt; define methods such as &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;std&#x2F;primitive.i32.html#method.from_ne_bytes&quot;&gt;&lt;code&gt;from_ne_bytes&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; and &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;std&#x2F;primitive.i32.html#method.to_ne_bytes&quot;&gt;&lt;code&gt;to_ne_bytes&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; which convert raw bytes from and into its native representation. This is all really nice, but unfortunately, there&#x27;s no standard trait in the Rust&#x27;s standard library to &amp;quot;interpret a type &lt;code&gt;T&lt;&#x2F;code&gt; as the byte sequence of its native representation&amp;quot;. &lt;code&gt;transmute&lt;&#x2F;code&gt;, however, does exist, and similar to any other &lt;code&gt;unsafe&lt;&#x2F;code&gt; function, it&#x27;s safe to call &lt;strong&gt;as long as we respect its invariants&lt;&#x2F;strong&gt;. What are these invariants&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#3&quot;&gt;3&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;?&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Both types must have the same size&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Okay, we can just assert that the window length matches the type&#x27;s length. What else?&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Neither the original, nor the result, may be an &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;nomicon&#x2F;what-unsafe-does.html&quot;&gt;invalid value&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;What&#x27;s an invalid value?&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;a &lt;code&gt;bool&lt;&#x2F;code&gt; that isn&#x27;t 0 or 1&lt;&#x2F;li&gt;
+&lt;li&gt;an &lt;code&gt;enum&lt;&#x2F;code&gt; with an invalid discriminant&lt;&#x2F;li&gt;
+&lt;li&gt;a null &lt;code&gt;fn&lt;&#x2F;code&gt; pointer&lt;&#x2F;li&gt;
+&lt;li&gt;a &lt;code&gt;char&lt;&#x2F;code&gt; outside the ranges [0x0, 0xD7FF] and [0xE000, 0x10FFFF]&lt;&#x2F;li&gt;
+&lt;li&gt;a &lt;code&gt;!&lt;&#x2F;code&gt; (all values are invalid for this type)&lt;&#x2F;li&gt;
+&lt;li&gt;an integer (&lt;code&gt;i*&lt;&#x2F;code&gt;&#x2F;&lt;code&gt;u*&lt;&#x2F;code&gt;), floating point value (&lt;code&gt;f*&lt;&#x2F;code&gt;), or raw pointer read from uninitialized memory, or uninitialized memory in a &lt;code&gt;str&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;a reference&#x2F;&lt;code&gt;Box&lt;&#x2F;code&gt; that is dangling, unaligned, or points to an invalid value.&lt;&#x2F;li&gt;
+&lt;li&gt;a wide reference, &lt;code&gt;Box&lt;&#x2F;code&gt;, or raw pointer that has invalid metadata:
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;dyn Trait&lt;&#x2F;code&gt; metadata is invalid if it is not a pointer to a vtable for &lt;code&gt;Trait&lt;&#x2F;code&gt; that matches the actual dynamic trait the pointer or reference points to&lt;&#x2F;li&gt;
+&lt;li&gt;slice metadata is invalid if the length is not a valid &lt;code&gt;usize&lt;&#x2F;code&gt; (i.e., it must not be read from uninitialized memory)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;a type with custom invalid values that is one of those values, such as a &lt;code&gt;NonNull&lt;&#x2F;code&gt; that is null. (Requesting custom invalid values is an unstable feature, but some stable libstd types, like &lt;code&gt;NonNull&lt;&#x2F;code&gt;, make use of it.)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Okay, that&#x27;s actually an awful lot. Types like &lt;code&gt;bool&lt;&#x2F;code&gt; implement all the trait bounds we defined, and it would be insta-UB to ever try to cast them from arbitrary bytes. The same goes for &lt;code&gt;char&lt;&#x2F;code&gt;, and all &lt;code&gt;enum&lt;&#x2F;code&gt; are out of our control, too. At least we&#x27;re safe on the &amp;quot;memory is initialized&amp;quot; front.&lt;&#x2F;p&gt;
+&lt;p&gt;Dang it, I really wanted to use &lt;code&gt;transmute&lt;&#x2F;code&gt;! But if we were to use it for arbitrary types, it would trigger undefined behaviour sooner than later.&lt;&#x2F;p&gt;
+&lt;p&gt;We have several options here:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Make it an &lt;code&gt;unsafe trait&lt;&#x2F;code&gt;. Implementors will be responsible for ensuring that the type they&#x27;re implementing it for can be safely transmuted from and into.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;rust-lang.github.io&#x2F;api-guidelines&#x2F;future-proofing.html&quot;&gt;Seal the &lt;code&gt;trait&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; and implement it only for types we know are safe&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#4&quot;&gt;4&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;, like &lt;code&gt;i32&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;Add methods to the &lt;code&gt;trait&lt;&#x2F;code&gt; definition that do the conversion of the type into its native representation.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;We will go with the first option&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#5&quot;&gt;5&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;, because I really want to use &lt;code&gt;transmute&lt;&#x2F;code&gt;, and I want users to be able to implement the trait on their own types.&lt;&#x2F;p&gt;
+&lt;p&gt;In any case, we need to change our &lt;code&gt;impl&lt;&#x2F;code&gt; to something more specific, in order to prevent it from automatically implementing the trait for types for which their memory representation has invalid values. So we get rid of this:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub trait Scannable: Copy + PartialEq + PartialOrd {}
+
+impl&amp;lt;T: Copy + PartialEq + PartialOrd&amp;gt; Scannable for T {}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;And replace it with this:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub unsafe trait Scannable: Copy + PartialEq + PartialOrd {}
+
+macro_rules! impl_many {
+    ( unsafe impl $trait:tt for $( $ty:ty ),* ) =&amp;gt; {
+        $( unsafe impl $trait for $ty {} )*
+    };
+}
+
+&#x2F;&#x2F; SAFETY: all these types respect `Scannable` invariants.
+impl_many!(unsafe impl Scannable for i8, u8, i16, u16, i32, u32, i64, u64, f32, f64);
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Making a small macro for things like these is super useful. You could of course write &lt;code&gt;unsafe impl Scannable for T&lt;&#x2F;code&gt; for all ten &lt;code&gt;T&lt;&#x2F;code&gt; as well, but that introduces even more &lt;code&gt;unsafe&lt;&#x2F;code&gt; to read. Last but not least, let&#x27;s replace the hardcoded &lt;code&gt;i32::from_ne_bytes&lt;&#x2F;code&gt; and &lt;code&gt;i32::to_ne_bytes&lt;&#x2F;code&gt; with &lt;code&gt;mem::transmute&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;All the &lt;code&gt;windows(4)&lt;&#x2F;code&gt; need to be replaced with &lt;code&gt;windows(mem::size_of::&amp;lt;T&amp;gt;())&lt;&#x2F;code&gt; because the size may no longer be &lt;code&gt;4&lt;&#x2F;code&gt;. All the &lt;code&gt;i32::from_ne_bytes(...)&lt;&#x2F;code&gt; need to be replaced with &lt;code&gt;mem::transmute::&amp;lt;_, T&amp;gt;(...)&lt;&#x2F;code&gt;. We explicitly write out &lt;code&gt;T&lt;&#x2F;code&gt; to make sure the compiler doesn&#x27;t accidentally infer something we didn&#x27;t intend.&lt;&#x2F;p&gt;
+&lt;p&gt;And… it doesn&#x27;t work at all. We&#x27;re working with byte slices of arbitrary length. We cannot transmute a &lt;code&gt;&amp;amp;[]&lt;&#x2F;code&gt; type, which is 16 bytes (8 for the pointer and 8 for the length), to our &lt;code&gt;T&lt;&#x2F;code&gt;. My plan to use transmute can&#x27;t possibly work here. Sigh.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;not-quite-transmuting-memory&quot;&gt;Not quite transmuting memory&lt;&#x2F;h2&gt;
+&lt;p&gt;Okay, we can&#x27;t transmute, because we don&#x27;t have a sized value, we only have a slice of bytes pointing somewhere else. What we &lt;em&gt;could&lt;&#x2F;em&gt; do is reinterpret the pointer to those bytes as a different type, and then dereference it! This is still a form of &amp;quot;transmutation&amp;quot;, just without using &lt;code&gt;transmute&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let value = unsafe { *(window.as_ptr() as *const T) };
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Woop! You can compile this and test it out on the step 2 and 3 of the tutorial, using &lt;code&gt;i32&lt;&#x2F;code&gt;, and it will still work! Something troubles me, though. Can you see what it is?&lt;&#x2F;p&gt;
+&lt;p&gt;When we talked about invalid values, it had a note about unaligned references:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;a reference&#x2F;&lt;code&gt;Box&lt;&#x2F;code&gt; that is dangling, unaligned, or points to an invalid value.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Our &lt;code&gt;window&lt;&#x2F;code&gt; is essentially a reference to &lt;code&gt;T&lt;&#x2F;code&gt;. The only difference is we&#x27;re working at the pointer level, but they&#x27;re pretty much references. Let&#x27;s see what the documentation for &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;primitive.pointer.html&quot;&gt;&lt;code&gt;pointer&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; has to say as well, since we&#x27;re dereferencing pointers:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;when a raw pointer is dereferenced (using the &lt;code&gt;*&lt;&#x2F;code&gt; operator), it must be non-null and aligned.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;It must be aligned. The only reason why our data is aligned is because we are also performing a &amp;quot;fast scan&amp;quot;, so we only look at aligned locations. This is a time bomb waiting to blow up. Is there any other way to &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;ptr&#x2F;fn.read.html&quot;&gt;&lt;code&gt;read&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; from a pointer which is safer?&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;src&lt;&#x2F;code&gt; must be properly aligned. Use &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;ptr&#x2F;fn.read_unaligned.html&quot;&gt;&lt;code&gt;read_unaligned&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; if this is not the case.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Bingo! Both &lt;code&gt;read&lt;&#x2F;code&gt; and &lt;code&gt;read_unaligned&lt;&#x2F;code&gt;, unlike dereferencing the pointer, will perform a copy, but if it can make the code less prone to blowing up, I&#x27;ll take it&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#6&quot;&gt;6&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. Let&#x27;s change the code one more time:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let current = unsafe { window.as_ptr().cast::&amp;lt;T&amp;gt;().read_unaligned() };
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I prefer to avoid type annotations in variables where possible, which is why I use the &lt;a href=&quot;https:&#x2F;&#x2F;www.reddit.com&#x2F;r&#x2F;rust&#x2F;comments&#x2F;3fimgp&#x2F;why_double_colon_rather_that_dot&#x2F;ctozkd0&#x2F;&quot;&gt;turbofish&lt;&#x2F;a&gt; so often. You can get rid of the cast and use a type annotation instead, but make sure the type is known, otherwise it will think it&#x27;s &lt;code&gt;u8&lt;&#x2F;code&gt; because &lt;code&gt;window&lt;&#x2F;code&gt; is a &lt;code&gt;&amp;amp;[u8]&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Now, this is all cool and good. You can replace &lt;code&gt;i32&lt;&#x2F;code&gt; with &lt;code&gt;f32&lt;&#x2F;code&gt; for &lt;code&gt;T&lt;&#x2F;code&gt; and you&#x27;ll be able to get halfway done with the step 4 of Cheat Engine&#x27;s tutorial. Unfortunately, as it is, this code is not enough to complete step 4 with exact scans&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#7&quot;&gt;7&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. You see, comparing floating point values is not as simple as checking for bitwise equality. We were actually really lucky that the &lt;code&gt;f32&lt;&#x2F;code&gt; part works! But the values in the &lt;code&gt;f64&lt;&#x2F;code&gt; part are not as precise as our inputs, so our exact scan fails.&lt;&#x2F;p&gt;
+&lt;p&gt;Using a fixed type parameter is pretty limiting as well. On the one hand, it is nice that, if you scan for &lt;code&gt;i32&lt;&#x2F;code&gt;, the compiler statically guarantees that subsequent scans will also happen on &lt;code&gt;i32&lt;&#x2F;code&gt; and thus be compatible. On the other, this requires us to know the type at compile time, which for an interactive program, is not possible. While we &lt;em&gt;could&lt;&#x2F;em&gt; create different methods for each supported type and, at runtime, decide to which we should jump, I am not satisfied with that solution. It also means we can&#x27;t switch from scanning an &lt;code&gt;u32&lt;&#x2F;code&gt; to an &lt;code&gt;i32&lt;&#x2F;code&gt;, for whatever reason.&lt;&#x2F;p&gt;
+&lt;p&gt;So we need to work around this once more.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;rethinking-the-scans&quot;&gt;Rethinking the scans&lt;&#x2F;h2&gt;
+&lt;p&gt;What does our scanning function need, really? It needs a way to compare two chunks of memory as being equal or not (as we have seen, this isn&#x27;t trivial with types such as floating point numbers) and, for other types of scans, it needs to be able to produce an ordering, or calculate a difference.&lt;&#x2F;p&gt;
+&lt;p&gt;Instead of having a our trait require the bounds &lt;code&gt;PartialEq&lt;&#x2F;code&gt; and &lt;code&gt;PartialOrd&lt;&#x2F;code&gt;, we can define our own methods to compare &lt;code&gt;Self&lt;&#x2F;code&gt; with &lt;code&gt;&amp;amp;[u8]&lt;&#x2F;code&gt;. It still should be &lt;code&gt;Clone&lt;&#x2F;code&gt;, so we can pass it around without worrying about lifetimes:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&#x2F;&#x2F; Callers must `assert_eq!(memory.len(), mem::size_of::&amp;lt;Self&amp;gt;())`.
+unsafe fn eq(&amp;amp;self, memory: &amp;amp;[u8]) -&amp;gt; bool;
+unsafe fn cmp(&amp;amp;self, memory: &amp;amp;[u8]) -&amp;gt; Ordering;
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This can be trivially implemented for all integer types:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;macro_rules! impl_scannable_for_int {
+    ( $( $ty:ty ),* ) =&amp;gt; {
+        $(
+            &#x2F;&#x2F; SAFETY: caller is responsible to `assert_eq!(memory.len(), mem::size_of::&amp;lt;T&amp;gt;())`
+            impl Scannable for $ty {
+                unsafe fn eq(&amp;amp;self, memory: &amp;amp;[u8]) -&amp;gt; bool {
+                    let other = unsafe { memory.as_ptr().cast::&amp;lt;$ty&amp;gt;().read_unaligned() };
+                    *self == other
+                }
+
+                unsafe fn cmp(&amp;amp;self, memory: &amp;amp;[u8]) -&amp;gt; Ordering {
+                    let other = unsafe { memory.as_ptr().cast::&amp;lt;$ty&amp;gt;().read_unaligned() };
+                    &amp;lt;$ty as Ord&amp;gt;::cmp(self, &amp;amp;other)
+                }
+            }
+        )*
+    };
+}
+
+impl_scannable_for_int!(i8, u8, i16, u16, i32, u32, i64, u64);
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The funny &lt;code&gt;&amp;lt;$ty as Ord&amp;gt;&lt;&#x2F;code&gt; is because I decided to call the method &lt;code&gt;Scannable::cmp&lt;&#x2F;code&gt;, so I have to disambiguate between it and &lt;code&gt;Ord::cmp&lt;&#x2F;code&gt;. We can go ahead and update the code using &lt;code&gt;Scannable&lt;&#x2F;code&gt; to use these new functions instead.&lt;&#x2F;p&gt;
+&lt;p&gt;Now, you may have noticed I only implemented it for the integer types. That&#x27;s because floats need some extra care. Unfortunately, floating point types do not have any form of &amp;quot;precision&amp;quot; embedded in them, so we can&#x27;t accurately say &amp;quot;compare these floats to the precision level the user specified&amp;quot;. What we can do, however, is drop a few bits from the mantissa, so &amp;quot;relatively close&amp;quot; quantities are considered equal. It&#x27;s definitely not as good as comparing floats to the user&#x27;s precision, but it will get the job done.&lt;&#x2F;p&gt;
+&lt;p&gt;I&#x27;m going to arbitrarily say that we are okay comparing with &amp;quot;half&amp;quot; the precision. We can achieve that by masking half of the bits from the mantissa to zero:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;
+macro_rules! impl_scannable_for_float {
+    ( $( $ty:ty : $int_ty:ty ),* ) =&amp;gt; {
+        $(
+            #[allow(unused_unsafe)] &#x2F;&#x2F; mind you, it is necessary
+            impl Scannable for $ty {
+                unsafe fn eq(&amp;amp;self, memory: &amp;amp;[u8]) -&amp;gt; bool {
+                    const MASK: $int_ty = !((1 &amp;lt;&amp;lt; (&amp;lt;$ty&amp;gt;::MANTISSA_DIGITS &#x2F; 2)) - 1);
+
+                    &#x2F;&#x2F; SAFETY: caller is responsible to `assert_eq!(memory.len(), mem::size_of::&amp;lt;T&amp;gt;())`
+                    let other = unsafe { memory.as_ptr().cast::&amp;lt;$ty&amp;gt;().read_unaligned() };
+                    let left = &amp;lt;$ty&amp;gt;::from_bits(self.to_bits() &amp;amp; MASK);
+                    let right = &amp;lt;$ty&amp;gt;::from_bits(other.to_bits() &amp;amp; MASK);
+                    left == right
+                }
+
+                ...
+            }
+        )*
+    };
+}
+
+impl_scannable_for_float!(f32: u32, f64: u64);
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;You may be wondering what&#x27;s up with that weird &lt;code&gt;MASK&lt;&#x2F;code&gt;. Let&#x27;s visualize it with a &lt;a href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Bfloat16_floating-point_format&quot;&gt;&lt;code&gt;f16&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;. This type has 16 bits, 1 for sign, 5 for exponent, and 10 for the mantissa:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;S EEEEE MMMMMMMMMM
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;If we substitute the constant with the numeric value and operate:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;!((1 &amp;lt;&amp;lt; (10 &#x2F; 2)) - 1)
+!((1 &amp;lt;&amp;lt; 5) - 1)
+!(0b00000000_00100000 - 1)
+!(0b00000000_00011111)
+0b11111111_11100000
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;So effectively, half of the mantisssa bit will be masked to 0. For the &lt;code&gt;f16&lt;&#x2F;code&gt; example, this makes us lose 5 bits of precision. Comparing two floating point values with their last five bits truncated is equivalent to checking if they are &amp;quot;roughly equal&amp;quot;!&lt;&#x2F;p&gt;
+&lt;p&gt;When Cheat Engine scans for floating point values, several additional settings show, and one such option is &amp;quot;truncated&amp;quot;. I do not know if it behaves like this, but it might.&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s try this out:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;#[test]
+fn f32_roughly_eq() {
+    let left = 0.25f32;
+    let right = 0.25000123f32;
+    let memory = unsafe { mem::transmute::&amp;lt;_, [u8; 4]&amp;gt;(right) };
+    assert_ne!(left, right);
+    assert!(unsafe { Scannable::eq(&amp;amp;left, &amp;amp;memory) });
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;&amp;gt;cargo test f32_roughly_eq
+
+running 1 test
+test scan::candidate_location_tests::f32_roughly_eq ... ok
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Huzzah! The &lt;code&gt;assert_ne!&lt;&#x2F;code&gt; makes sure that a normal comparision would fail, and then we &lt;code&gt;assert!&lt;&#x2F;code&gt; that our custom one passes the test. When the user performs an exact scan, the code will be more tolerant to the user&#x27;s less precise inputs, which overall should result in a nicer experience.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;dynamically-sized-scans&quot;&gt;Dynamically sized scans&lt;&#x2F;h2&gt;
+&lt;p&gt;The second problem we need to solve is the possibility of the size not being known at compile time&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#8&quot;&gt;8&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. While we can go as far as scanning over strings of a known length, this is rather limiting, because we need to know the length at compile time&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#9&quot;&gt;9&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. Heap allocated objects are another problem, because we don&#x27;t want to compare the memory representation of the stack object, but likely the memory where they point to (such as &lt;code&gt;String&lt;&#x2F;code&gt;).&lt;&#x2F;p&gt;
+&lt;p&gt;Instead of using &lt;code&gt;mem::size_of&lt;&#x2F;code&gt;, we can add a new method to our &lt;code&gt;Scannable&lt;&#x2F;code&gt;, &lt;code&gt;size&lt;&#x2F;code&gt;, which will tell us the size required of the memory view we&#x27;re comparing against:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;unsafe impl Scannable {
+    ...
+
+    fn size(&amp;amp;self) -&amp;gt; usize;
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It is &lt;code&gt;unsafe&lt;&#x2F;code&gt; to implement, because we are relying on the returned value to be truthful and unchanging. It should be safe to call, because it cannot have any invariants. Unfortunately, signaling &amp;quot;unsafe to implement&amp;quot; is done by marking the entire trait as &lt;code&gt;unsafe&lt;&#x2F;code&gt;, since &amp;quot;unsafe to call&amp;quot; is reserved for &lt;code&gt;unsafe fn&lt;&#x2F;code&gt;, and even though the rest of methods are not necessarily unsafe to implement, they&#x27;re treated as such.&lt;&#x2F;p&gt;
+&lt;p&gt;At the moment, &lt;code&gt;Scannable&lt;&#x2F;code&gt; cannot be made into a trait object because it is &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;error-index.html#E0038&quot;&gt;not object safe&lt;&#x2F;a&gt;. This is caused by the &lt;code&gt;Clone&lt;&#x2F;code&gt; requirement on all &lt;code&gt;Scannable&lt;&#x2F;code&gt; object, which in turn needs the types to be &lt;code&gt;Sized&lt;&#x2F;code&gt; because &lt;code&gt;clone&lt;&#x2F;code&gt; returns &lt;code&gt;Self&lt;&#x2F;code&gt;. Because of this, the size must be known.&lt;&#x2F;p&gt;
+&lt;p&gt;However, we &lt;em&gt;can&lt;&#x2F;em&gt; move the &lt;code&gt;Clone&lt;&#x2F;code&gt; requirement to the methods that need it! This way, &lt;code&gt;Scannable&lt;&#x2F;code&gt; can remain object safe, enabling us to do the following:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;unsafe impl&amp;lt;T: AsRef&amp;lt;dyn Scannable&amp;gt; + AsMut&amp;lt;dyn Scannable&amp;gt;&amp;gt; Scannable for T {
+    unsafe fn eq(&amp;amp;self, memory: &amp;amp;[u8]) -&amp;gt; bool {
+        self.as_ref().eq(memory)
+    }
+
+    unsafe fn cmp(&amp;amp;self, memory: &amp;amp;[u8]) -&amp;gt; Ordering {
+        self.as_ref().cmp(memory)
+    }
+
+    fn mem_view(&amp;amp;self) -&amp;gt; &amp;amp;[u8] {
+        self.as_ref().mem_view()
+    }
+
+    fn size(&amp;amp;self) -&amp;gt; usize {
+        self.as_ref().size()
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Any type which can be interpreted as a reference to &lt;code&gt;Scannable&lt;&#x2F;code&gt; is also a scannable! This enables us to perform scans over &lt;code&gt;Box&amp;lt;dyn i32&amp;gt;&lt;&#x2F;code&gt;, where the type is known at runtime! Or rather, it would, if &lt;code&gt;Box&amp;lt;dyn T&amp;gt;&lt;&#x2F;code&gt; implemented &lt;code&gt;Clone&lt;&#x2F;code&gt;, which it can&#x27;t&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#10&quot;&gt;10&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; because that&#x27;s what prompted this entire issue. Dang it! I can&#x27;t catch a breath today!&lt;&#x2F;p&gt;
+&lt;p&gt;Okay, let&#x27;s step back. Why did we need our scannables to be clone in the first place? When we perform exact scans, we store the original value in the region, which we don&#x27;t own, so we clone it. But what if we &lt;em&gt;did&lt;&#x2F;em&gt; own the value? Instead of taking the &lt;code&gt;Scan&lt;&#x2F;code&gt; by reference, which holds &lt;code&gt;T: Scannable&lt;&#x2F;code&gt;, we could take it by value. If we get rid of all the &lt;code&gt;Clone&lt;&#x2F;code&gt; bounds and update &lt;code&gt;Scan::run&lt;&#x2F;code&gt; to take &lt;code&gt;self&lt;&#x2F;code&gt;, along with updating all the things that take a &lt;code&gt;Region&lt;&#x2F;code&gt; to take them by value as well, it should all work out.&lt;&#x2F;p&gt;
+&lt;p&gt;But it does not. If we take &lt;code&gt;Scan&lt;&#x2F;code&gt; by value, with it not being &lt;code&gt;Clone&lt;&#x2F;code&gt;, we simply can&#x27;t use it to scan over multiple regions. After the first region, we have lost the &lt;code&gt;Scan&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s take a second step back. We are scanning memory, and we want to compare memory, but we want to treat the memory with different semantics (for example, if we treat it as &lt;code&gt;f32&lt;&#x2F;code&gt;, we want to check for rough equality). Instead of storing the &lt;em&gt;value&lt;&#x2F;em&gt; itself, we could store its &lt;em&gt;memory representation&lt;&#x2F;em&gt;, and when we compare memory representations, we can do so under certain semantics.&lt;&#x2F;p&gt;
+&lt;p&gt;First off, let&#x27;s revert getting rid of all &lt;code&gt;Clone&lt;&#x2F;code&gt;. Wherever we stored a &lt;code&gt;T&lt;&#x2F;code&gt;, we will now store a &lt;code&gt;Vec&amp;lt;u8&amp;gt;&lt;&#x2F;code&gt;. We will still use a type parameter to represent the &amp;quot;implementations of &lt;code&gt;Scannable&lt;&#x2F;code&gt;&amp;quot;. For this to work, our definitions need to use &lt;code&gt;T&lt;&#x2F;code&gt; somewhere, or else the compiler refuses to compile the code with error &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;error-index.html#E0392&quot;&gt;E0392&lt;&#x2F;a&gt;. For this, I will stick a &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;std&#x2F;marker&#x2F;struct.PhantomData.html&quot;&gt;&lt;code&gt;PhantomData&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; in the &lt;code&gt;Exact&lt;&#x2F;code&gt; variant. It&#x27;s a bit pointless to include it in all variants, and &lt;code&gt;Exact&lt;&#x2F;code&gt; seems the most appropriated:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub enum Scan&amp;lt;T: Scannable&amp;gt; {
+    Exact(Vec&amp;lt;u8&amp;gt;, PhantomData&amp;lt;T&amp;gt;),
+    Unknown,
+    ...
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This keeps in line with &lt;code&gt;Value&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub enum Value&amp;lt;T: Scannable&amp;gt; {
+    Exact(Vec&amp;lt;u8&amp;gt;, PhantomData&amp;lt;T&amp;gt;),
+    ...
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Our &lt;code&gt;Scannable&lt;&#x2F;code&gt; will no longer work on &lt;code&gt;T&lt;&#x2F;code&gt; and &lt;code&gt;&amp;amp;[u8]&lt;&#x2F;code&gt;. Instead, it will work on two &lt;code&gt;&amp;amp;[u8]&lt;&#x2F;code&gt;. We will also need a way to interpret a &lt;code&gt;T&lt;&#x2F;code&gt; as &lt;code&gt;&amp;amp;[u8]&lt;&#x2F;code&gt;, which we can achieve with a new method, &lt;code&gt;mem_view&lt;&#x2F;code&gt;. This method interprets the raw memory representation of &lt;code&gt;self&lt;&#x2F;code&gt; as its raw bytes. It also lets us get rid of &lt;code&gt;size&lt;&#x2F;code&gt;, because we can simply do &lt;code&gt;mem_view().len()&lt;&#x2F;code&gt;. It&#x27;s still &lt;code&gt;unsafe&lt;&#x2F;code&gt; to implement, because it should return the same length every time:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub unsafe trait Scannable {
+    &#x2F;&#x2F; Callers must `assert_eq!(left.len(), right.len(), self.mem_view().len())`.
+    unsafe fn eq(left: &amp;amp;[u8], right: &amp;amp;[u8]) -&amp;gt; bool;
+    unsafe fn cmp(left: &amp;amp;[u8], right: &amp;amp;[u8]) -&amp;gt; Ordering;
+    fn mem_view(&amp;amp;self) -&amp;gt; &amp;amp;[u8];
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;But now we can&#x27;t use it in trait object, so the following no longer works:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;unsafe impl&amp;lt;T: AsRef&amp;lt;dyn Scannable&amp;gt; + AsMut&amp;lt;dyn Scannable&amp;gt;&amp;gt; Scannable for T {
+    ...
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Ugh! Well, to be fair, we no longer have a &amp;quot;scannable&amp;quot; at this point. It&#x27;s more like a scan mode that tells us how memory should be compared according to a certain type. Let&#x27;s split the trait into two: one for the scan mode, and other for &amp;quot;things which are scannable&amp;quot;:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub trait ScanMode {
+    unsafe fn eq(left: &amp;amp;[u8], right: &amp;amp;[u8]) -&amp;gt; bool;
+    unsafe fn cmp(left: &amp;amp;[u8], right: &amp;amp;[u8]) -&amp;gt; Ordering;
+}
+
+pub unsafe trait Scannable {
+    type Mode: ScanMode;
+
+    fn mem_view(&amp;amp;self) -&amp;gt; &amp;amp;[u8];
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Note that we have an associated &lt;code&gt;type Mode&lt;&#x2F;code&gt; which contains the corresponding &lt;code&gt;ScanMode&lt;&#x2F;code&gt;. If we used a trait bound such as &lt;code&gt;Scannable: ScanMode&lt;&#x2F;code&gt;, we&#x27;d be back to square one: it would inherit the method definitions that don&#x27;t use &lt;code&gt;&amp;amp;self&lt;&#x2F;code&gt; and thus cannot be used as trait objects.&lt;&#x2F;p&gt;
+&lt;p&gt;With these changes, it is possible to implement &lt;code&gt;Scannable&lt;&#x2F;code&gt; for any &lt;code&gt;dyn Scannable&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;unsafe impl&amp;lt;T: ScanMode + AsRef&amp;lt;dyn Scannable&amp;lt;Mode = Self&amp;gt;&amp;gt;&amp;gt; Scannable for T {
+    type Mode = Self;
+
+    fn mem_view(&amp;amp;self) -&amp;gt; &amp;amp;[u8] {
+        self.as_ref().mem_view()
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;We do have to adjust a few places of the code to account for both &lt;code&gt;Scannable&lt;&#x2F;code&gt; and &lt;code&gt;ScanMode&lt;&#x2F;code&gt;, but all in all, it&#x27;s pretty straightforward. Things like &lt;code&gt;Value&lt;&#x2F;code&gt; don&#x27;t need to store the &lt;code&gt;Scannable&lt;&#x2F;code&gt; anymore, just a &lt;code&gt;Vec&amp;lt;u8&amp;gt;&lt;&#x2F;code&gt;. It also doesn&#x27;t need the &lt;code&gt;ScanMode&lt;&#x2F;code&gt;, because it&#x27;s not going to be scanning anything on its own. This applies transitively to &lt;code&gt;Region&lt;&#x2F;code&gt; which was holding a &lt;code&gt;Value&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;code&gt;Value&lt;&#x2F;code&gt; &lt;em&gt;does&lt;&#x2F;em&gt; need to be updated to store the size of the region we are scanning for, however, because we need that information when running a subsequent scan. For all &lt;code&gt;Scan&lt;&#x2F;code&gt; that don&#x27;t have a explicit thing to scan for (like &lt;code&gt;Decreased&lt;&#x2F;code&gt;), the &lt;code&gt;size&lt;&#x2F;code&gt; also needs to be stored in them.&lt;&#x2F;p&gt;
+&lt;p&gt;Despite all our efforts, we&#x27;re still unable to return an &lt;code&gt;Scannable&lt;&#x2F;code&gt; chosen at runtime.&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;fn prompt_user_for_scan() -&amp;gt; Scan&amp;lt;Box&amp;lt;dyn Scannable&amp;lt;Mode = ???&amp;gt;&amp;gt;&amp;gt; {
+    todo!()
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;As far as I can tell, there&#x27;s simply no way to specify that type. We want to return a type which is scannable, which has itself (which is also a &lt;code&gt;ScanMode&lt;&#x2F;code&gt;) as the corresponding mode. Even if we just tried to return the mode, we simply can&#x27;t, because it&#x27;s not object-safe. Is this the end of the road?&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;specifying-the-scan-mode&quot;&gt;Specifying the scan mode&lt;&#x2F;h2&gt;
+&lt;p&gt;We need a way to pass an arbitrary scan mode to our &lt;code&gt;Scan&lt;&#x2F;code&gt;. This scan mode should go in tandem with &lt;code&gt;Scannable&lt;&#x2F;code&gt; types, because it would be unsafe otherwise. We&#x27;ve seen that using a type just doesn&#x27;t cut it. What else can we do?&lt;&#x2F;p&gt;
+&lt;p&gt;Using an enumeration is a no-go, because I want users to be able to extend it further. I also would like to avoid having to update the &lt;code&gt;enum&lt;&#x2F;code&gt; and all the matches every time I come up with a different type combination. And it could get pretty complicated if I ever built something dynamically, such as letting the user combine different scans in one pass.&lt;&#x2F;p&gt;
+&lt;p&gt;So what if we make &lt;code&gt;Scannable&lt;&#x2F;code&gt; return a value that implements the functions we need?&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub struct ScanMode {
+    eq: unsafe fn(left: &amp;amp;[u8], right: &amp;amp;[u8]) -&amp;gt; bool,
+    cmp: unsafe fn(left: &amp;amp;[u8], right: &amp;amp;[u8]) -&amp;gt; Ordering,
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It&#x27;s definitely… non-conventional. But hey, now we&#x27;re left with the &lt;code&gt;Scannable&lt;&#x2F;code&gt; trait, which is object-safe, and does not have any type parameters!&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub unsafe trait Scannable {
+    fn mem_view(&amp;amp;self) -&amp;gt; &amp;amp;[u8];
+    fn scan_mode(&amp;amp;self) -&amp;gt; ScanMode;
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It is a bit weird, but defining local functions and using those in the returned value is a nice way to keep things properly scoped:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;macro_rules! impl_scannable_for_int {
+    ( $( $ty:ty ),* ) =&amp;gt; {
+        $(
+            unsafe impl Scannable for $ty {
+                fn mem_view(&amp;amp;self) -&amp;gt; &amp;amp;[u8] {
+                    unsafe { std::slice::from_raw_parts(self as *const _ as *const u8, mem::size_of::&amp;lt;$ty&amp;gt;()) }
+                }
+
+                fn scan_mode(&amp;amp;self) -&amp;gt; ScanMode {
+                    unsafe fn eq(left: &amp;amp;[u8], right: &amp;amp;[u8]) -&amp;gt; bool {
+                        ...
+                    }
+
+                    unsafe fn cmp(left: &amp;amp;[u8], right: &amp;amp;[u8]) -&amp;gt; Ordering {
+                        ...
+                    }
+
+                    ScanMode { eq, cmp }
+                }
+            }
+        )*
+    };
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Our &lt;code&gt;Scan&lt;&#x2F;code&gt; needs to store the &lt;code&gt;Scannable&lt;&#x2F;code&gt; type, and not just the memory, once again. For variants that don&#x27;t need any value, they can store the &lt;code&gt;ScanMode&lt;&#x2F;code&gt; and size instead.&lt;&#x2F;p&gt;
+&lt;p&gt;Does this solution work? Yes! It&#x27;s possible to return a &lt;code&gt;Box&amp;lt;dyn Scannable&amp;gt;&lt;&#x2F;code&gt; from a function, and underneath, it may be using any type which is &lt;code&gt;Scannable&lt;&#x2F;code&gt;. Is this the best solution? Well, that&#x27;s hard to say. This is &lt;em&gt;one&lt;&#x2F;em&gt; of the possible solutions.&lt;&#x2F;p&gt;
+&lt;p&gt;We have been going around in circles for quite some time now, so I&#x27;ll leave it there. It&#x27;s a solution, which may not be pretty, but it works. With these changes, the code is capable of completing all of the steps in the Cheat Engine tutorial up until point!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;finale&quot;&gt;Finale&lt;&#x2F;h2&gt;
+&lt;p&gt;If there&#x27;s one lesson to learn from this post, it&#x27;s that there is often no single correct solution to a problem. We could have approached the scan types in many, many ways (and we tried quite a few!), but in the end, choosing one option or the other comes down to your (sometimes self-imposed) requirements.&lt;&#x2F;p&gt;
+&lt;p&gt;You may &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lonami&#x2F;memo&quot;&gt;obtain the code for this post&lt;&#x2F;a&gt; over at my GitHub. You can run &lt;code&gt;git checkout step4&lt;&#x2F;code&gt; after cloning the repository to get the right version of the code. The code has gone through a lot of iterations, and I&#x27;d still like to polish it a bit more, so it might slightly differ from the code presented in this entry.&lt;&#x2F;p&gt;
+&lt;p&gt;If you feel adventurous, Cheat Engine has different options for scanning floating point types: &amp;quot;rounded (default)&amp;quot;, &amp;quot;rounded (extreme)&amp;quot;, and truncated. Optionally, it can scan for &amp;quot;simple values only&amp;quot;. You could go ahead and toy around with these!&lt;&#x2F;p&gt;
+&lt;p&gt;We didn&#x27;t touch on types with different lengths, such as strings. You could support UTF-8, UTF-16, or arbitrary byte sequences. This post also didn&#x27;t cover scanning for multiple things at once, known as &amp;quot;groupscan commands&amp;quot;, although from what I can tell, these are just a nice way to scan for arbitrary byte sequences.&lt;&#x2F;p&gt;
+&lt;p&gt;We also didn&#x27;t look into supporting different the same scan with different alignments. All these things may be worth exploring depending on your requirements. You could even get rid of such genericity and go with something way simpler. Supporting &lt;code&gt;i32&lt;&#x2F;code&gt;, &lt;code&gt;f32&lt;&#x2F;code&gt; and &lt;code&gt;f64&lt;&#x2F;code&gt; is enough to complete the Cheat Engine tutorial. But I wanted something more powerful, although my solution currently can&#x27;t scan for a sequence such as &amp;quot;exact type, unknown, exact matching the unknown&amp;quot;. So yeah.&lt;&#x2F;p&gt;
+&lt;p&gt;In the next post, we&#x27;ll tackle the fifth step of the tutorial: Code finder. Cheat Engine attaches its debugger to the process for this one, and then replaces the instruction that performs the write with a different no-op so that nothing is written anymore. This will be quite the challenge!&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;footnotes&quot;&gt;Footnotes&lt;&#x2F;h3&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;std&#x2F;ops&#x2F;trait.Drop.html#copy-and-drop-are-exclusive&quot;&gt;&lt;code&gt;Copy&lt;&#x2F;code&gt; and &lt;code&gt;Drop&lt;&#x2F;code&gt; are exclusive&lt;&#x2F;a&gt;. See also &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;error-index.html#E0184&quot;&gt;E0184&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;2&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;2&lt;&#x2F;sup&gt;
+&lt;p&gt;If you added more scan types that require additional bounds, make sure to add them too. For example, the &amp;quot;decreased by&amp;quot; scan requires the type to &lt;code&gt;impl Sub&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;3&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;3&lt;&#x2F;sup&gt;
+&lt;p&gt;This is a good time to remind you to read the documentation. It is of special importance when dealing with &lt;code&gt;unsafe&lt;&#x2F;code&gt; methods; I recommend reading it a couple times.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;4&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;4&lt;&#x2F;sup&gt;
+&lt;p&gt;Even with this option, it would not be a bad idea to make the trait &lt;code&gt;unsafe&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;5&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;5&lt;&#x2F;sup&gt;
+&lt;p&gt;Not for long. As we will find out later, this approach has its limitations.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;6&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;6&lt;&#x2F;sup&gt;
+&lt;p&gt;We can still perform the pointer dereference when we know it&#x27;s aligned. This would likely be an optimization, although it would definitely complicate the code more.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;7&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;7&lt;&#x2F;sup&gt;
+&lt;p&gt;It &lt;em&gt;would&lt;&#x2F;em&gt; work if you scanned for unknown values and then checked for decreased values repeatedly. But we can&#x27;t just leave exact scan broken!&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;8&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;8&lt;&#x2F;sup&gt;
+&lt;p&gt;Unfortunately, this makes some optimizations harder or even impossible to perform. Providing specialized functions for types where the size is known at compile time could be worth doing. Programming is all tradeoffs.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;9&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;9&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.rust-lang.org&#x2F;2021&#x2F;02&#x2F;26&#x2F;const-generics-mvp-beta.html&quot;&gt;Rust 1.51&lt;&#x2F;a&gt;, which was not out at the time of writing, would make it a lot easier to allow scanning for fixed-length sequences of bytes, thanks to const generics.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;10&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;10&lt;&#x2F;sup&gt;
+&lt;p&gt;Workarounds do exist, such as &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;dyn-clone&quot;&gt;dtolnay&#x27;s &lt;code&gt;dyn-clone&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;. But I would rather not go that route.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+</content>
+	</entry>
 	<entry xml:lang="en">
 		<title>Writing our own Cheat Engine: Unknown initial value</title>
 		<published>2021-02-19T00:00:00+00:00</published>
@@ -17,6 +430,7 @@
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-1&quot;&gt;Part 1: Introduction&lt;&#x2F;a&gt; (start here if you&#x27;re new to the series!)&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-2&quot;&gt;Part 2: Exact Value scanning&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;Part 3: Unknown initial value&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-4&quot;&gt;Part 4: Floating points&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In part 2 we left off with a bit of a cliff-hanger. Our little program is now able to scan for an exact value, remember the couple hundred addresses pointing to said value, and perform subsequent scans to narrow the list of addresses down until we&#x27;re left with a handful of them.&lt;&#x2F;p&gt;
 &lt;p&gt;However, it is not always the case that you have an exact value to work with. The best you can do in these cases is guess what the software might be storing. For example, it could be a floating point for your current movement speed in a game, or an integer for your current health.&lt;&#x2F;p&gt;
@@ -339,7 +753,7 @@ Found 223791 locations
 &lt;p&gt;What if, despite all of the efforts above, we still don&#x27;t have enough RAM to store all this information? The Cheat Engine Tutorial doesn&#x27;t use a lot of memory, but as soon as you try scanning bigger programs, like games, you may find yourself needing several gigabytes worth of memory to remember all the found values in order to compare them in subsequent scans. You may even need to consider dumping all the regions to a file and read from it to run the comparisons. For example, running a scan for &amp;quot;unknown value&amp;quot; in Cheat Engine brings its memory up by the same amount of memory used by the process scanned (which makes sense), but as soon as I ran a scan for &amp;quot;unchanged value&amp;quot; over the misaligned values, Cheat Engine&#x27;s disk usage skyrocketed to 1GB&#x2F;s (!) for several seconds on my SSD. After it finished, memory usage went down to normal. It was very likely writing out all candidate locations to disk.&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;finale&quot;&gt;Finale&lt;&#x2F;h2&gt;
 &lt;p&gt;There is a lot of things to learn from Cheat Engine just by observing its behaviour, and we&#x27;re only scratching its surface.&lt;&#x2F;p&gt;
-&lt;p&gt;In the next post, we&#x27;ll tackle the fourth step of the tutorial: Floating points. So far, we have only been working with &lt;code&gt;i32&lt;&#x2F;code&gt; for simplicity. We will need to update our code to be able to account for different data types, which will make it easy to support other types like &lt;code&gt;i16&lt;&#x2F;code&gt;, &lt;code&gt;i64&lt;&#x2F;code&gt;, or even strings, represented as an arbitrary sequence of bytes.&lt;&#x2F;p&gt;
+&lt;p&gt;In the &lt;a href=&quot;&#x2F;blog&#x2F;woce-4&quot;&gt;next post&lt;&#x2F;a&gt;, we&#x27;ll tackle the fourth step of the tutorial: Floating points. So far, we have only been working with &lt;code&gt;i32&lt;&#x2F;code&gt; for simplicity. We will need to update our code to be able to account for different data types, which will make it easy to support other types like &lt;code&gt;i16&lt;&#x2F;code&gt;, &lt;code&gt;i64&lt;&#x2F;code&gt;, or even strings, represented as an arbitrary sequence of bytes.&lt;&#x2F;p&gt;
 &lt;p&gt;As usual, you can &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lonami&#x2F;memo&quot;&gt;obtain the code for this post&lt;&#x2F;a&gt; over at my GitHub. You can run &lt;code&gt;git checkout step3&lt;&#x2F;code&gt; after cloning the repository to get the right version of the code. This version is a bit cleaner than the one presented in the blog, and contains some of the things described in the &lt;a href=&quot;https:&#x2F;&#x2F;lonami.dev&#x2F;blog&#x2F;woce-3&#x2F;#going-beyond&quot;&gt;Going beyond&lt;&#x2F;a&gt; section. Until next time!&lt;&#x2F;p&gt;
 &lt;h3 id=&quot;footnotes&quot;&gt;Footnotes&lt;&#x2F;h3&gt;
 &lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
@@ -370,6 +784,7 @@ Found 223791 locations
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-1&quot;&gt;Part 1: Introduction&lt;&#x2F;a&gt; (start here if you&#x27;re new to the series!)&lt;&#x2F;li&gt;
 &lt;li&gt;Part 2: Exact Value scanning&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-3&quot;&gt;Part 3: Unknown initial value&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-4&quot;&gt;Part 4: Floating points&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In the introduction, we spent a good deal of time enumerating all running processes just so we could find out the pid we cared about. With the pid now in our hands, we can do pretty much anything to its corresponding process.&lt;&#x2F;p&gt;
 &lt;p&gt;It&#x27;s now time to read the process&#x27; memory and write to it. If our process was a single-player game, this would enable us to do things like setting a very high value on the player&#x27;s current health pool, making us invincible. This technique will often not work for multi-player games, because the server likely knows your true current health (the most you could probably do is make the client render an incorrect value). However, if the server is crappy and it trusts the client, then you&#x27;re still free to mess around with your current health.&lt;&#x2F;p&gt;
@@ -747,7 +1162,7 @@ Written 4 bytes to [15d8b90]
 &lt;h2 id=&quot;finale&quot;&gt;Finale&lt;&#x2F;h2&gt;
 &lt;p&gt;This post somehow ended up being longer than part one, but look at what we&#x27;ve achieved! We completed a step of the Cheat Engine Tutorial &lt;em&gt;without using Cheat Engine&lt;&#x2F;em&gt;. Just pure Rust. Figuring out how a program works and reimplementing it yourself is a great way to learn what it&#x27;s doing behind the scenes. And now that this code is yours, you can extend it as much as you like, without being constrained by Cheat Engine&#x27;s UI. You can automate it as much as you want.&lt;&#x2F;p&gt;
 &lt;p&gt;And we&#x27;re not even done. The current tutorial has nine steps, and three additional graphical levels.&lt;&#x2F;p&gt;
-&lt;p&gt;In the next post, we&#x27;ll tackle the third step of the tutorial: Unknown initial value. This will pose a challenge, because with just 2 MiB of memory, storing all the 4-byte aligned locations would require 524288 addresses (&lt;code&gt;usize&lt;&#x2F;code&gt;, 8 bytes). This adds up to twice as much memory as the original program (4 MiB), but that&#x27;s not our main concern, having to perform over five hundred thousand API calls is!&lt;&#x2F;p&gt;
+&lt;p&gt;In the &lt;a href=&quot;&#x2F;blog&#x2F;woce-3&quot;&gt;next post&lt;&#x2F;a&gt;, we&#x27;ll tackle the third step of the tutorial: Unknown initial value. This will pose a challenge, because with just 2 MiB of memory, storing all the 4-byte aligned locations would require 524288 addresses (&lt;code&gt;usize&lt;&#x2F;code&gt;, 8 bytes). This adds up to twice as much memory as the original program (4 MiB), but that&#x27;s not our main concern, having to perform over five hundred thousand API calls is!&lt;&#x2F;p&gt;
 &lt;p&gt;Remember that you can &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lonami&#x2F;memo&quot;&gt;obtain the code for this post&lt;&#x2F;a&gt; over at my GitHub. You can run &lt;code&gt;git checkout step2&lt;&#x2F;code&gt; after cloning the repository to get the right version of the code.&lt;&#x2F;p&gt;
 &lt;h3 id=&quot;footnotes&quot;&gt;Footnotes&lt;&#x2F;h3&gt;
 &lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
@@ -790,6 +1205,7 @@ Written 4 bytes to [15d8b90]
 &lt;li&gt;Part 1: Introduction&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-2&quot;&gt;Part 2: Exact Value scanning&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-3&quot;&gt;Part 3: Unknown initial value&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-4&quot;&gt;Part 4: Floating points&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;cheatengine.org&#x2F;&quot;&gt;Cheat Engine&lt;&#x2F;a&gt; is a tool designed to modify single player games and contains other useful tools within itself that enable its users to debug games or other applications. It comes with a memory scanner, (dis)assembler, inspection tools and a handful other things. In this series, we will be writing our own tiny Cheat Engine capable of solving all steps of the tutorial, and diving into how it all works underneath.&lt;&#x2F;p&gt;
 &lt;p&gt;Needless to say, we&#x27;re doing this for private and educational purposes only. One has to make sure to not violate the EULA or ToS of the specific application we&#x27;re attaching to. This series, much like cheatengine.org, does not condone the illegal use of the code shared.&lt;&#x2F;p&gt;

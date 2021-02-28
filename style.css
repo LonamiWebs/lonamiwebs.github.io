@@ -190,6 +190,18 @@ hr {
 }
 
 /* code */
+code {
+    font-weight: bold;
+    font-size: large;
+    background-color: #f7f7f0;
+}
+
+pre code {
+    font-weight: normal;
+    font-size: 1em;
+    background: none;
+}
+
 pre {
     background-color: #eee;
     padding: 4px;
