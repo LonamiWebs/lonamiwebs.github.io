@@ -12,6 +12,7 @@ This is part 2 on the *Writing our own Cheat Engine* series:
 * [Part 1: Introduction](/blog/woce-1) (start here if you're new to the series!)
 * Part 2: Exact Value scanning
 * [Part 3: Unknown initial value](/blog/woce-3)
+* [Part 4: Floating points](/blog/woce-4)
 
 In the introduction, we spent a good deal of time enumerating all running processes just so we could find out the pid we cared about. With the pid now in our hands, we can do pretty much anything to its corresponding process.
 
@@ -516,7 +517,7 @@ This post somehow ended up being longer than part one, but look at what we've ac
 
 And we're not even done. The current tutorial has nine steps, and three additional graphical levels.
 
-In the next post, we'll tackle the third step of the tutorial: Unknown initial value. This will pose a challenge, because with just 2 MiB of memory, storing all the 4-byte aligned locations would require 524288 addresses (`usize`, 8 bytes). This adds up to twice as much memory as the original program (4 MiB), but that's not our main concern, having to perform over five hundred thousand API calls is!
+In the [next post](/blog/woce-3), we'll tackle the third step of the tutorial: Unknown initial value. This will pose a challenge, because with just 2 MiB of memory, storing all the 4-byte aligned locations would require 524288 addresses (`usize`, 8 bytes). This adds up to twice as much memory as the original program (4 MiB), but that's not our main concern, having to perform over five hundred thousand API calls is!
 
 Remember that you can [obtain the code for this post][code] over at my GitHub. You can run `git checkout step2` after cloning the repository to get the right version of the code.
 

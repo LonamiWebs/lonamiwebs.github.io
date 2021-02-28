@@ -12,6 +12,7 @@ This is part 3 on the *Writing our own Cheat Engine* series:
 * [Part 1: Introduction](/blog/woce-1) (start here if you're new to the series!)
 * [Part 2: Exact Value scanning](/blog/woce-2)
 * Part 3: Unknown initial value
+* [Part 4: Floating points](/blog/woce-4)
 
 In part 2 we left off with a bit of a cliff-hanger. Our little program is now able to scan for an exact value, remember the couple hundred addresses pointing to said value, and perform subsequent scans to narrow the list of addresses down until we're left with a handful of them.
 
@@ -438,7 +439,7 @@ What if, despite all of the efforts above, we still don't have enough RAM to sto
 
 There is a lot of things to learn from Cheat Engine just by observing its behaviour, and we're only scratching its surface.
 
-In the next post, we'll tackle the fourth step of the tutorial: Floating points. So far, we have only been working with `i32` for simplicity. We will need to update our code to be able to account for different data types, which will make it easy to support other types like `i16`, `i64`, or even strings, represented as an arbitrary sequence of bytes.
+In the [next post](/blog/woce-4), we'll tackle the fourth step of the tutorial: Floating points. So far, we have only been working with `i32` for simplicity. We will need to update our code to be able to account for different data types, which will make it easy to support other types like `i16`, `i64`, or even strings, represented as an arbitrary sequence of bytes.
 
 As usual, you can [obtain the code for this post][code] over at my GitHub. You can run `git checkout step3` after cloning the repository to get the right version of the code. This version is a bit cleaner than the one presented in the blog, and contains some of the things described in the [Going beyond](#going-beyond) section. Until next time!
 
@@ -454,5 +455,4 @@ As usual, you can [obtain the code for this post][code] over at my GitHub. You c
 
 [^5]: (A footnote in a footnote?) The machine registers, memory cache and compiler will all help lower this cost, so the generated executable might not actually need that many reads from RAM. But that's getting way too deep into the details now.
 
-[script-kid]: https://www.urbandictionary.com/define.php?term=script%20kiddie
 [code]: https://github.com/lonami/memo
