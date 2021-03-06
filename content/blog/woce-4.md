@@ -13,6 +13,7 @@ This is part 4 on the *Writing our own Cheat Engine* series:
 * [Part 2: Exact Value scanning](/blog/woce-2)
 * [Part 3: Unknown initial value](/blog/woce-3)
 * Part 4: Floating points
+* [Part 5: Code finder](/blog/woce-5)
 
 In part 3 we did a fair amount of plumbing in order to support scan modes beyond the trivial "exact value scan". As a result, we have abstracted away the `Scan`, `CandidateLocations` and `Value` types as a separate `enum` each. Scanning for changed memory regions in an opened process can now be achieved with three lines of code:
 
@@ -517,7 +518,7 @@ We didn't touch on types with different lengths, such as strings. You could supp
 
 We also didn't look into supporting different the same scan with different alignments. All these things may be worth exploring depending on your requirements. You could even get rid of such genericity and go with something way simpler. Supporting `i32`, `f32` and `f64` is enough to complete the Cheat Engine tutorial. But I wanted something more powerful, although my solution currently can't scan for a sequence such as "exact type, unknown, exact matching the unknown". So yeah.
 
-In the next post, we'll tackle the fifth step of the tutorial: Code finder. Cheat Engine attaches its debugger to the process for this one, and then replaces the instruction that performs the write with a different no-op so that nothing is written anymore. This will be quite the challenge!
+In the [next post](/blog/woce-5), we'll tackle the fifth step of the tutorial: Code finder. Cheat Engine attaches its debugger to the process for this one, and then replaces the instruction that performs the write with a different no-op so that nothing is written anymore. This will be quite the challenge!
 
 ### Footnotes
 
