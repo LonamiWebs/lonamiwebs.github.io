@@ -4,8 +4,584 @@
 	<link href="https://lonami.dev/blog/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://lonami.dev/blog/"/>
 	<generator uri="https://www.getzola.org/">Zola</generator>
-	<updated>2021-02-22T00:00:00+00:00</updated>
+	<updated>2021-03-06T00:00:00+00:00</updated>
 	<id>https://lonami.dev/blog/atom.xml</id>
+	<entry xml:lang="en">
+		<title>Writing our own Cheat Engine: Code finder</title>
+		<published>2021-03-06T00:00:00+00:00</published>
+		<updated>2021-03-06T00:00:00+00:00</updated>
+		<link href="https://lonami.dev/blog/woce-5/" type="text/html"/>
+		<id>https://lonami.dev/blog/woce-5/</id>
+		<content type="html">&lt;p&gt;This is part 5 on the &lt;em&gt;Writing our own Cheat Engine&lt;&#x2F;em&gt; series:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-1&quot;&gt;Part 1: Introduction&lt;&#x2F;a&gt; (start here if you&#x27;re new to the series!)&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-2&quot;&gt;Part 2: Exact Value scanning&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-3&quot;&gt;Part 3: Unknown initial value&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-4&quot;&gt;Part 4: Floating points&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Part 5: Code finder&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;In part 4 we spent a good deal of time trying to make our scans generic, and now we have something that works&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;! Now that the scanning is fairly powerful and all covered, the Cheat Engine tutorial shifts focus into slightly more advanced techniques that you will most certainly need in anything bigger than a toy program.&lt;&#x2F;p&gt;
+&lt;p&gt;It&#x27;s time to write our very own &lt;strong&gt;debugger&lt;&#x2F;strong&gt; in Rust!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;code-finder&quot;&gt;Code finder&lt;&#x2F;h2&gt;
+&lt;details open&gt;&lt;summary&gt;Cheat Engine Tutorial: Step 5&lt;&#x2F;summary&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Sometimes the location something is stored at changes when you restart the game, or even while you&#x27;re playing… In that case you can use 2 things to still make a table that works. In this step I&#x27;ll try to describe how to use the Code Finder function.&lt;&#x2F;p&gt;
+&lt;p&gt;The value down here will be at a different location each time you start the tutorial, so a normal entry in the address list wouldn&#x27;t work. First try to find the address. (You&#x27;ve got to this point so I assume you know how to.)&lt;&#x2F;p&gt;
+&lt;p&gt;When you&#x27;ve found the address, right-click the address in Cheat Engine and choose &amp;quot;Find out what writes to this address&amp;quot;. A window will pop up with an empty list.&lt;&#x2F;p&gt;
+&lt;p&gt;Then click on the Change value button in this tutorial, and go back to Cheat Engine. If everything went right there should be an address with assembler code there now.&lt;&#x2F;p&gt;
+&lt;p&gt;Click it and choose the replace option to replace it with code that does nothing. That will also add the code address to the code list in the advanced options window. (Which gets saved if you save your table.)&lt;&#x2F;p&gt;
+&lt;p&gt;Click on stop, so the game will start running normal again, and close to close the window. Now, click on Change value, and if everything went right the Next button should become enabled.&lt;&#x2F;p&gt;
+&lt;p&gt;Note: When you&#x27;re freezing the address with a high enough speed it may happen that next becomes visible anyhow&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;&#x2F;details&gt;
+&lt;h2 id=&quot;baby-steps-to-debugging&quot;&gt;Baby steps to debugging&lt;&#x2F;h2&gt;
+&lt;p&gt;Although I have used debuggers before, I have never had a need to write one myself so it&#x27;s time for some research.&lt;&#x2F;p&gt;
+&lt;p&gt;Searching on DuckDuckGo, I can find entire series to &lt;a href=&quot;http:&#x2F;&#x2F;system.joekain.com&#x2F;debugger&#x2F;&quot;&gt;Writing a Debugger&lt;&#x2F;a&gt;. We would be done by now if only that series wasn&#x27;t written for Linux. The Windows documentation contains a section called &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;debug&#x2F;creating-a-basic-debugger&quot;&gt;Creating a Basic Debugger&lt;&#x2F;a&gt;, but as far as I can tell, it only teaches you the &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;debug&#x2F;debugging-functions&quot;&gt;functions&lt;&#x2F;a&gt; needed to configure the debugging loop. Which mind you, we will need, but in due time.&lt;&#x2F;p&gt;
+&lt;p&gt;According to &lt;a href=&quot;https:&#x2F;&#x2F;www.gironsec.com&#x2F;blog&#x2F;2013&#x2F;12&#x2F;writing-your-own-debugger-windows-in-c&#x2F;&quot;&gt;Writing your own windows debugger in C&lt;&#x2F;a&gt;, the steps needed to write a debugger are:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;processthreadsapi&#x2F;nf-processthreadsapi-suspendthread&quot;&gt;&lt;code&gt;SuspendThread(proc)&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;. It makes sense that we need to pause all the threads&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; before messing around with the code the program is executing, or things are very prone to go wrong.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;processthreadsapi&#x2F;nf-processthreadsapi-getthreadcontext&quot;&gt;&lt;code&gt;GetThreadContext(proc)&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;. This function retrieves the appropriate context of the specified thread and is highly processor specific. It basically takes a snapshot of all the registers. Think of registers like extremely fast, but also extremely limited, memory the processor uses.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;winbase&#x2F;nf-winbase-debugbreakprocess&quot;&gt;&lt;code&gt;DebugBreakProcess&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;. Essentially &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows-hardware&#x2F;drivers&#x2F;debugger&#x2F;x86-instructions#miscellaneous&quot;&gt;writes out the 0xCC opcode&lt;&#x2F;a&gt;, &lt;code&gt;int 3&lt;&#x2F;code&gt; in assembly, also known as software breakpoint. It&#x27;s written wherever the Register Instruction Pointer (RIP&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#3&quot;&gt;3&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;) currently points to, so in essence, when the thread resumes, it will immediately &lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;q&#x2F;3915511&#x2F;&quot;&gt;trigger the breakpoint&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;debugapi&#x2F;nf-debugapi-continuedebugevent&quot;&gt;&lt;code&gt;ContinueDebugEvent&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;. Presumably continues debugging.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;There are pages documenting &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;debug&#x2F;debugging-events&quot;&gt;all of the debug events&lt;&#x2F;a&gt; that our debugger will be able to handle.&lt;&#x2F;p&gt;
+&lt;p&gt;Okay, nice! Software breakpoints seem to be done by writing out memory to the region where the program is reading instructions from. We know how to write memory, as that&#x27;s what all the previous posts have been doing to complete the corresponding tutorial steps. After the breakpoint is executed, all we need to do is &lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;q&#x2F;3747852&#x2F;&quot;&gt;restore the original memory back&lt;&#x2F;a&gt; so that the next time the program executes the code it sees no difference.&lt;&#x2F;p&gt;
+&lt;p&gt;But a software breakpoint will halt execution when the code executes the interrupt instruction. This step of the tutorial wants us to find &lt;em&gt;what writes to a memory location&lt;&#x2F;em&gt;. Where should we place the breakpoint to detect such location? Writing out the instruction to the memory we want to break in won&#x27;t do; it&#x27;s not an instruction, it&#x27;s just data.&lt;&#x2F;p&gt;
+&lt;p&gt;The name may have given it away. If we&#x27;re talking about software breakpoints, it makes sense that there would exist such a thing as &lt;a href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Breakpoint#Hardware&quot;&gt;&lt;em&gt;hardware&lt;&#x2F;em&gt; breakpoints&lt;&#x2F;a&gt;. Because they&#x27;re tied to the hardware, they&#x27;re highly processor-specific, but luckily for us, the processor on your usual desktop computer probably has them! Even the &lt;a href=&quot;https:&#x2F;&#x2F;interrupt.memfault.com&#x2F;blog&#x2F;cortex-m-breakpoints&quot;&gt;cortex-m&lt;&#x2F;a&gt; does. The wikipedia page also tells us the name of the thing we&#x27;re looking for, watchpoints:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Other kinds of conditions can also be used, such as the reading, writing, or modification of a specific location in an area of memory. This is often referred to as a conditional breakpoint, a data breakpoint, or a watchpoint.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;A breakpoint that triggers when a specific memory location is written to is exactly what we need, and &lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;a&#x2F;19109153&#x2F;&quot;&gt;x86 has debug registers D0 to D3 to track memory addresses&lt;&#x2F;a&gt;. As far as I can tell, there is no API in specific to mess with the registers. But we don&#x27;t need any of that! We can just go ahead and &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;unstable-book&#x2F;library-features&#x2F;asm.html&quot;&gt;write some assembly by hand&lt;&#x2F;a&gt; to access these registers. At the time of writing, inline assembly is unstable, so we need a nightly compiler. Run &lt;code&gt;rustup toolchain install nightly&lt;&#x2F;code&gt; if you haven&#x27;t yet, and execute the following code with &lt;code&gt;cargo +nightly run&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;#![feature(asm)] &#x2F;&#x2F; top of the file
+
+fn main() {
+    let x: u64 = 123;
+    unsafe {
+        asm!(&amp;quot;mov dr7, {}&amp;quot;, in(reg) x);
+    }
+}
+
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;dr7&lt;&#x2F;code&gt; stands is the &lt;a href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;X86_debug_register&quot;&gt;debug control register&lt;&#x2F;a&gt;, and running this we get…&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;gt;cargo +nightly run
+   Compiling memo v0.1.0
+    Finished dev [unoptimized + debuginfo] target(s) in 0.74s
+     Running `target\debug\memo.exe`
+error: process didn&#x27;t exit successfully: `target\debug\memo.exe` (exit code: 0xc0000096, STATUS_PRIVILEGED_INSTRUCTION)
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;…an exception! In all fairness, I have no idea what that code would have done. So maybe the &lt;code&gt;STATUS_PRIVILEGED_INSTRUCTION&lt;&#x2F;code&gt; is just trying to protect us. Can we read from the register instead, and see it&#x27;s default value?&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let x: u64;
+unsafe {
+    asm!(&amp;quot;mov {}, dr7&amp;quot;, out(reg) x);
+}
+assert_eq!(x, 5);
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;&amp;gt;cargo +nightly run
+...
+error: process didn&#x27;t exit successfully: `target\debug\memo.exe` (exit code: 0xc0000096, STATUS_PRIVILEGED_INSTRUCTION)
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Nope. Okay, it seems directly reading from or writing to the debug register is a ring-0 thing. Surely there&#x27;s a way around this. But first we should figure out how to enumerate and pause all the threads.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;pausing-all-the-threads&quot;&gt;Pausing all the threads&lt;&#x2F;h2&gt;
+&lt;p&gt;It seems there is no straightforward way to enumerate the threads. One has to &lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;a&#x2F;1206915&#x2F;&quot;&gt;create a &amp;quot;toolhelp&amp;quot;&lt;&#x2F;a&gt; and poll the entries. I won&#x27;t bore you with the details. Let&#x27;s add &lt;code&gt;tlhelp32&lt;&#x2F;code&gt; to the crate features of &lt;code&gt;winapi&lt;&#x2F;code&gt; and try it out:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;
+#[derive(Debug)]
+pub struct Toolhelp {
+    handle: winapi::um::winnt::HANDLE,
+}
+
+impl Drop for Toolhelp {
+    fn drop(&amp;amp;mut self) {
+        unsafe { winapi::um::handleapi::CloseHandle(self.handle) };
+    }
+}
+
+pub fn enum_threads(pid: u32) -&amp;gt; io::Result&amp;lt;Vec&amp;lt;u32&amp;gt;&amp;gt; {
+    const ENTRY_SIZE: u32 = mem::size_of::&amp;lt;winapi::um::tlhelp32::THREADENTRY32&amp;gt;() as u32;
+
+    &#x2F;&#x2F; size_of(dwSize + cntUsage + th32ThreadID + th32OwnerProcessID)
+    const NEEDED_ENTRY_SIZE: u32 = 4 * mem::size_of::&amp;lt;DWORD&amp;gt;() as u32;
+
+    &#x2F;&#x2F; SAFETY: it is always safe to attempt to call this function.
+    let handle = unsafe {
+        winapi::um::tlhelp32::CreateToolhelp32Snapshot(winapi::um::tlhelp32::TH32CS_SNAPTHREAD, 0)
+    };
+    if handle == winapi::um::handleapi::INVALID_HANDLE_VALUE {
+        return Err(io::Error::last_os_error());
+    }
+    let toolhelp = Toolhelp { handle };
+
+    let mut result = Vec::new();
+    let mut entry = winapi::um::tlhelp32::THREADENTRY32 {
+        dwSize: ENTRY_SIZE,
+        cntUsage: 0,
+        th32ThreadID: 0,
+        th32OwnerProcessID: 0,
+        tpBasePri: 0,
+        tpDeltaPri: 0,
+        dwFlags: 0,
+    };
+
+    &#x2F;&#x2F; SAFETY: we have a valid handle, and point to memory we own with the right size.
+    if unsafe { winapi::um::tlhelp32::Thread32First(toolhelp.handle, &amp;amp;mut entry) } != FALSE {
+        loop {
+            if entry.dwSize &amp;gt;= NEEDED_ENTRY_SIZE &amp;amp;&amp;amp; entry.th32OwnerProcessID == pid {
+                result.push(entry.th32ThreadID);
+            }
+
+            entry.dwSize = ENTRY_SIZE;
+            &#x2F;&#x2F; SAFETY: we have a valid handle, and point to memory we own with the right size.
+            if unsafe { winapi::um::tlhelp32::Thread32Next(toolhelp.handle, &amp;amp;mut entry) } == FALSE {
+                break;
+            }
+        }
+    }
+
+    Ok(result)
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Annoyingly, invalid handles returned by &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;tlhelp32&#x2F;nf-tlhelp32-createtoolhelp32snapshot&quot;&gt;&lt;code&gt;CreateToolhelp32Snapshot&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;, are &lt;code&gt;INVALID_HANDLE_VALUE&lt;&#x2F;code&gt; (which is -1), not null. But that&#x27;s not a big deal, we simply can&#x27;t use &lt;code&gt;NonNull&lt;&#x2F;code&gt; here. The function ignores the process identifier when using &lt;code&gt;TH32CS_SNAPTHREAD&lt;&#x2F;code&gt;, used to include all threads, and we need to compare the process identifier ourselves.&lt;&#x2F;p&gt;
+&lt;p&gt;In summary, we create a &amp;quot;toolhelp&amp;quot; (wrapped in a helper &lt;code&gt;struct&lt;&#x2F;code&gt; so that whatever happens, &lt;code&gt;Drop&lt;&#x2F;code&gt; will clean it up), initialize a thread enntry (with everything but the structure size to zero) and call &lt;code&gt;Thread32First&lt;&#x2F;code&gt; the first time, &lt;code&gt;Thread32Next&lt;&#x2F;code&gt; subsequent times. It seems to work all fine!&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;dbg!(process::enum_threads(pid));
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;[src\main.rs:46] process::enum_threads(pid) = Ok(
+    [
+        10560,
+    ],
+)
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;According to this, the Cheat Engine tutorial is only using one thread. Good to know. Much like processes, threads need to be opened before we can use them, with &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;processthreadsapi&#x2F;nf-processthreadsapi-openthread&quot;&gt;&lt;code&gt;OpenThread&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub struct Thread {
+    tid: u32,
+    handle: NonNull&amp;lt;c_void&amp;gt;,
+}
+
+impl Thread {
+    pub fn open(tid: u32) -&amp;gt; io::Result&amp;lt;Self&amp;gt; {
+        &#x2F;&#x2F; SAFETY: the call doesn&#x27;t have dangerous side-effects
+        NonNull::new(unsafe {
+            winapi::um::processthreadsapi::OpenThread(
+                winapi::um::winnt::THREAD_SUSPEND_RESUME,
+                FALSE,
+                tid,
+            )
+        })
+        .map(|handle| Self { tid, handle })
+        .ok_or_else(io::Error::last_os_error)
+    }
+
+    pub fn tid(&amp;amp;self) -&amp;gt; u32 {
+        self.tid
+    }
+}
+
+impl Drop for Thread {
+    fn drop(&amp;amp;mut self) {
+        unsafe { winapi::um::handleapi::CloseHandle(self.handle.as_mut()) };
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Just your usual RAII pattern. The thread is opened with permission to suspend and resume it. Let&#x27;s try to pause the handles with &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;processthreadsapi&#x2F;nf-processthreadsapi-suspendthread&quot;&gt;&lt;code&gt;SuspendThread&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; to make sure that this thread is actually the one we&#x27;re looking for:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub fn suspend(&amp;amp;mut self) -&amp;gt; io::Result&amp;lt;usize&amp;gt; {
+    &#x2F;&#x2F; SAFETY: the handle is valid.
+    let ret = unsafe {
+        winapi::um::processthreadsapi::SuspendThread(self.handle.as_ptr())
+    };
+    if ret == -1i32 as u32 {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(ret as usize)
+    }
+}
+
+pub fn resume(&amp;amp;mut self) -&amp;gt; io::Result&amp;lt;usize&amp;gt; {
+    &#x2F;&#x2F; SAFETY: the handle is valid.
+    let ret = unsafe {
+        winapi::um::processthreadsapi::ResumeThread(self.handle.as_ptr())
+    };
+    if ret == -1i32 as u32 {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(ret as usize)
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Both suspend and resume return the previous &amp;quot;suspend count&amp;quot;. It&#x27;s kind of like a barrier or semaphore where the thread only runs if the suspend count is zero. Trying it out:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let mut threads = thread::enum_threads(pid)
+    .unwrap()
+    .into_iter()
+    .map(Thread::open)
+    .collect::&amp;lt;Result&amp;lt;Vec&amp;lt;_&amp;gt;, _&amp;gt;&amp;gt;()
+    .unwrap();
+
+threads
+    .iter_mut()
+    .for_each(|thread| {
+        println!(&amp;quot;Pausing thread {} for 10 seconds…&amp;quot;, thread.tid());
+        thread.suspend().unwrap();
+
+        std::thread::sleep(std::time::Duration::from_secs(10));
+
+        println!(&amp;quot;Wake up, {}!&amp;quot;, thread.tid());
+        thread.resume().unwrap();
+    });
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;If you run this code with the process ID of the Cheat Engine tutorial, you will see that the tutorial window freezes for ten seconds! Because the main and only thread is paused, it cannot process any window events, so it becomes unresponsive. It is now &amp;quot;safe&amp;quot; to mess around with the thread context.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;setting-hardware-breakpoints&quot;&gt;Setting hardware breakpoints&lt;&#x2F;h2&gt;
+&lt;p&gt;I&#x27;m definitely not the first person to wonder &lt;a href=&quot;https:&#x2F;&#x2F;social.msdn.microsoft.com&#x2F;Forums&#x2F;en-US&#x2F;0cb3360d-3747-42a7-bc0e-668c5d9ee1ee&#x2F;how-to-set-a-hardware-breakpoint&quot;&gt;How to set a hardware breakpoint?&lt;&#x2F;a&gt;. This is great, because it means I don&#x27;t need to ask that question myself. It appears we need to change the debug register &lt;em&gt;via the thread context&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;One has to be careful to use the right context structure. Confusingly enough, &lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;q&#x2F;17504174&#x2F;&quot;&gt;&lt;code&gt;WOW64_CONTEXT&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; is 32 bits, not 64. &lt;code&gt;CONTEXT&lt;&#x2F;code&gt; alone seems to be the right one:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub fn get_context(&amp;amp;self) -&amp;gt; io::Result&amp;lt;winapi::um::winnt::CONTEXT&amp;gt; {
+    let context = MaybeUninit::&amp;lt;winapi::um::winnt::CONTEXT&amp;gt;::zeroed();
+    &#x2F;&#x2F; SAFETY: it&#x27;s a C struct, and all-zero is a valid bit-pattern for the type.
+    let mut context = unsafe { context.assume_init() };
+    context.ContextFlags = winapi::um::winnt::CONTEXT_ALL;
+
+    &#x2F;&#x2F; SAFETY: the handle is valid and structure points to valid memory.
+    if unsafe {
+        winapi::um::processthreadsapi::GetThreadContext(self.handle.as_ptr(), &amp;amp;mut context)
+    } == FALSE
+    {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(context)
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Trying it out:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;thread.suspend().unwrap();
+
+let context = thread.get_context().unwrap();
+println!(&amp;quot;Dr0: {:016x}&amp;quot;, context.Dr0);
+println!(&amp;quot;Dr7: {:016x}&amp;quot;, context.Dr7);
+println!(&amp;quot;Dr6: {:016x}&amp;quot;, context.Dr6);
+println!(&amp;quot;Rax: {:016x}&amp;quot;, context.Rax);
+println!(&amp;quot;Rbx: {:016x}&amp;quot;, context.Rbx);
+println!(&amp;quot;Rcx: {:016x}&amp;quot;, context.Rcx);
+println!(&amp;quot;Rip: {:016x}&amp;quot;, context.Rip);
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;Dr0: 0000000000000000
+Dr7: 0000000000000000
+Dr6: 0000000000000000
+Rax: 0000000000001446
+Rbx: 0000000000000000
+Rcx: 0000000000000000
+Rip: 00007ffda4259904
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Looks about right! Hm, I wonder what happens if I use Cheat Engine to add the watchpoint on the memory location we care about?&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;Dr0: 000000000157e650
+Dr7: 00000000000d0001
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Look at that! The debug registers changed! DR0 contains the location we want to watch for writes, and the debug control register DR7 changed. Cheat Engine sets the same values on all threads (for some reason I now see more than one thread printed for the tutorial, not sure what&#x27;s up with that; maybe the single-thread is the weird one out).&lt;&#x2F;p&gt;
+&lt;p&gt;Hmm, what happens if I watch for access instead of write?&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;Dr0: 000000000157e650
+Dr7: 00000000000f0001
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;What if I set both?&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;Dr0: 000000000157e650
+Dr7: 0000000000fd0005
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Most intriguing! This was done by telling Cheat Engine to find &amp;quot;what writes&amp;quot; to the address, then &amp;quot;what accesses&amp;quot; the address. I wonder if the order matters?&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;Dr0: 000000000157e650
+Dr7: 0000000000df0005
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&amp;quot;What accesses&amp;quot; and then &amp;quot;what writes&amp;quot; does change it. Very well! We&#x27;re only concerned in a single breakpoint, so we won&#x27;t worry about this, but it&#x27;s good to know that we can inspect what Cheat Engine is doing. It&#x27;s also interesting to see how Cheat Engine is using hardware breakpoints and not software breakpoints.&lt;&#x2F;p&gt;
+&lt;p&gt;For simplicity, our code is going to assume that we&#x27;re the only ones messing around with the debug registers, and that there will only be a single debug register in use. Make sure to add &lt;code&gt;THREAD_SET_CONTEXT&lt;&#x2F;code&gt; to the permissions when opening the thread handle:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub fn set_context(&amp;amp;self, context: &amp;amp;winapi::um::winnt::CONTEXT) -&amp;gt; io::Result&amp;lt;()&amp;gt; {
+    &#x2F;&#x2F; SAFETY: the handle is valid and structure points to valid memory.
+    if unsafe {
+        winapi::um::processthreadsapi::SetThreadContext(self.handle.as_ptr(), context)
+    } == FALSE
+    {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(())
+    }
+}
+
+pub fn watch_memory_write(&amp;amp;self, addr: usize) -&amp;gt; io::Result&amp;lt;()&amp;gt; {
+    let mut context = self.get_context()?;
+    context.Dr0 = addr as u64;
+    context.Dr7 = 0x00000000000d0001;
+    self.set_context(&amp;amp;context)?;
+    todo!()
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;If we do this (and temporarily get rid of the &lt;code&gt;todo!()&lt;&#x2F;code&gt;), trying to change the value in the Cheat Engine tutorial will greet us with a warm message:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Tutorial-x86_64&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;External exception 80000004.&lt;&#x2F;p&gt;
+&lt;p&gt;Press OK to ignore and risk data corruption.&lt;br &#x2F;&gt;
+Press Abort to kill the program.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;kbd&gt;OK&lt;&#x2F;kbd&gt; &lt;kbd&gt;Abort&lt;&#x2F;kbd&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;There is no debugger attached yet that could possibly handle this exception, so the exception just propagates. Let&#x27;s fix that.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;handling-debug-events&quot;&gt;Handling debug events&lt;&#x2F;h2&gt;
+&lt;p&gt;Now that we&#x27;ve succeeded on setting breakpoints, we can actually follow the steps described in &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;debug&#x2F;creating-a-basic-debugger&quot;&gt;Creating a Basic Debugger&lt;&#x2F;a&gt;. It starts by saying that we should use &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;debugapi&#x2F;nf-debugapi-debugactiveprocess&quot;&gt;&lt;code&gt;DebugActiveProcess&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; to attach our processor, the debugger, to the process we want to debug, the debuggee. This function lives under the &lt;code&gt;debugapi&lt;&#x2F;code&gt; header, so add it to &lt;code&gt;winapi&lt;&#x2F;code&gt; features:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub struct DebugToken {
+    pid: u32,
+}
+
+pub fn debug(pid: u32) -&amp;gt; io::Result&amp;lt;DebugToken&amp;gt; {
+    if unsafe { winapi::um::debugapi::DebugActiveProcess(pid) } == FALSE {
+        return Err(io::Error::last_os_error());
+    };
+    let token = DebugToken { pid };
+    if unsafe { winapi::um::winbase::DebugSetProcessKillOnExit(FALSE) } == FALSE {
+        return Err(io::Error::last_os_error());
+    };
+    Ok(token)
+}
+
+impl Drop for DebugToken {
+    fn drop(&amp;amp;mut self) {
+        unsafe { winapi::um::debugapi::DebugActiveProcessStop(self.pid) };
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Once again, we create a wrapper &lt;code&gt;struct&lt;&#x2F;code&gt; with &lt;code&gt;Drop&lt;&#x2F;code&gt; to stop debugging the process once the token is dropped. The call to &lt;code&gt;DebugSetProcessKillOnExit&lt;&#x2F;code&gt; in our &lt;code&gt;debug&lt;&#x2F;code&gt; method ensures that, if our process (the debugger) dies, the process we&#x27;re debugging (the debuggee) stays alive. We don&#x27;t want to be restarting the entire Cheat Engine tutorial every time our Rust code crashes!&lt;&#x2F;p&gt;
+&lt;p&gt;With the debugger attached, we can wait for debug events. We will put this method inside of &lt;code&gt;impl DebugToken&lt;&#x2F;code&gt;, so that the only way you can call it is if you successfully attached to another process:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;impl DebugToken {
+    pub fn wait_event(
+        &amp;amp;self,
+        timeout: Option&amp;lt;Duration&amp;gt;,
+    ) -&amp;gt; io::Result&amp;lt;winapi::um::minwinbase::DEBUG_EVENT&amp;gt; {
+        let mut result = MaybeUninit::uninit();
+        let timeout = timeout
+            .map(|d| d.as_millis().try_into().ok())
+            .flatten()
+            .unwrap_or(winapi::um::winbase::INFINITE);
+
+        &#x2F;&#x2F; SAFETY: can only wait for events with a token, so the debugger is active.
+        if unsafe { winapi::um::debugapi::WaitForDebugEvent(result.as_mut_ptr(), timeout) } == FALSE
+        {
+            Err(io::Error::last_os_error())
+        } else {
+            &#x2F;&#x2F; SAFETY: the call returned non-zero, so the structure is initialized.
+            Ok(unsafe { result.assume_init() })
+        }
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;WaitForDebugEvent&lt;&#x2F;code&gt; wants a timeout in milliseconds, so our function lets the user pass the more Rusty &lt;code&gt;Duration&lt;&#x2F;code&gt; type. &lt;code&gt;None&lt;&#x2F;code&gt; will indicate &amp;quot;there is no timeout&amp;quot;, i.e., it&#x27;s infinite. If the duration is too large to fit in the &lt;code&gt;u32&lt;&#x2F;code&gt; (&lt;code&gt;try_into&lt;&#x2F;code&gt; fails), it will also be infinite.&lt;&#x2F;p&gt;
+&lt;p&gt;If we attach the debugger, set the hardware watchpoint, and modify the memory location from the tutorial, an event with &lt;code&gt;dwDebugEventCode = 3&lt;&#x2F;code&gt; will be returned! Now, back to the page with the &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;debug&#x2F;debugging-events&quot;&gt;Debugging Events&lt;&#x2F;a&gt;… Gah! It only has the name of the constants, not the values. Well, good thing &lt;a href=&quot;https:&#x2F;&#x2F;docs.rs&#x2F;&quot;&gt;docs.rs&lt;&#x2F;a&gt; has a source view! We can just check the values in the &lt;a href=&quot;https:&#x2F;&#x2F;docs.rs&#x2F;winapi&#x2F;0.3.9&#x2F;src&#x2F;winapi&#x2F;um&#x2F;minwinbase.rs.html#203-211&quot;&gt;source code for &lt;code&gt;winapi&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub const EXCEPTION_DEBUG_EVENT: DWORD = 1;
+pub const CREATE_THREAD_DEBUG_EVENT: DWORD = 2;
+pub const CREATE_PROCESS_DEBUG_EVENT: DWORD = 3;
+pub const EXIT_THREAD_DEBUG_EVENT: DWORD = 4;
+pub const EXIT_PROCESS_DEBUG_EVENT: DWORD = 5;
+pub const LOAD_DLL_DEBUG_EVENT: DWORD = 6;
+pub const UNLOAD_DLL_DEBUG_EVENT: DWORD = 7;
+pub const OUTPUT_DEBUG_STRING_EVENT: DWORD = 8;
+pub const RIP_EVENT: DWORD = 9;
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;So, we&#x27;ve got a &lt;code&gt;CREATE_PROCESS_DEBUG_EVENT&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Generated whenever a new process is created in a process being debugged or whenever the debugger begins debugging an already active process. The system generates this debugging event before the process begins to execute in user mode and before the system generates any other debugging events for the new process.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;It makes sense that this is our first event. By the way, if you were trying this out with a &lt;code&gt;sleep&lt;&#x2F;code&gt; lying around in your code, you may have noticed that the window froze until the debugger terminated. That&#x27;s because:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;When the system notifies the debugger of a debugging event, it also suspends all threads in the affected process. The threads do not resume execution until the debugger continues the debugging event by using &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;debugapi&#x2F;nf-debugapi-continuedebugevent&quot;&gt;&lt;code&gt;ContinueDebugEvent&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Let&#x27;s call &lt;code&gt;ContinueDebugMethod&lt;&#x2F;code&gt; but also wait on more than one event and see what happens:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;for _ in 0..10 {
+    let event = debugger.wait_event(None).unwrap();
+    println!(&amp;quot;Got {}&amp;quot;, event.dwDebugEventCode);
+    debugger.cont(event, true).unwrap();
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;Got 3
+Got 6
+Got 6
+Got 6
+Got 6
+Got 6
+Got 6
+Got 6
+Got 6
+Got 6
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;That&#x27;s a lot of &lt;code&gt;LOAD_DLL_DEBUG_EVENT&lt;&#x2F;code&gt;. Pumping it up to one hundred and also showing the index we get the following:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;0. Got 3
+1. Got 6
+...
+40. Got 6
+41. Got 2
+42. Got 1
+43. Got 4
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;In order, we got:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;One &lt;code&gt;CREATE_PROCESS_DEBUG_EVENT&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;Forty &lt;code&gt;LOAD_DLL_DEBUG_EVENT&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;One &lt;code&gt;CREATE_THREAD_DEBUG_EVENT&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;One &lt;code&gt;EXCEPTION_DEBUG_EVENT&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;One &lt;code&gt;EXIT_THREAD_DEBUG_EVENT&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;And, if after all this, you change the value in the Cheat Engine tutorial (thus triggering our watch point), we get &lt;code&gt;EXCEPTION_DEBUG_EVENT&lt;&#x2F;code&gt;!&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Generated whenever an exception occurs in the process being debugged. Possible exceptions include attempting to access inaccessible memory, executing breakpoint instructions, attempting to divide by zero, or any other exception noted in Structured Exception Handling.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;If we print out all the fields in the &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;minwinbase&#x2F;ns-minwinbase-exception_debug_info&quot;&gt;&lt;code&gt;EXCEPTION_DEBUG_INFO&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; structure:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;Watching writes to 10e3a0 for 10s
+First chance: 1
+ExceptionCode: 2147483652
+ExceptionFlags: 0
+ExceptionRecord: 0x0
+ExceptionAddress: 0x10002c5ba
+NumberParameters: 0
+ExceptionInformation: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The &lt;code&gt;ExceptionCode&lt;&#x2F;code&gt;, which is &lt;code&gt;0x80000004&lt;&#x2F;code&gt;, corresponds with &lt;code&gt;EXCEPTION_SINGLE_STEP&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;A trace trap or other single-instruction mechanism signaled that one instruction has been executed.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;The &lt;code&gt;ExceptionAddress&lt;&#x2F;code&gt; is supposed to be &amp;quot;the address where the exception occurred&amp;quot;. Very well! I have already completed this step of the tutorial, and I know the instruction is &lt;code&gt;mov [rax],edx&lt;&#x2F;code&gt; (or, as Cheat Engine shows, the bytes &lt;code&gt;89 10&lt;&#x2F;code&gt; in hexadecimal). The opcode for the &lt;code&gt;nop&lt;&#x2F;code&gt; instruction is &lt;code&gt;90&lt;&#x2F;code&gt; in hexadecimal, so if we replace two bytes at this address, we should be able to complete the tutorial.&lt;&#x2F;p&gt;
+&lt;p&gt;Note that we also need to flush the instruction cache, as noted in the Windows documentation:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Debuggers frequently read the memory of the process being debugged and write the memory that contains instructions to the instruction cache. After the instructions are written, the debugger calls the &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;processthreadsapi&#x2F;nf-processthreadsapi-flushinstructioncache&quot;&gt;&lt;code&gt;FlushInstructionCache&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; function to execute the cached instructions.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;So we add a new method to &lt;code&gt;impl Process&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&#x2F;&#x2F;&#x2F; Flushes the instruction cache.
+&#x2F;&#x2F;&#x2F;
+&#x2F;&#x2F;&#x2F; Should be called when writing to memory regions that contain code.
+pub fn flush_instruction_cache(&amp;amp;self) -&amp;gt; io::Result&amp;lt;()&amp;gt; {
+    &#x2F;&#x2F; SAFETY: the call doesn&#x27;t have dangerous side-effects.
+    if unsafe {
+        winapi::um::processthreadsapi::FlushInstructionCache(
+            self.handle.as_ptr(),
+            ptr::null(),
+            0,
+        )
+    } == FALSE
+    {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(())
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;And write some quick and dirty code to get this done:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let addr = ...;
+println!(&amp;quot;Watching writes to {:x} for 10s&amp;quot;, addr);
+threads.iter_mut().for_each(|thread| {
+    thread.watch_memory_write(addr).unwrap();
+});
+loop {
+    let event = debugger.wait_event(None).unwrap();
+    if event.dwDebugEventCode == 1 {
+        let exc = unsafe { event.u.Exception() };
+        if exc.ExceptionRecord.ExceptionCode == 2147483652 {
+            let addr = exc.ExceptionRecord.ExceptionAddress as usize;
+            match process.write_memory(addr, &amp;amp;[0x90, 0x90]) {
+                Ok(_) =&amp;gt; eprintln!(&amp;quot;Patched [{:x}] with NOP&amp;quot;, addr),
+                Err(e) =&amp;gt; eprintln!(&amp;quot;Failed to patch [{:x}] with NOP: {}&amp;quot;, addr, e),
+            };
+            process.flush_instruction_cache().unwrap();
+            debugger.cont(event, true).unwrap();
+            break;
+        }
+    }
+    debugger.cont(event, true).unwrap();
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Although it seems to work:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;Watching writes to 15103f0 for 10s
+Patched [10002c5ba] with NOP
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It really doesn&#x27;t:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Tutorial-x86_64&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Access violation.&lt;&#x2F;p&gt;
+&lt;p&gt;Press OK to ignore and risk data corruption.&lt;br &#x2F;&gt;
+Press Abort to kill the program.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;kbd&gt;OK&lt;&#x2F;kbd&gt; &lt;kbd&gt;Abort&lt;&#x2F;kbd&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Did we write memory somewhere we shouldn&#x27;t? The documentation does mention &amp;quot;segment-relative&amp;quot; and &amp;quot;linear virtual addresses&amp;quot;:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;GetThreadSelectorEntry&lt;&#x2F;code&gt; returns the descriptor table entry for a specified selector and thread. Debuggers use the descriptor table entry to convert a segment-relative address to a linear virtual address. The &lt;code&gt;ReadProcessMemory&lt;&#x2F;code&gt; and &lt;code&gt;WriteProcessMemory&lt;&#x2F;code&gt; functions require linear virtual addresses.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;But nope! This isn&#x27;t the problem. The problem is that the &lt;code&gt;ExceptionRecord.ExceptionAddress&lt;&#x2F;code&gt; is &lt;em&gt;after&lt;&#x2F;em&gt; the execution happened, so it&#x27;s already 2 bytes beyond where it should be. We were accidentally writing out the first half of the next instruction, which, yeah, could not end good.&lt;&#x2F;p&gt;
+&lt;p&gt;So does it work if I do this instead?:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;process.write_memory(addr - 2, &amp;amp;[0x90, 0x90])
+&#x2F;&#x2F;                        ^^^ new
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This totally does work. Step 5: complete 🎉&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;properly-patching-instructions&quot;&gt;Properly patching instructions&lt;&#x2F;h2&gt;
+&lt;p&gt;You may not be satisfied at all with our solution. Not only are we hardcoding some magic constants to set hardware watchpoints, we&#x27;re also relying on knowledge specific to the Cheat Engine tutorial (insofar that we&#x27;re replacing two bytes worth of instruction with NOPs).&lt;&#x2F;p&gt;
+&lt;p&gt;Properly supporting more than one hardware breakpoint, along with supporting different types of breakpoints, is definitely doable. The meaning of the bits for the debug registers is well defined, and you can definitely study that to come up with &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;mmorearty&#x2F;hardware-breakpoints&quot;&gt;something more sophisticated&lt;&#x2F;a&gt; and support multiple different breakpoints. But for now, that&#x27;s out of the scope of this series. The tutorial only wants us to use an on-write watchpoint, and our solution is fine and portable for that use case.&lt;&#x2F;p&gt;
+&lt;p&gt;However, relying on the size of the instructions is pretty bad. The instructions x86 executes are of variable length, so we can&#x27;t possibly just look back until we find the previous instruction, or even naively determine its length. A lot of unrelated sequences of bytes are very likely instructions themselves. We need a disassembler. No, we&#x27;re not writing our own.&lt;&#x2F;p&gt;
+&lt;p&gt;Searching on &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&quot;&gt;crates.io&lt;&#x2F;a&gt; for &amp;quot;disassembler&amp;quot; yields a few results, and the first one I&#x27;ve found is &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;iced-x86&quot;&gt;iced-x86&lt;&#x2F;a&gt;. I like the name, it has a decent amount of GitHub stars, and it was last updated less than a month ago. I don&#x27;t know about you, but I think we&#x27;ve just hit a jackpot!&lt;&#x2F;p&gt;
+&lt;p&gt;It&#x27;s quite heavy though, so I will add it behind a feature gate, and users that want it may opt into it:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;[features]
+patch-nops = [&amp;quot;iced-x86&amp;quot;]
+
+[dependencies]
+iced-x86 = { version = &amp;quot;1.10.3&amp;quot;, optional = true }
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;You can make use of it with &lt;code&gt;cargo run --features=patch-nops&lt;&#x2F;code&gt;. I don&#x27;t want to turn this blog post into a tutorial for &lt;code&gt;iced-x86&lt;&#x2F;code&gt;, but in essence, we need to make use of its &lt;code&gt;Decoder&lt;&#x2F;code&gt;. Here&#x27;s the plan:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Find the memory region corresponding to the address we want to patch.&lt;&#x2F;li&gt;
+&lt;li&gt;Read the entire region.&lt;&#x2F;li&gt;
+&lt;li&gt;Decode the read bytes until the instruction pointer reaches our address.&lt;&#x2F;li&gt;
+&lt;li&gt;Because we just parsed the previous instruction, we know its length, and can be replaced with NOPs.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;#[cfg(feature = &amp;quot;patch-nops&amp;quot;)]
+pub fn nop_last_instruction(&amp;amp;self, addr: usize) -&amp;gt; io::Result&amp;lt;()&amp;gt; {
+    use iced_x86::{Decoder, DecoderOptions, Formatter, Instruction, NasmFormatter};
+
+    let region = self
+        .memory_regions()
+        .into_iter()
+        .find(|region| {
+            let base = region.BaseAddress as usize;
+            base &amp;lt;= addr &amp;amp;&amp;amp; addr &amp;lt; base + region.RegionSize
+        })
+        .ok_or_else(|| io::Error::new(io::ErrorKind::Other, &amp;quot;no matching region found&amp;quot;))?;
+
+    let bytes = self.read_memory(region.BaseAddress as usize, region.RegionSize)?;
+
+    let mut decoder = Decoder::new(64, &amp;amp;bytes, DecoderOptions::NONE);
+    decoder.set_ip(region.BaseAddress as _);
+
+    let mut instruction = Instruction::default();
+    while decoder.can_decode() {
+        decoder.decode_out(&amp;amp;mut instruction);
+        if instruction.next_ip() as usize == addr {
+            return self
+                .write_memory(instruction.ip() as usize, &amp;amp;vec![0x90; instruction.len()])
+                .map(drop);
+        }
+    }
+
+    Err(io::Error::new(
+        io::ErrorKind::Other,
+        &amp;quot;no matching instruction found&amp;quot;,
+    ))
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Pretty straightforward! We can set the &amp;quot;instruction pointer&amp;quot; of the decoder so that it matches with the address we&#x27;re reading from. The &lt;code&gt;next_ip&lt;&#x2F;code&gt; method comes in really handy. Overall, it&#x27;s a bit inefficient, because we could reuse the regions retrieved previously, but other than that, there is not much room for improvement.&lt;&#x2F;p&gt;
+&lt;p&gt;With this, we are no longer hardcoding the instruction size or guessing which instruction is doing what. You may wonder, what if the region does not start with valid executable code? It could be possible that the instructions are in some memory region with garbage except for a very specific location with real code. I don&#x27;t know how Cheat Engine handles this, but I think it&#x27;s reasonable to assume that the region starts with valid code. If you can think of any more reliable way to figure out the instruction right before a given address, please let me know!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;finale&quot;&gt;Finale&lt;&#x2F;h2&gt;
+&lt;p&gt;That was quite a deep dive! We have learnt about the existence of the various breakpoint types (software, hardware, and even behaviour, such as watchpoints), how to debug a separate process, and how to correctly update the code other process is running on-the-fly. The &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lonami&#x2F;memo&quot;&gt;code for this post&lt;&#x2F;a&gt; is available over at my GitHub. You can run &lt;code&gt;git checkout step5&lt;&#x2F;code&gt; after cloning the repository to get the right version of the code.&lt;&#x2F;p&gt;
+&lt;p&gt;Although we&#x27;ve only talked about &lt;em&gt;setting&lt;&#x2F;em&gt; breakpoints, there are of course &lt;a href=&quot;https:&#x2F;&#x2F;reverseengineering.stackexchange.com&#x2F;a&#x2F;16547&quot;&gt;ways of detecting them&lt;&#x2F;a&gt;. There&#x27;s &lt;a href=&quot;https:&#x2F;&#x2F;www.codeproject.com&#x2F;Articles&#x2F;30815&#x2F;An-Anti-Reverse-Engineering-Guide&quot;&gt;entire guides about it&lt;&#x2F;a&gt;. Again, we currently hardcode the fact we want to add a single watchpoint using the first debug register. A proper solution here would be to actually calculate the needs that need to be set, as well as keeping track of how many breakpoints have been added so far.&lt;&#x2F;p&gt;
+&lt;p&gt;Hardware breakpoints are also limited, since they&#x27;re simply a bunch of registers, and our machine does not have infinite registers. How are other debuggers like &lt;code&gt;gdb&lt;&#x2F;code&gt; able to create a seemingly unlimited amount of breakpoints? Well, the GDB wiki actually has a page on &lt;a href=&quot;https:&#x2F;&#x2F;sourceware.org&#x2F;gdb&#x2F;wiki&#x2F;Internals%20Watchpoints&quot;&gt;Internals Watchpoints&lt;&#x2F;a&gt;, and it&#x27;s really interesting! &lt;code&gt;gdb&lt;&#x2F;code&gt; essentially single-steps through the entire program and tests the expressions after every instruction:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Software watchpoints are very slow, since GDB needs to single-step the program being debugged and test the value of the watched expression(s) after each instruction.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;However, that&#x27;s not the only way. One could &lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;a&#x2F;7805842&#x2F;&quot;&gt;change the protection level&lt;&#x2F;a&gt; of the region of interest (for example, remove the write permission), and when the program tries to write there, it will fail! In any case, the GDB wiki is actually a pretty nice resource. It also has a section on &lt;a href=&quot;https:&#x2F;&#x2F;sourceware.org&#x2F;gdb&#x2F;wiki&#x2F;Internals&#x2F;Breakpoint%20Handling&quot;&gt;Breakpoint Handling&lt;&#x2F;a&gt;, which contains some additional insight.&lt;&#x2F;p&gt;
+&lt;p&gt;With regards to code improvements, &lt;code&gt;DebugToken::wait_event&lt;&#x2F;code&gt; could definitely be both nicer and safer to use, with a custom &lt;code&gt;enum&lt;&#x2F;code&gt;, so the user does not need to rely on magic constants or having to resort to &lt;code&gt;unsafe&lt;&#x2F;code&gt; access to get the right &lt;code&gt;union&lt;&#x2F;code&gt; variant.&lt;&#x2F;p&gt;
+&lt;p&gt;In the next post, we&#x27;ll tackle the sixth step of the tutorial: Pointers. It reuses the debugging techniques presented here to backtrack where the pointer for our desired value is coming from, so here we will need to actually &lt;em&gt;understand&lt;&#x2F;em&gt; what the instructions are doing, not just patching them out!&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;footnotes&quot;&gt;Footnotes&lt;&#x2F;h3&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;I&#x27;m not super happy about the design of it all, but we won&#x27;t actually need anything beyond scanning for integers for the rest of the steps so it doesn&#x27;t really matter.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;2&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;2&lt;&#x2F;sup&gt;
+&lt;p&gt;There seems to be a way to pause the entire process in one go, with the [undocumented &lt;code&gt;NtSuspendProcess&lt;&#x2F;code&gt;] function!&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;3&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;3&lt;&#x2F;sup&gt;
+&lt;p&gt;It really is called that. The naming went from &amp;quot;IP&amp;quot; (instruction pointer, 16 bits), to &amp;quot;EIP&amp;quot; (extended instruction pointer, 32 bits) and currently &amp;quot;RIP&amp;quot; (64 bits). The naming convention for upgraded registers is the same (RAX, RBX, RCX, and so on). The &lt;a href=&quot;https:&#x2F;&#x2F;wiki.osdev.org&#x2F;CPU_Registers_x86_64&quot;&gt;OS Dev wiki&lt;&#x2F;a&gt; is a great resource for this kind of stuff.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+</content>
+	</entry>
 	<entry xml:lang="en">
 		<title>Writing our own Cheat Engine: Floating points</title>
 		<published>2021-02-22T00:00:00+00:00</published>
@@ -18,6 +594,7 @@
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-2&quot;&gt;Part 2: Exact Value scanning&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-3&quot;&gt;Part 3: Unknown initial value&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;Part 4: Floating points&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In part 3 we did a fair amount of plumbing in order to support scan modes beyond the trivial &amp;quot;exact value scan&amp;quot;. As a result, we have abstracted away the &lt;code&gt;Scan&lt;&#x2F;code&gt;, &lt;code&gt;CandidateLocations&lt;&#x2F;code&gt; and &lt;code&gt;Value&lt;&#x2F;code&gt; types as a separate &lt;code&gt;enum&lt;&#x2F;code&gt; each. Scanning for changed memory regions in an opened process can now be achieved with three lines of code:&lt;&#x2F;p&gt;
 &lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let regions = process.memory_regions();
@@ -385,7 +962,7 @@ pub unsafe trait Scannable {
 &lt;p&gt;If you feel adventurous, Cheat Engine has different options for scanning floating point types: &amp;quot;rounded (default)&amp;quot;, &amp;quot;rounded (extreme)&amp;quot;, and truncated. Optionally, it can scan for &amp;quot;simple values only&amp;quot;. You could go ahead and toy around with these!&lt;&#x2F;p&gt;
 &lt;p&gt;We didn&#x27;t touch on types with different lengths, such as strings. You could support UTF-8, UTF-16, or arbitrary byte sequences. This post also didn&#x27;t cover scanning for multiple things at once, known as &amp;quot;groupscan commands&amp;quot;, although from what I can tell, these are just a nice way to scan for arbitrary byte sequences.&lt;&#x2F;p&gt;
 &lt;p&gt;We also didn&#x27;t look into supporting different the same scan with different alignments. All these things may be worth exploring depending on your requirements. You could even get rid of such genericity and go with something way simpler. Supporting &lt;code&gt;i32&lt;&#x2F;code&gt;, &lt;code&gt;f32&lt;&#x2F;code&gt; and &lt;code&gt;f64&lt;&#x2F;code&gt; is enough to complete the Cheat Engine tutorial. But I wanted something more powerful, although my solution currently can&#x27;t scan for a sequence such as &amp;quot;exact type, unknown, exact matching the unknown&amp;quot;. So yeah.&lt;&#x2F;p&gt;
-&lt;p&gt;In the next post, we&#x27;ll tackle the fifth step of the tutorial: Code finder. Cheat Engine attaches its debugger to the process for this one, and then replaces the instruction that performs the write with a different no-op so that nothing is written anymore. This will be quite the challenge!&lt;&#x2F;p&gt;
+&lt;p&gt;In the &lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;next post&lt;&#x2F;a&gt;, we&#x27;ll tackle the fifth step of the tutorial: Code finder. Cheat Engine attaches its debugger to the process for this one, and then replaces the instruction that performs the write with a different no-op so that nothing is written anymore. This will be quite the challenge!&lt;&#x2F;p&gt;
 &lt;h3 id=&quot;footnotes&quot;&gt;Footnotes&lt;&#x2F;h3&gt;
 &lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
 &lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;std&#x2F;ops&#x2F;trait.Drop.html#copy-and-drop-are-exclusive&quot;&gt;&lt;code&gt;Copy&lt;&#x2F;code&gt; and &lt;code&gt;Drop&lt;&#x2F;code&gt; are exclusive&lt;&#x2F;a&gt;. See also &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;error-index.html#E0184&quot;&gt;E0184&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
@@ -431,6 +1008,7 @@ pub unsafe trait Scannable {
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-2&quot;&gt;Part 2: Exact Value scanning&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;Part 3: Unknown initial value&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-4&quot;&gt;Part 4: Floating points&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In part 2 we left off with a bit of a cliff-hanger. Our little program is now able to scan for an exact value, remember the couple hundred addresses pointing to said value, and perform subsequent scans to narrow the list of addresses down until we&#x27;re left with a handful of them.&lt;&#x2F;p&gt;
 &lt;p&gt;However, it is not always the case that you have an exact value to work with. The best you can do in these cases is guess what the software might be storing. For example, it could be a floating point for your current movement speed in a game, or an integer for your current health.&lt;&#x2F;p&gt;
@@ -785,6 +1363,7 @@ Found 223791 locations
 &lt;li&gt;Part 2: Exact Value scanning&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-3&quot;&gt;Part 3: Unknown initial value&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-4&quot;&gt;Part 4: Floating points&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In the introduction, we spent a good deal of time enumerating all running processes just so we could find out the pid we cared about. With the pid now in our hands, we can do pretty much anything to its corresponding process.&lt;&#x2F;p&gt;
 &lt;p&gt;It&#x27;s now time to read the process&#x27; memory and write to it. If our process was a single-player game, this would enable us to do things like setting a very high value on the player&#x27;s current health pool, making us invincible. This technique will often not work for multi-player games, because the server likely knows your true current health (the most you could probably do is make the client render an incorrect value). However, if the server is crappy and it trusts the client, then you&#x27;re still free to mess around with your current health.&lt;&#x2F;p&gt;
@@ -1206,6 +1785,7 @@ Written 4 bytes to [15d8b90]
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-2&quot;&gt;Part 2: Exact Value scanning&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-3&quot;&gt;Part 3: Unknown initial value&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-4&quot;&gt;Part 4: Floating points&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;cheatengine.org&#x2F;&quot;&gt;Cheat Engine&lt;&#x2F;a&gt; is a tool designed to modify single player games and contains other useful tools within itself that enable its users to debug games or other applications. It comes with a memory scanner, (dis)assembler, inspection tools and a handful other things. In this series, we will be writing our own tiny Cheat Engine capable of solving all steps of the tutorial, and diving into how it all works underneath.&lt;&#x2F;p&gt;
 &lt;p&gt;Needless to say, we&#x27;re doing this for private and educational purposes only. One has to make sure to not violate the EULA or ToS of the specific application we&#x27;re attaching to. This series, much like cheatengine.org, does not condone the illegal use of the code shared.&lt;&#x2F;p&gt;
