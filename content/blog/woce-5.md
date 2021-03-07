@@ -626,7 +626,7 @@ You may not be satisfied at all with our solution. Not only are we hardcoding so
 
 Properly supporting more than one hardware breakpoint, along with supporting different types of breakpoints, is definitely doable. The meaning of the bits for the debug registers is well defined, and you can definitely study that to come up with [something more sophisticated][cpp-many-brk] and support multiple different breakpoints. But for now, that's out of the scope of this series. The tutorial only wants us to use an on-write watchpoint, and our solution is fine and portable for that use case.
 
-However, relying on the size of the instructions is pretty bad. The instructions x86 executes are of variable length, so we can't possibly just look back until we find the previous instruction, or even naively determine its length. A lot of unrelated sequences of bytes are very likely instructions themselves. We need a disassembler. No, we're not writing our own.
+However, relying on the size of the instructions is pretty bad. The instructions x86 executes are of variable length, so we can't possibly just look back until we find the previous instruction, or even naively determine its length. A lot of unrelated sequences of bytes are very likely instructions themselves. We need a disassembler. No, we're not writing our own[^4].
 
 Searching on [crates.io] for "disassembler" yields a few results, and the first one I've found is [iced-x86]. I like the name, it has a decent amount of GitHub stars, and it was last updated less than a month ago. I don't know about you, but I think we've just hit a jackpot!
 
@@ -685,7 +685,9 @@ pub fn nop_last_instruction(&self, addr: usize) -> io::Result<()> {
 
 Pretty straightforward! We can set the "instruction pointer" of the decoder so that it matches with the address we're reading from. The `next_ip` method comes in really handy. Overall, it's a bit inefficient, because we could reuse the regions retrieved previously, but other than that, there is not much room for improvement.
 
-With this, we are no longer hardcoding the instruction size or guessing which instruction is doing what. You may wonder, what if the region does not start with valid executable code? It could be possible that the instructions are in some memory region with garbage except for a very specific location with real code. I don't know how Cheat Engine handles this, but I think it's reasonable to assume that the region starts with valid code. If you can think of any more reliable way to figure out the instruction right before a given address, please let me know!
+With this, we are no longer hardcoding the instruction size or guessing which instruction is doing what. You may wonder, what if the region does not start with valid executable code? It could be possible that the instructions are in some memory region with garbage except for a very specific location with real code. I don't know how Cheat Engine handles this, but I think it's reasonable to assume that the region starts with valid code.
+
+As far as I can tell (after having asked a bit around), the encoding is usually self synchronizing (similar to UTF-8), so eventually we should end up with correct instructions. But someone can still intentionally write real code between garbage data which we would then disassemble incorrectly. This is a problem on all variable-length ISAs. Half a solution is to [start at the entry point][howto-disasm], decode all instructions, and follow the jumps. The other half would be correctly identifying jumps created just to trip a disassembler up, and jumps pointing to dynamically-calculated addresses!
 
 ## Finale
 
@@ -710,6 +712,8 @@ In the next post, we'll tackle the sixth step of the tutorial: Pointers. It reus
 [^2]: There seems to be a way to pause the entire process in one go, with the [undocumented `NtSuspendProcess`] function!
 
 [^3]: It really is called that. The naming went from "IP" (instruction pointer, 16 bits), to "EIP" (extended instruction pointer, 32 bits) and currently "RIP" (64 bits). The naming convention for upgraded registers is the same (RAX, RBX, RCX, and so on). The [OS Dev wiki][osdev-wiki] is a great resource for this kind of stuff.
+
+[^4]: Well, we don't need an entire disassembler. Knowing the length of each instruction is enough, but that on its own is also a lot of work.
 
 [debug-series]: http://system.joekain.com/debugger/
 [win-basic-dbg]: https://docs.microsoft.com/en-us/windows/win32/debug/creating-a-basic-debugger
@@ -745,6 +749,7 @@ In the next post, we'll tackle the sixth step of the tutorial: Pointers. It reus
 [detect-brk-guide]: https://www.codeproject.com/Articles/30815/An-Anti-Reverse-Engineering-Guide
 [gdb-watchpoints]: https://sourceware.org/gdb/wiki/Internals%20Watchpoints
 [gdb-breakpoints]: https://sourceware.org/gdb/wiki/Internals/Breakpoint%20Handling
+[howto-disasm]: https://stackoverflow.com/q/3983735/
 [cpp-many-brk]: https://github.com/mmorearty/hardware-breakpoints
 [change-prot]: https://stackoverflow.com/a/7805842/
 [suspend-proc]: https://stackoverflow.com/a/4062698/
