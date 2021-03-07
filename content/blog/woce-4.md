@@ -1,7 +1,7 @@
 +++
 title = "Writing our own Cheat Engine: Floating points"
-date = 2021-02-22
-updated = 2021-02-22
+date = 2021-02-28
+updated = 2021-02-28
 [taxonomies]
 category = ["sw"]
 tags = ["windows", "rust", "hacking"]
