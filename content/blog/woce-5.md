@@ -709,7 +709,7 @@ In the next post, we'll tackle the sixth step of the tutorial: Pointers. It reus
 
 [^1]: I'm not super happy about the design of it all, but we won't actually need anything beyond scanning for integers for the rest of the steps so it doesn't really matter.
 
-[^2]: There seems to be a way to pause the entire process in one go, with the [undocumented `NtSuspendProcess`] function!
+[^2]: There seems to be a way to pause the entire process in one go, with the [undocumented `NtSuspendProcess`][suspend-proc] function!
 
 [^3]: It really is called that. The naming went from "IP" (instruction pointer, 16 bits), to "EIP" (extended instruction pointer, 32 bits) and currently "RIP" (64 bits). The naming convention for upgraded registers is the same (RAX, RBX, RCX, and so on). The [OS Dev wiki][osdev-wiki] is a great resource for this kind of stuff.
 
