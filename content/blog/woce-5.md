@@ -14,6 +14,7 @@ This is part 5 on the *Writing our own Cheat Engine* series:
 * [Part 3: Unknown initial value](/blog/woce-3)
 * [Part 4: Floating points](/blog/woce-4)
 * Part 5: Code finder
+* [Part 6: Pointers](/blog/woce-6)
 
 In part 4 we spent a good deal of time trying to make our scans generic, and now we have something that works[^1]! Now that the scanning is fairly powerful and all covered, the Cheat Engine tutorial shifts focus into slightly more advanced techniques that you will most certainly need in anything bigger than a toy program.
 
@@ -703,7 +704,7 @@ However, that's not the only way. One could [change the protection level][change
 
 With regards to code improvements, `DebugToken::wait_event` could definitely be both nicer and safer to use, with a custom `enum`, so the user does not need to rely on magic constants or having to resort to `unsafe` access to get the right `union` variant.
 
-In the next post, we'll tackle the sixth step of the tutorial: Pointers. It reuses the debugging techniques presented here to backtrack where the pointer for our desired value is coming from, so here we will need to actually *understand* what the instructions are doing, not just patching them out!
+In the [next post](/blog/woce-6), we'll tackle the sixth step of the tutorial: Pointers. It reuses the debugging techniques presented here to backtrack where the pointer for our desired value is coming from, so here we will need to actually *understand* what the instructions are doing, not just patching them out!
 
 ### Footnotes
 

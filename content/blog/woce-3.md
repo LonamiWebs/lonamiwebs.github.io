@@ -14,6 +14,7 @@ This is part 3 on the *Writing our own Cheat Engine* series:
 * Part 3: Unknown initial value
 * [Part 4: Floating points](/blog/woce-4)
 * [Part 5: Code finder](/blog/woce-5)
+* [Part 6: Pointers](/blog/woce-6)
 
 In part 2 we left off with a bit of a cliff-hanger. Our little program is now able to scan for an exact value, remember the couple hundred addresses pointing to said value, and perform subsequent scans to narrow the list of addresses down until we're left with a handful of them.
 

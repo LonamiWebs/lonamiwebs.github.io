@@ -14,6 +14,7 @@ This is part 2 on the *Writing our own Cheat Engine* series:
 * [Part 3: Unknown initial value](/blog/woce-3)
 * [Part 4: Floating points](/blog/woce-4)
 * [Part 5: Code finder](/blog/woce-5)
+* [Part 6: Pointers](/blog/woce-6)
 
 In the introduction, we spent a good deal of time enumerating all running processes just so we could find out the pid we cared about. With the pid now in our hands, we can do pretty much anything to its corresponding process.
 
