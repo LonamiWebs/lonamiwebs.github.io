@@ -189,11 +189,16 @@ hr {
     border-bottom: 2px dashed #aaa;
 }
 
+sub {
+    font-size: small;
+}
+
 /* code */
 code {
     font-weight: bold;
     font-size: large;
     background-color: #f7f7f0;
+    white-space: pre;
 }
 
 pre code {
