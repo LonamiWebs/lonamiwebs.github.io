@@ -42,7 +42,7 @@ nav.sections li {
 }
 
 nav.sections .left a {
-    color: #787878;
+    color: #666;
     border-bottom: solid 2px #A8A8A8;
     padding: 0 16px;
 }
@@ -143,14 +143,14 @@ img {
 
 a {
     text-decoration: none;
-    color: #f74c00;
+    color: #c74727;
     border-bottom: 0 dashed rgba(0, 0, 0, 0);
     transition: color 300ms, border-bottom 300ms;
 }
 
 a:hover {
-    color: #e33b26;
-    border-bottom: 1px solid #e33b26;
+    color: #b73717;
+    border-bottom: 1px solid #b73717;
 }
 
 blockquote {
