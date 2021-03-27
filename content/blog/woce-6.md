@@ -15,6 +15,7 @@ This is part 6 on the *Writing our own Cheat Engine* series:
 * [Part 4: Floating points](/blog/woce-4)
 * [Part 5: Code finder](/blog/woce-5)
 * Part 6: Pointers
+* [Part 7: Code Injection](/blog/woce-7)
 
 In part 5 we wrote our very own debugger. We learnt that Cheat Engine is using hardware breakpoints to watch memory change, and how to do the same ourselves. We also learnt that hardware points are not the only way to achieve the effect of watchpoints, although they certainly are the fastest and cleanest approach.
 
@@ -24,7 +25,7 @@ Why care about pointers? It turns out that things, such as your current health i
 
 Not all hope is lost! The game must *somehow* have a way to reliably find this value, and the way it's done is with pointers. There will always be some base address that holds a pointer, and the game code knows where to find this pointer. If we are also able to find the pointer at said base address, and follow it ourselves ("dereferencing" it), we can perform the same steps the game is doing, and reliably find the health no matter how much we restart the game[^3].
 
-## Code finder
+## Pointers
 
 <details open><summary>Cheat Engine Tutorial: Step 6</summary>
 
@@ -510,7 +511,7 @@ We have learnt how to pretty-print instructions, and had a very gentle introduct
 
 The [code for this post][code] is available over at my GitHub. You can run `git checkout step6` after cloning the repository to get the right version of the code, although you will have to `checkout` to individual commits if you want to review, for example, how the instructions were printed out. Only the code necessary to complete the step is included at the `step6` tag.
 
-In the next post, we'll tackle the sixth step of the tutorial: Code Injection. This will be pretty similar to part 5, but instead of writing out a simple NOP instruction, we will have to get a bit more creative.
+In the [next post](/blog/woce-7), we'll tackle the seventh step of the tutorial: Code Injection. This will be pretty similar to part 5, but instead of writing out a simple NOP instruction, we will have to get a bit more creative.
 
 ### Footnotes
 
