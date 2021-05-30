@@ -22,16 +22,24 @@ input {
     left: 0;
 }
 ul {
-    background-color: red;
     position: absolute;
     bottom: 30%;
     left: 39%;
     list-style-type: none;
     padding: 0;
     font-size: 2rem;
-    background: linear-gradient(0deg, #fff, #000);
-    background-clip: text;
-    color: transparent;
+}
+@supports (background-clip: text) {
+    ul {
+        background: linear-gradient(0deg, #fff, #000);
+        background-clip: text;
+        color: transparent;
+    }
+}
+@supports not (background-clip: text) {
+    ul {
+        color: #fff;
+    }
 }
         </style>
     </head>
