@@ -10,7 +10,7 @@ tags = ["os", "nixos"]
 Update
 ------
 
-*Please see [my followup post with NixOS](../installing_nixos_2/index.html) for a far better experience with it*
+*Please see [my followup post with NixOS](/blog/installing-nixos-2) for a far better experience with it*
 
 ----------------------------------------
 
