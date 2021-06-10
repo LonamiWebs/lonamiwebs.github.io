@@ -4,8 +4,536 @@
 	<link href="https://lonami.dev/blog/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://lonami.dev/blog/"/>
 	<generator uri="https://www.getzola.org/">Zola</generator>
-	<updated>2021-03-13T00:00:00+00:00</updated>
+	<updated>2021-05-15T00:00:00+00:00</updated>
 	<id>https://lonami.dev/blog/atom.xml</id>
+	<entry xml:lang="en">
+		<title>Writing our own Cheat Engine: Multilevel pointers</title>
+		<published>2021-05-15T00:00:00+00:00</published>
+		<updated>2021-05-15T00:00:00+00:00</updated>
+		<link href="https://lonami.dev/blog/woce-8/" type="text/html"/>
+		<id>https://lonami.dev/blog/woce-8/</id>
+		<content type="html">&lt;p&gt;This is part 8 on the &lt;em&gt;Writing our own Cheat Engine&lt;&#x2F;em&gt; series:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-1&quot;&gt;Part 1: Introduction&lt;&#x2F;a&gt; (start here if you&#x27;re new to the series!)&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-2&quot;&gt;Part 2: Exact Value scanning&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-3&quot;&gt;Part 3: Unknown initial value&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-4&quot;&gt;Part 4: Floating points&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-6&quot;&gt;Part 6: Pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-7&quot;&gt;Part 7: Code Injection&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Part 8: Multilevel pointers&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;In part 7 we...&lt;&#x2F;p&gt;
+&lt;p&gt;In this post, we...&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;multilevel-pointers&quot;&gt;Multilevel pointers&lt;&#x2F;h2&gt;
+&lt;details open&gt;&lt;summary&gt;Cheat Engine Tutorial: Step 8&lt;&#x2F;summary&gt;
+&lt;blockquote&gt;
+&lt;p&gt;This step will explain how to use multi-level pointers.&lt;&#x2F;p&gt;
+&lt;p&gt;In step 6 you had a simple level-1 pointer, with the first address found already being the real base address. This step however is a level-4 pointer. It has a pointer to a pointer to a pointer to a pointer to a pointer to the health.&lt;&#x2F;p&gt;
+&lt;p&gt;You basicly do the same as in step 6. Find out what accesses the value, look at the instruction and what probably is the base pointer value, and what is the offset, and already fill that in or write it down. But in this case the address you&#x27;ll find will also be a pointer. You just have to find out the pointer to that pointer exactly the same way as you did with the value. Find out what accesses that address you found, look at the assembler instruction, note the probable instruction and offset, and use that, and continue till you can&#x27;t get any further (usually when the base address is a static address, shown up as green).&lt;&#x2F;p&gt;
+&lt;p&gt;Click Change Value to let the tutorial access the health. If you think you&#x27;ve found the pointer path click Change Register. The pointers and value will then change and you&#x27;ll have 3 seconds to freeze the address to 5000.&lt;&#x2F;p&gt;
+&lt;p&gt;Extra: This problem can also be solved using a auto assembler script, or using the pointer scanner.&lt;&#x2F;p&gt;
+&lt;p&gt;Extra2: In some situations it is recommended to change ce&#x27;s codefinder settings to Access violations when encountering instructions like mov eax,[eax] since debugregisters show it AFTER it was changed, making it hard to find out the the value of the pointer.&lt;&#x2F;p&gt;
+&lt;p&gt;Extra3: If you&#x27;re still reading. You might notice that when looking at the assembler instructions that the pointer is being read and filled out in the same codeblock (same routine, if you know assembler, look up till the start of the routine). This doesn&#x27;t always happen, but can be really useful in finding a pointer when debugging is troublesome.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;&#x2F;details&gt;
+&lt;h2 id=&quot;pointers-pointing-points&quot;&gt;Pointers pointing points&lt;&#x2F;h2&gt;
+&lt;p&gt;If you say &amp;quot;pointer&amp;quot; enough, you&#x27;ll end up having &lt;a href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Semantic_satiation&quot;&gt;semantic satiation&lt;&#x2F;a&gt;. My goal by the end of this post is that you actually get to experience that phenomenon. Anyway, no real program would actually have pointers pointing to pointers which themselves point to a different point (you guessed it, another pointer pointing to yet another pointer), right? That would be silly. Why would I have a value behind, say, 5 references? I&#x27;m not writing Rust code like &lt;code&gt;&amp;amp;&amp;amp;&amp;amp;&amp;amp;&amp;amp;value&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;But I am sure you are much more likely to be doing something like &lt;code&gt;game.world.areas[i].players[j].regen()&lt;&#x2F;code&gt;. And there&#x27;s a lot of references there:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt; game.world.areas[i].players[j].regen()
+^    ^           ^^^        ^^^      ^^
+|    |            |          |        \called by &amp;amp;mut ref
+|    |            |           \taking by &amp;amp;mut ref
+|    |             \taking by &amp;amp;mut ref
+|     \accessing by &amp;amp;mut ref
+ \this game is actually in a `Box` (so you&#x27;re accessing it behind other ref)
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Each of those is a different structure, with many fields each (for example, the areas also contain enemies and items dropped in different vectors. So a pointer does not necessarily point directly to the desired field! To complicate things further, the same reference to one thing may be stored in multiple locations, making it possible to find your goal address through many different paths.&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;#[repr(C)] &#x2F;&#x2F; &amp;lt;- used for clarity to get precise offsets
+struct Area {
+    &#x2F;* offset 00 *&#x2F; pub monsters: Vec&amp;lt;Monster&amp;gt;,
+    &#x2F;* offset 24 *&#x2F; pub items: Vec&amp;lt;Item&amp;gt;,
+    &#x2F;* offset 48 *&#x2F; pub kill_goal: u32,
+    &#x2F;* offset 52 *&#x2F; pub players: Vec&amp;lt;Player&amp;gt;,
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;If you have a reference to some &lt;code&gt;&amp;amp;Area&lt;&#x2F;code&gt; but access the &lt;code&gt;players&lt;&#x2F;code&gt; field, you actually need to read from &lt;code&gt;[addrof area + 52]&lt;&#x2F;code&gt;. This is why the tutorial step suggests to &amp;quot;look at the instruction&amp;quot;, because it very likely encodes the offset somewhere (if not directly, nearby). Looking at instructions to determine offsets works because normally people want their games to be fast, so they make good use of the available CPU instructions. Obfuscating hot code could slow a game way too much (but it may still be done to some degree!).&lt;&#x2F;p&gt;
+&lt;p&gt;The tutorial suggests to complete this step in the same way we did back in step 6. Add a watchpoint, find out what code is accessing this address, look around the disassembly, and write down your findings. Although this technique definitely is a valid way to approach the problem, it is quite tedious and error-prone. It would be hard to fully automate this, because who knows what shenanigans the code could be doing to calculate the right pointer and offset!&lt;&#x2F;p&gt;
+&lt;p&gt;It&#x27;s also pretty intrusive, because it requires us to attach ourselves as the debugger of the victim program. I hardly have any experience writing debuggers, leave alone writing them in a way that makes them hard to detect! I&#x27;m sure it&#x27;s a very interesting topic, but it&#x27;s not the current topic at hand, so we&#x27;ll leave it be. Furthermore, we&#x27;ve already gone that route, so it would be silly to repeat that here, just a longer version of it.&lt;&#x2F;p&gt;
+&lt;p&gt;You may have noticed the &amp;quot;extra&amp;quot; information the tutorial step provides:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Extra: This problem can also be solved using a auto assembler script, or using the pointer scanner.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;We&#x27;ve already done the &amp;quot;auto assembler script&amp;quot; part before (in part 7). I&#x27;m not sure how you would approach this problem with that technique. Maybe one could dig until the base pointer, and replace whatever read is happening there with a hardcoded value so that the game thinks that&#x27;s what it actually read? I&#x27;m not sure if it would be possible to solve with injected code without following the entire pointer chain. But anyway, we&#x27;re not doing that, no manual work will happen on this one. No, we&#x27;re interested in the &lt;span class=&quot;rainbow&quot;&gt;pointer scanner&lt;&#x2F;span&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;pointer-maps&quot;&gt;Pointer maps&lt;&#x2F;h2&gt;
+&lt;p&gt;Once you find a value in Cheat Engine, you have the option to &amp;quot;Generate pointermap&amp;quot;. This will prompt you to select a file where the generated pointermap will be stored, in &lt;code&gt;.scandata&lt;&#x2F;code&gt; format (along with its &lt;code&gt;.addresslist&lt;&#x2F;code&gt;). If you&#x27;re scanning a lot of memory, you will get to see a progress window (otherwise, it will be pretty much instant), along with some statistics:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Unique pointervalues in target.&lt;&#x2F;li&gt;
+&lt;li&gt;Scan duration.&lt;&#x2F;li&gt;
+&lt;li&gt;Paths evaluated.&lt;&#x2F;li&gt;
+&lt;li&gt;Paths &#x2F; seconds.&lt;&#x2F;li&gt;
+&lt;li&gt;Static and dynamic queue sizes.&lt;&#x2F;li&gt;
+&lt;li&gt;Results found.&lt;&#x2F;li&gt;
+&lt;li&gt;Time spent writing.&lt;&#x2F;li&gt;
+&lt;li&gt;Lowest known path.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;My guess for &amp;quot;unique pointervalues&amp;quot; is the set of pointers found so far, and the queues may be used by the way the scan is done. The rest of information is pretty much self-explanatory (lowest known path probably is the shortest &amp;quot;pointer path&amp;quot; found so far). When I&#x27;m talking about &amp;quot;pointer paths&amp;quot;, I&#x27;m referring to a known, static base address that won&#x27;t change, with a list of offsets that, when followed, arrive at some desired value in memory (for example, your character&#x27;s health). For this step, the solution found with Cheat Engine is a good example:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rusty&quot; data-lang=&quot;rusty&quot;&gt;let offsets = [10, 18, 0, 18]; &#x2F;&#x2F; list of offsets
+let mut addr = EXE_BASE_ADDR + 0x00306B00; &#x2F;&#x2F; current addr (initialized to base addr)
+
+&#x2F;&#x2F; follow the path:
+&#x2F;&#x2F; addr_at(&amp;quot;Tutorial-x86_64.exe&amp;quot;+00306B00) -&amp;gt; 0165F260
+&#x2F;&#x2F; addr_at(10+0165F260) -&amp;gt; 01690000
+&#x2F;&#x2F; addr_at(18+01690000) -&amp;gt; 01677790
+&#x2F;&#x2F; addr_at( 0+01677790) -&amp;gt; 01601A80
+&#x2F;&#x2F;         18+01601A80  -&amp;gt; 01601A98
+for offset in offsets {
+    addr = process.read_addr_at(addr);
+    addr += offset;
+}
+
+let value = process.read_desired_value_at(addr);
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;After generating the pointermap, the idea is to force the game to change the pointer path (for example, by closing and re-opening the game again) and find your target value once again. For the tutorial, we can just change the pointer. After we find the value again, we do a &amp;quot;Pointer scan for this address&amp;quot;. The &amp;quot;Pointerscanner options&amp;quot; has a checkbox to &amp;quot;Compare results with other saved pointermap(s)&amp;quot;. Running this seems to generate a second pointermap, and after some magic, both are compared and the one true pointer path is found.&lt;&#x2F;p&gt;
+&lt;p&gt;There&#x27;s a bunch of files generated:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;.scandata&lt;&#x2F;code&gt; is a bunch of binary data that I have no idea what could contain.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;.scandata.addresslist&lt;&#x2F;code&gt; seems to contain &lt;code&gt;ADDRESS=DESCRIPTION&lt;&#x2F;code&gt;, one per line, of the addresses you had &amp;quot;saved&amp;quot; when the first pointermap was made. This seems to be used when performing the pointer scan and comparing results (so that you can choose the address you want to compare it to).&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;.PTR&lt;&#x2F;code&gt; is 1201 bytes (such an strange size) and seems to contain a list of the modules loaded by the program&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;.PTR.results.#&lt;&#x2F;code&gt;, where &lt;code&gt;#&lt;&#x2F;code&gt; is a number between 0 and 8, are mostly empty files (except for 4 which is 14 bytes).&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Now, there&#x27;s this one option under &amp;quot;advanced&amp;quot; known as &amp;quot;Compress pointerscan file&amp;quot;. The long description reads (emphasis mine):&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Compresses the generated .PTR files &lt;em&gt;slightly&lt;&#x2F;em&gt;, so they take less space on the disk and less time writing to disk. Most of the time the bottleneck of a pointerscan is disk writing, so it is recommended to use this option.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Slightly, huh. Well, for the tutorial, which is using (according to the task manager) 2&#x27;364 K, running the scan with the compression disabled generates roughly &lt;em&gt;5 gigabytes&lt;&#x2F;em&gt; across the nine &lt;code&gt;.PTR.results&lt;&#x2F;code&gt;. That&#x27;s… not too shabby for a &amp;quot;slight&amp;quot; compression.&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s guess what those files are storing. The screen with the results does say it found uh, well you know, the usual, 122&#x27;808&#x27;639 pointer paths. This is the result of scanning for an address. That&#x27;s (very) roughly 40 bytes per path, and assuming 8 bytes for each address&#x2F;offset, equates to 5 hops. I guess the math kind of checks out?&lt;&#x2F;p&gt;
+&lt;p&gt;On the other hand, &amp;quot;generate pointermap&amp;quot; just spits out the &lt;code&gt;.scandata&lt;&#x2F;code&gt; at roughly 60KB. So these two options are definitely doing something very, very different. And I have no idea what either of these are doing. Let&#x27;s dive into Cheat Engine&#x27;s &amp;quot;advanced options&amp;quot; for the pointer scan to try and gain some insight. I will be listing all the settings available in the scan form and adding a bit on whether I think they&#x27;re useful to us or not.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;scan-options&quot;&gt;Scan options&lt;&#x2F;h2&gt;
+&lt;p&gt;The &lt;em&gt;Pointerscanner scanoptions&lt;&#x2F;em&gt; window has plenty of options that are extremely valuable to gain insight of what&#x27;s going on behind the scenes without having to dig into the code. At the very top we have three modes:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Scan for address&lt;&#x2F;li&gt;
+&lt;li&gt;Scan for addresses with value&lt;&#x2F;li&gt;
+&lt;li&gt;Generate pointermap&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;The third option is what we use during the first step, and the first option for the second step.&lt;&#x2F;p&gt;
+&lt;p&gt;When using either the first or second mode, you can also check &lt;em&gt;Use saved pointermap&lt;&#x2F;em&gt; which you can use if you have created a pointermap on a system that runs the game, but you wish to do the scan on another system (or multiple systems).&lt;&#x2F;p&gt;
+&lt;p&gt;With the first or second mode, you can also &lt;em&gt;Compare results with other saved pointermap(s)&lt;&#x2F;em&gt; which, when ticked, lets you add other pointermaps which will be used to verify that the pointers it finds are correct. You do have to fill in the correct address for each pointermap provided, and one should expect at least the size of the game itself in memory for every pointermap used. We know this step is key, but we don&#x27;t know how that comparison could be possibly done.&lt;&#x2F;p&gt;
+&lt;p&gt;The checkbox &lt;em&gt;Include system modules&lt;&#x2F;em&gt; I presume also scans in system modules and not just game&#x27;s own modules, which is useful if you suspect the value lives elsewhere. Not helpful for us right now, but good to know this is a possibility.&lt;&#x2F;p&gt;
+&lt;p&gt;Apparently, Cheat Engine can improve pointerscan with gathered heap data. The heap is used to figure out the offset sizes, instead of blindly guessing them. This should greatly improve speed and a lot less useless results and give perfect pointers, but if the game allocates gigantic chunks of heap memory, and then divides it up itself, this will give wrong results. If you only allow static and heap addresses in the path, when the address searched isn&#x27;t a heap address, the scan will return 0 results. I do not really know how Cheat Engine gathers heap data here to improve the pointerscan, but since this mode is unchecked by default, we should be fine without it.&lt;&#x2F;p&gt;
+&lt;p&gt;By default, the pointer path may only be inside the region 0000000000000000-7FFFFFFFFFFFFFFF. There&#x27;s a fancier option to limit scan to specified region file, which presumably enables a more complex, discontinuous region. Or you can filter pointers so that they end with specific offsets. Or you can indicate that the base address must be in specific range, which will only mark the given range as valid base address (this reduces the number of results, and internally makes use of the &amp;quot;Only find paths with a static address&amp;quot; feature by marking the provided range as static only, so it must be enabled).&lt;&#x2F;p&gt;
+&lt;p&gt;Pointers with read-only nodes are excluded by default, so the pointerscan will throw away memory that is readonly. When it looks for paths, it won&#x27;t encounter paths that pass through read only memory blocks. This is often faster and yields less useless results, but if the game decides to mark a pointer as readonly Cheat Engine won&#x27;t find it.&lt;&#x2F;p&gt;
+&lt;p&gt;Only paths with a static address are &amp;quot;found&amp;quot;. The pointerscan will only store a path when it starts with a static address (or easily looked up address). It may miss pointers that are accessed by special paths like thread local storage (but even then they&#x27;d be useless for Cheat Engine as they will change). When it&#x27;s disabled, it finds every single pointer path. Now, this bit is interesting, because the checkbox talks about &amp;quot;find&amp;quot;, but the description talks about &amp;quot;store&amp;quot;, so we can guess there&#x27;s no trick to only &amp;quot;finding&amp;quot; correct ones. It&#x27;s going to find a lot of things, and many of them will be discarded. It also mentions thread-local storage and how we probably shouldn&#x27;t worry about it.&lt;&#x2F;p&gt;
+&lt;p&gt;Cheat Engine won&#x27;t stop traversing a path when a static has been found by default. When the pointerscanner goes through the list of pointervalues with a specific value, this will stop exploring other paths as soon as it encounters a static pointer to that value. By enabling this option, some valid results could be missed. This talks about &amp;quot;pointervalues with a specific value&amp;quot;, which is a bit too obscure for me to try and make any sense out of it.&lt;&#x2F;p&gt;
+&lt;p&gt;Addresses must be 32-bit alligned. Only pointers that are stored in an address dividable by 4 are looked at. When disabled, it won&#x27;t bother. It enables fast scans, but &amp;quot;on some horrible designed games that you shouldn&#x27;t even play it won&#x27;t find the paths&amp;quot;. Values in memory are often aligned, so reducing the search space by 75% is a no-brainer.&lt;&#x2F;p&gt;
+&lt;p&gt;Cheat Engine can optionally verify that the first element of pointerstruct must point to module (e.g vtable). Object oriented programming languages tend to implement classobjects by having a pointer in the first element to something that describes the class. With this option enabled, Cheat Engine will check if it&#x27;s a classobject by checking that rule. If not, it won&#x27;t see it as a pointer. It should yield a tremendous speed increase and almost perfect pointers, but it doesn&#x27;t work with runtime generated classes (Java, .NET). Optionally, it can also accept non-module addresses. I have no idea how this is achieved, but since it&#x27;s disabled by default, we can forget about it.&lt;&#x2F;p&gt;
+&lt;p&gt;By default, no looping pointers are allowed. This will filter out pointerpaths that ended up in a loop (for example, base-&amp;gt;p1-&amp;gt;p2-&amp;gt;p3-&amp;gt;p1-&amp;gt;p4 since you could just as well do base-&amp;gt;p1-&amp;gt;p4 then, so throw this one away (base-&amp;gt;p1-&amp;gt;p4 will be found another way)). This gives less results so less diskspace used, but slightly slows down the scan as it needs to check for loops every single iteration. The thought of how much data the 5GB scan would generate without this option makes me shiver.&lt;&#x2F;p&gt;
+&lt;p&gt;Cheat Engine will allow stack addresses of the first thread(s) to be handled as static, which allows the stack of threads to be seen as static addresses by the pointerscan. The main thread is always a sure bet that it&#x27;s the first one in the list. And often the second thread created is pretty stable as well. With more there&#x27;s a bigger chance they get created and destroyed randomly. When a program enters a function and exits it, the stack pointer decreases and increases, and the data there gets written to. The farther the game is inside function calls, the more static the older data will be. With max stack offset you can set the max size that can be deemed as static enough (the max stackoffset to be deemed static enough is 4096 by default). It finds paths otherwise never found, but since there are more results, there&#x27;s more diskspace.&lt;&#x2F;p&gt;
+&lt;p&gt;Cheat Engine by default will look at the stacks of two threads, from oldest to newest. It indicates &amp;quot;he total number of threads that should be allowed to be used as a stack lookup. Thread 1 is usually the main thread of the game, but if that one spawns another thread for game related events, you might want to have that secondary thread as well. More threads is not recommend as they may get created and destroyed on the fly, and are therefore useless as a lookup base, but it depends on the game&amp;quot;.&lt;&#x2F;p&gt;
+&lt;p&gt;Unfortunately, this option is enabled by default, so it seems pretty important, and we might need to put some work into figuring out how &amp;quot;stacks&amp;quot; are found. However, this would mean that some &amp;quot;base&amp;quot; object (like a &lt;code&gt;Game&lt;&#x2F;code&gt; instance) is passed down by reference hundreds of calls, which seems pretty annoying just to have access to something that effectively acts like a global, so hopefully games don&#x27;t make use of this.&lt;&#x2F;p&gt;
+&lt;p&gt;This can be taken a step further, and consider stack addresses as ONLY static address, if you wish to only find pointer paths with a stack address.It must be combined with &amp;quot;Only find paths with a static address&amp;quot; (default on) else this option will have no effect. You&#x27;ll only get paths from the stack, but you don&#x27;t get get paths from random DLL&#x27;s or the executable.&lt;&#x2F;p&gt;
+&lt;p&gt;The pointerscan file is by default compressed. Cheat Engine Compresses the generated .PTR files slightly so they take less space on the disk and less time writing to disk. Most of the time the bottleneck of a pointerscan is disk writing, so it is recommended to use this option (which was not available in older versions).&lt;&#x2F;p&gt;
+&lt;p&gt;Only positive offsets are scanned by default, but Cheat Engine may optionally scan for negative offsets as well (although it can not be used in combination with compressed pointerscan files; this seems to hint that the compression assumes only positive values).&lt;&#x2F;p&gt;
+&lt;p&gt;On my machine, 9 threads are scanning by default with a maximum offset value of 4095 and a maximum level (depth) of 7. The maximum different offsets per node are 3. When the pointerscan looks through the list of pointers with a specific value, it goes through every single pointer that has that value. Every time increasing the offset slightly. With this feature enabled the pointerscan will only check the first few pointers with that value. This is extremely fast, and the results have the lowest pointer paths possible, but you&#x27;ll miss a lot of pointers that might be valid too. I think this description is key, as it clearly says what the pointerscan does and maybe even how it works (although it sounds a bit inefficient, so Cheat Engine probably uses other tricks).&lt;&#x2F;p&gt;
+&lt;p&gt;Cheat Engine clearly knows this process is expensive, so it optionally allow scanners to connect at runtime. This opens a port that other systems running the pointerscanner can connect to and help out with the scan. Or it can connect to pointerscan node, which will send a broadcast message on the local network which will tell pointer scanner systems to join this scan if they are set to auto join (or  &amp;quot;Setup specific IP&#x27;s to notify&amp;quot; to notify systems of this scan that are outside of the local network).&lt;&#x2F;p&gt;
+&lt;p&gt;And that&#x27;s all! In summary:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Assume addresses are 32-bit aligned (maybe even 64-bit).&lt;&#x2F;li&gt;
+&lt;li&gt;Discard paths that don&#x27;t end in a static address (bonus points if the top of the stack for the firsts two threads are also considered).&lt;&#x2F;li&gt;
+&lt;li&gt;Ignore read-only memory.&lt;&#x2F;li&gt;
+&lt;li&gt;Limit the number of offsets per pointer to something small like 3, and give up after reaching a depth greater than 7.&lt;&#x2F;li&gt;
+&lt;li&gt;Limit the offset range to &lt;code&gt;0..4096&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;Use multiple threads.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;single-threaded-naive-approach&quot;&gt;Single-threaded naive approach&lt;&#x2F;h2&gt;
+&lt;p&gt;After playing around a bit more with Cheat Engine&#x27;s scans, I realized the 14 bytes of the &lt;code&gt;.PTR.results.4&lt;&#x2F;code&gt; is because the process literally finds a single path which it places there. Running the process with compression and no previous scan to compare it to spits out roughly 750MB (so the compression does go from 5GB to 750MB, that&#x27;s a lot more reasonable).&lt;&#x2F;p&gt;
+&lt;p&gt;In any case, we&#x27;re with the &lt;code&gt;.scandata&lt;&#x2F;code&gt; now. I really do wonder what could it possibly contain? I really doubt it&#x27;s the pointer paths found, because then it would be huge. Perhaps it contains the memory regions? That would make some sense, since the sibling &lt;code&gt;.addresslist&lt;&#x2F;code&gt; &lt;em&gt;is&lt;&#x2F;em&gt; a list of all the loaded modules. Maybe the &lt;code&gt;.scandata&lt;&#x2F;code&gt; contains the memory regions for all of those loaded modules.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;(PW=525927) - SHOW OSIRI RAINBOW WHEN DONE&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;finale&quot;&gt;Finale&lt;&#x2F;h2&gt;
+&lt;p&gt;This post...&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;footnotes&quot;&gt;Footnotes&lt;&#x2F;h3&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;I spent a good chunk of time figuring out how to get this effect on the text (and borrowing code from several sites), but I&#x27;m extremely satisfied with the result. You do need a &amp;quot;modern&amp;quot; browser to see what I mean, though.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>Writing our own Cheat Engine: Code Injection</title>
+		<published>2021-05-08T00:00:00+00:00</published>
+		<updated>2021-05-08T00:00:00+00:00</updated>
+		<link href="https://lonami.dev/blog/woce-7/" type="text/html"/>
+		<id>https://lonami.dev/blog/woce-7/</id>
+		<content type="html">&lt;p&gt;This is part 7 on the &lt;em&gt;Writing our own Cheat Engine&lt;&#x2F;em&gt; series:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-1&quot;&gt;Part 1: Introduction&lt;&#x2F;a&gt; (start here if you&#x27;re new to the series!)&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-2&quot;&gt;Part 2: Exact Value scanning&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-3&quot;&gt;Part 3: Unknown initial value&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-4&quot;&gt;Part 4: Floating points&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-6&quot;&gt;Part 6: Pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Part 7: Code Injection&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;In part 6 we ended up spending most of the time in upgrading our breakpoint support to have a proper implementation, rather than using some hardcoded constants. We then made use of the new and improved breakpoint support to find what code accessed an specific memory address our very own debugger. To complete the tutorial, we read and understood the surrounding assembly around the code accessing our address and figured out what pointer to look for. In the end, we were left with a base address that we can rely on and follow to reach the target memory address, without having to scan for it every time.&lt;&#x2F;p&gt;
+&lt;p&gt;In this post, we will take a look at the different techniques Cheat Engine uses to patch instructions with as many other instructions as we need.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;code-injection&quot;&gt;Code Injection&lt;&#x2F;h2&gt;
+&lt;details open&gt;&lt;summary&gt;Cheat Engine Tutorial: Step 7&lt;&#x2F;summary&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Code injection is a technique where you inject a piece of code into the target process, and then reroute the execution of code to go through your own written code.&lt;&#x2F;p&gt;
+&lt;p&gt;In this tutorial you&#x27;ll have a health value and a button that will decrease your health by 1 each time you click it. Your task is to use code injection to make the button increase your health by 2 each time it is clicked.&lt;&#x2F;p&gt;
+&lt;p&gt;Start with finding the address and then find what writes to it. Then when you&#x27;ve found the code that decreases it browse to that address in the disassembler, and open the auto assembler window (ctrl+a). There click on template and then code injection, and give it the address that decreases health (if it isn&#x27;t already filled in correctly). That will generate a basic auto assembler injection framework you can use for your code.&lt;&#x2F;p&gt;
+&lt;p&gt;Notice the alloc, that will allocate a block of memory for your code cave, in the past, in the pre windows 2000 systems, people had to find code caves in the memory (regions of memory unused by the game), but that&#x27;s luckily a thing of the past since windows 2000, and will these days cause errors when trying to be used, due to SP2 of XP and the NX bit of new CPU&#x27;s&lt;&#x2F;p&gt;
+&lt;p&gt;Also notice the line &lt;code&gt;newmem:&lt;&#x2F;code&gt; and &lt;code&gt;originalcode:&lt;&#x2F;code&gt; and the text &amp;quot;Place your code here&amp;quot;. As you guessed it, write your code here that will increase the health with 2. An usefull assembler instruction in this case is the &amp;quot;ADD instruction&amp;quot;. Here are a few examples:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&amp;quot;ADD [00901234],9&amp;quot; to increase the address at 00901234 with 9&lt;&#x2F;li&gt;
+&lt;li&gt;&amp;quot;ADD [ESP+4],9&amp;quot; to increase the address pointed to by ESP+4 with 9&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;In this case, you&#x27;ll have to use the same thing between the brackets as the original code has that decreases your health&lt;&#x2F;p&gt;
+&lt;p&gt;Notice: It is recommended to delete the line that decreases your health from the original code section, else you&#x27;ll have to increase your health with 3 (you increase with 3, the original code decreases with 1, so the end result is increase with 2), which might become confusing. But it&#x27;s all up to you and your programming.&lt;&#x2F;p&gt;
+&lt;p&gt;Notice 2: In some games the original code can exist out of multiple instructions, and sometimes, not always, it might happen that a code at another place jumps into your jump instruction end will then cause unknown behavior. If that happens, you should usually look near that instruction and see the jumps and fix it, or perhaps even choose to use a different address to do the code injection from. As long as you&#x27;re able to figure out the address to change from inside your injected code.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;&#x2F;details&gt;
+&lt;h2 id=&quot;injection-techniques&quot;&gt;Injection techniques&lt;&#x2F;h2&gt;
+&lt;p&gt;The Instruction Set Architecture (ISA) a typical desktop computer is able to interpret uses a variable-length encoding for the instructions (do correct me if this is phrased incorrectly; it&#x27;s not my area of expertise). That means we can&#x27;t go and blindly replace a instruction with the code we need. We need to be careful, and still hope that no code dynamically jumps to this very specific location. Otherwise we may end up executing &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;preames&#x2F;public-notes&#x2F;blob&#x2F;master&#x2F;unintended-instructions.rst&quot;&gt;Unintended Instructions&lt;&#x2F;a&gt;!&lt;&#x2F;p&gt;
+&lt;p&gt;The way Cheat Engine gets around this is by replacing the instruction with a jump. After the offending code is found, you can use a &amp;quot;template&amp;quot; that prompts &amp;quot;On what address do you want the jump?&amp;quot;. After accepting the &amp;quot;code inject template&amp;quot;, a window with the following code shows:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-asm&quot; data-lang=&quot;asm&quot;&gt;alloc(newmem,2048,&amp;quot;Tutorial-x86_64.exe&amp;quot;+2D4F7)
+label(returnhere)
+label(originalcode)
+label(exit)
+
+newmem: &#x2F;&#x2F;this is allocated memory, you have read,write,execute access
+&#x2F;&#x2F;place your code here
+
+originalcode:
+sub dword ptr [rsi+000007E0],01
+
+exit:
+jmp returnhere
+
+&amp;quot;Tutorial-x86_64.exe&amp;quot;+2D4F7:
+jmp newmem
+nop 2
+returnhere:
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It seems Cheat Engine has its own mini-language that extends assembly using Intel-syntax. It has &lt;code&gt;directive(arguments)&lt;&#x2F;code&gt; which do… well, stuff.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;code&gt;alloc(label, size, address)&lt;&#x2F;code&gt; seems to allocate &lt;code&gt;size&lt;&#x2F;code&gt; bytes at some address and assign &lt;code&gt;label&lt;&#x2F;code&gt; to it. &lt;code&gt;address&lt;&#x2F;code&gt; is where the jump to the newly-allocated memory will be inserted.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;code&gt;label(label)&lt;&#x2F;code&gt; seems to be used to define a label. Unlike your usual assembler, it appears we need to define the labels beforehand.&lt;&#x2F;p&gt;
+&lt;p&gt;A label may also be an address directly, in this case, &lt;code&gt;&amp;quot;Tutorial-x86_64.exe&amp;quot;+2D4F7&lt;&#x2F;code&gt;. Cheat Engine will overwrite code from this address onwards.&lt;&#x2F;p&gt;
+&lt;p&gt;Executing Cheat Engine&#x27;s assembler will greet you with the following message, provided everything went okay:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Information&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The code injection was successfull&lt;br &#x2F;&gt;
+newmem=FFFF0000&lt;br &#x2F;&gt;
+Go to FFFF0000?&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;kbd&gt;Yes&lt;&#x2F;kbd&gt; &lt;kbd&gt;No&lt;&#x2F;kbd&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;If we navigate to the address, we find the following:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;...
+FFFEFFFE -                       - ??
+FFFEFFFF -                       - ??
+FFFF0000 - 83 AE E0070000 01     - sub dword ptr [rsi+000007E0],01
+FFFF0007 - E9 F2D40300           - jmp Tutorial-x86_64.exe+2D4FE
+FFFF000C - 00 00                 - add [rax],al
+...
+FFFF0FFF - 00 00                 - add [rax],al
+...
+FFFF1001 -                       - ??
+...
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;So, before this address we don&#x27;t know what&#x27;s in there. At the address, our newly inserted code is present, and after the code, a lot of zero values (which happen to be interpreted as &lt;code&gt;add [rax], al&lt;&#x2F;code&gt;). After the allocated region (in our case, 2048 bytes), more unknown memory follows.&lt;&#x2F;p&gt;
+&lt;p&gt;The old code was replaced with the jump:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;Tutorial-x86_64.exe+2D4F7 - E9 042BFCFF           - jmp FFFF0000
+Tutorial-x86_64.exe+2D4FC - 66 90                 - nop 2
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Note how the &lt;code&gt;sub&lt;&#x2F;code&gt; instruction (&lt;code&gt;83 AE E0070000 01&lt;&#x2F;code&gt;, 7 bytes) was replaced with both a &lt;code&gt;jmp&lt;&#x2F;code&gt; (&lt;code&gt;E9 042BFCFF&lt;&#x2F;code&gt;, 5 bytes) and a &lt;code&gt;nop&lt;&#x2F;code&gt; (&lt;code&gt;66 90&lt;&#x2F;code&gt;, 2 bytes), both occupying 7 bytes. Because the size was respected, any old jumps will still fall in the same locations. But we were lucky to be working with 7 whole bytes to ourselves. What happens if we try to do the same on, say, a &lt;code&gt;nop&lt;&#x2F;code&gt; which is only 1 byte long?&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-asm&quot; data-lang=&quot;asm&quot;&gt;alloc(newmem,2048,&amp;quot;Tutorial-x86_64.exe&amp;quot;+2D4F0)
+newmem:
+nop
+mov ebx,[rsi+000007E0]
+jmp returnhere
+
+&amp;quot;Tutorial-x86_64.exe&amp;quot;+2D4F0:
+jmp newmem
+nop 2
+returnhere:
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Interesting! A single byte is obviously not enough, so Cheat Engine goes ahead and replaces &lt;em&gt;two&lt;&#x2F;em&gt; instructions with the jump, even though we only intended to replace one. Note the old code at &lt;code&gt;newmem&lt;&#x2F;code&gt;, it contains the &lt;code&gt;nop&lt;&#x2F;code&gt; and the next instruction (this was just before the code we are meant to replace, so I picked it as the example).&lt;&#x2F;p&gt;
+&lt;p&gt;Cheat Engine is obviously careful to both pick as many instructions as it needs to fit a &lt;code&gt;jmp&lt;&#x2F;code&gt;, and the template pads the &lt;code&gt;jmp&lt;&#x2F;code&gt; with as many &lt;code&gt;nop&lt;&#x2F;code&gt; bytes as it needs to respect the old size.&lt;&#x2F;p&gt;
+&lt;p&gt;If you attempt to assemble a longer instruction to replace a smaller one inline (as opposed to use the assembler with templates), Cheat Engine will warn you:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Confirmation&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The generated code is 6 byte(s) long, but the selected opcode is 1 byte(s) long! Do you want to replace the incomplete opcode(s) with NOP&#x27;s?&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;kbd&gt;Yes&lt;&#x2F;kbd&gt; &lt;kbd&gt;No&lt;&#x2F;kbd&gt; &lt;kbd&gt;Cancel&lt;&#x2F;kbd&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Selecting &amp;quot;No&amp;quot; will leave the incomplete bytes as they were before (in the case you replace a long instruction with a short one), which is very likely to leave garbage instructions behind and mess up with even more instructions.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;allocating-remote-memory&quot;&gt;Allocating remote memory&lt;&#x2F;h2&gt;
+&lt;p&gt;When we initialize a new &lt;code&gt;Vec&lt;&#x2F;code&gt; via &lt;code&gt;Vec::with_capacity(2048)&lt;&#x2F;code&gt;, Rust will allocate enough space for 2048 items in a memory region that will belong to us. But we need this memory to belong to a different process, so that the remote process is the one with full Read, Write and eXecute access.&lt;&#x2F;p&gt;
+&lt;p&gt;There&#x27;s quite a few ways to allocate memory: &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;winbase&#x2F;nf-winbase-globalalloc&quot;&gt;&lt;code&gt;GlobalAlloc&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;, &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;desktop&#x2F;api&#x2F;WinBase&#x2F;nf-winbase-localalloc&quot;&gt;&lt;code&gt;LocalAlloc&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;, &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;desktop&#x2F;api&#x2F;HeapApi&#x2F;nf-heapapi-heapalloc&quot;&gt;&lt;code&gt;HeapAlloc&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;, &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;memoryapi&#x2F;nf-memoryapi-virtualalloc&quot;&gt;&lt;code&gt;VirtualAlloc&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;… just to name a few! A process may even embed its own allocator which works on top of any of these. Each of these functions has its own purpose, with different tradeoffs, but the &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;memory&#x2F;comparing-memory-allocation-methods&quot;&gt;comparison on allocation methods&lt;&#x2F;a&gt; notes:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Starting with 32-bit Windows, &lt;code&gt;GlobalAlloc&lt;&#x2F;code&gt; and &lt;code&gt;LocalAlloc&lt;&#x2F;code&gt; are implemented as wrapper functions that call &lt;code&gt;HeapAlloc&lt;&#x2F;code&gt; using a handle to the process&#x27;s default heap.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Cool! That&#x27;s two down. &lt;code&gt;CoTaskMemAlloc&lt;&#x2F;code&gt; seems to be useful in COM-based applications, which we don&#x27;t care about, and &lt;code&gt;VirtualAlloc&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[…] allows you to specify additional options for memory allocation. However, its allocations use a page granularity, so using &lt;code&gt;VirtualAlloc&lt;&#x2F;code&gt; can result in higher memory usage.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;…which we don&#x27;t care about, either. Since &lt;code&gt;HeapAlloc&lt;&#x2F;code&gt; requires &amp;quot;A handle to the heap from which the memory will be allocated&amp;quot;, and as far as I can tell, there is no easy way to do this for a different process, we&#x27;ll turn our attention back to &lt;code&gt;VirtualAlloc&lt;&#x2F;code&gt;. The &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;memoryapi&#x2F;nf-memoryapi-virtualalloc&quot;&gt;documentation&lt;&#x2F;a&gt; reads:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;To allocate memory in the address space of another process, use the &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;api&#x2F;memoryapi&#x2F;nf-memoryapi-virtualallocex&quot;&gt;&lt;code&gt;VirtualAllocEx&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; function.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;There&#x27;s our function! But before we can use it, we should figure out how the memory allocated by Cheat Engine looks like. I&#x27;ll be using this code:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let before = process.memory_regions();
+std::thread::sleep(std::time::Duration::from_secs(10));
+let after = process.memory_regions();
+
+before.iter().for_each(|pre| {
+    if let Some(post) = after.iter().find(|post| post.BaseAddress == pre.BaseAddress) {
+        if post.RegionSize != pre.RegionSize {
+            println!(&amp;quot;region {:?} size changed: {:x} -&amp;gt; {:x}&amp;quot;, pre.BaseAddress, pre.RegionSize, post.RegionSize);
+        }
+        if post.Protect != pre.Protect {
+            println!(&amp;quot;region {:?} prot changed: {:x} -&amp;gt; {:x}&amp;quot;, pre.BaseAddress, pre.Protect, post.Protect);
+        }
+    } else {
+        println!(&amp;quot;region {:?} lost&amp;quot;, pre.BaseAddress);
+    }
+});
+
+after.iter().for_each(|post| {
+    if !before.iter().any(|pre| pre.BaseAddress == post.BaseAddress) {
+        println!(&amp;quot;region {:?} came to life (size {:x}, prot {:x})&amp;quot;, post.BaseAddress, post.RegionSize, post.Protect);
+    }
+});
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The results:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;region 0x7ffe3000 size changed: 8001d000 -&amp;gt; 8000d000
+region 0xffff0000 came to life (size 1000, prot 40)
+region 0xffff1000 came to life (size f000, prot 1)
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;So far, so good. This matches the address Cheat Engine was telling us about. It appears region 0x7ffe3000 was split to accomodate for region 0xffff0000, and the remaining had to become region 0xffff1000. The protection level for the region we care about is 40, which, according to the &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;memory&#x2F;memory-protection-constants&quot;&gt;documentation&lt;&#x2F;a&gt; is &lt;code&gt;PAGE_EXECUTE_READWRITE&lt;&#x2F;code&gt;. It &amp;quot;Enables execute, read-only, or read&#x2F;write access to the committed region of pages&amp;quot;. Let&#x27;s implement that in &lt;code&gt;Process&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub fn alloc(&amp;amp;self, addr: usize, size: usize) -&amp;gt; io::Result&amp;lt;usize&amp;gt; {
+    let res = unsafe {
+        winapi::um::memoryapi::VirtualAllocEx(
+            self.handle.as_ptr(),
+            addr as _,
+            size,
+            winnt::MEM_COMMIT | winnt::MEM_RESERVE,
+            winnt::PAGE_EXECUTE_READWRITE,
+        )
+    };
+    if res == ptr::null_mut() {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(res as _)
+    }
+}
+
+pub fn dealloc(&amp;amp;self, addr: usize) -&amp;gt; io::Result&amp;lt;()&amp;gt; {
+    if unsafe {
+        winapi::um::memoryapi::VirtualFreeEx(
+            self.handle.as_ptr(),
+            addr as _,
+            0,
+            winnt::MEM_RELEASE,
+        )
+    } == FALSE
+    {
+        Err(io::Error::last_os_error())
+    } else {
+        Ok(())
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;VirtualAllocEx&lt;&#x2F;code&gt; will also zero-initialize the remote memory, although we don&#x27;t care much about that. To us, all the memory is initialized, because we work through &lt;code&gt;ReadProcessMemory&lt;&#x2F;code&gt; which is the one responsible for filling our buffers. The only fun remark is that we also saw zero-bytes when we did the process with Cheat Engine, and not random garbage, so that may be an indicator that we&#x27;re on the right track.&lt;&#x2F;p&gt;
+&lt;p&gt;We also provide &lt;code&gt;dealloc&lt;&#x2F;code&gt;, so that the user can free memory if they want to. Otherwise, they&#x27;re causing a memory leak in a remote process.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;finding-the-right-spot&quot;&gt;Finding the right spot&lt;&#x2F;h2&gt;
+&lt;p&gt;Before we go and allocate memory, we need to determine &lt;em&gt;where&lt;&#x2F;em&gt; it should be allocated. Remember the &lt;code&gt;jmp&lt;&#x2F;code&gt; instruction Cheat Engine added?:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;Tutorial-x86_64.exe+2D4F7 - E9 042BFCFF           - jmp FFFF0000
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It&#x27;s 5 bytes long, and the &amp;quot;address&amp;quot; is 4 bytes long. However, memory addresses are 8 bytes long! And also, the argument (&lt;code&gt;042BFCFF&lt;&#x2F;code&gt;) to the jump (&lt;code&gt;E9&lt;&#x2F;code&gt;) is backwards. Our machines are little endian, so the actual value is &lt;code&gt;FFFC2B04&lt;&#x2F;code&gt; instead. I wonder what happens if…&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&amp;gt;&amp;gt;&amp;gt; hex(0xFFFC2B04 + 0x2D4F7 + 5)
+&#x27;0xffff0000&#x27;
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Aha! So the argument to the jump location is actually encoded &lt;em&gt;relative&lt;&#x2F;em&gt; to the current instruction pointer &lt;em&gt;after&lt;&#x2F;em&gt; reading the instruction (that&#x27;s the plus five). In this case, all we need to do is find a memory region which is not yet reserved and is close enough to the offending instruction, so that we can make sure the relative offset will fit in 4 bytes:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let regions = process
+    .memory_regions()
+    .into_iter()
+    .filter(|p| (p.State &amp;amp; winnt::MEM_FREE) != 0)
+    .collect::&amp;lt;Vec&amp;lt;_&amp;gt;&amp;gt;();
+
+println!(&amp;quot;{} regions free&amp;quot;, regions.len());
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;68 regions free
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Sure enough, there&#x27;s still free regions available to us. Because &lt;code&gt;memory_regions&lt;&#x2F;code&gt; is sorted by &lt;code&gt;BaseAddress&lt;&#x2F;code&gt;, we can look for the first free region after the address we want to patch:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let region = process
+    .memory_regions()
+    .into_iter()
+    .find(|p| (p.State &amp;amp; winnt::MEM_FREE) != 0 &amp;amp;&amp;amp; p.BaseAddress as usize &amp;gt; addr)
+    .unwrap();
+
+println!(&amp;quot;Found free region at {:?}&amp;quot;, region.BaseAddress);
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;Do you want to simply inject NOPs replacing the old code at 10002d4fe (y&#x2F;n)?: n
+Found free region at 0x100321000
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;There we go! 0x2f3b02 bytes away of 0x10002d4fe, we have a free memory region at 0x100321000 where we can allocate memory to. Alas, trying to allocate memory here fails:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;Os { code: 487, kind: Other, message: &amp;quot;Attempt to access invalid address.&amp;quot; }
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Well, to be fair, that&#x27;s not the region Cheat Engine is finding. Here&#x27;s what the memory looks like around the region Cheat Engine does use &lt;em&gt;before&lt;&#x2F;em&gt; injecting the code:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;Region:
+    BaseAddress: 0x7ffe6000
+    AllocationBase: 0x0
+    AllocationProtect: 0
+    RegionSize: 8001a000
+    State: 10000
+    Protect: 1
+    Type: 0
+Region:
+    BaseAddress: 0x100000000
+    AllocationBase: 0x100000000
+    AllocationProtect: 80
+    RegionSize: 1000
+    State: 1000
+    Protect: 2
+    Type: 1000000
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;And here is the after:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;Region:
+    BaseAddress: 0x7ffe6000
+    AllocationBase: 0x0
+    AllocationProtect: 0
+    RegionSize: 8000a000
+    State: 10000
+    Protect: 1
+    Type: 0
+Region:
+    BaseAddress: 0xffff0000
+    AllocationBase: 0xffff0000
+    AllocationProtect: 40
+    RegionSize: 1000
+    State: 1000
+    Protect: 40
+    Type: 20000
+Region:
+    BaseAddress: 0xffff1000
+    AllocationBase: 0x0
+    AllocationProtect: 0
+    RegionSize: f000
+    State: 10000
+    Protect: 1
+    Type: 0
+Region:
+    BaseAddress: 0x100000000
+    AllocationBase: 0x100000000
+    AllocationProtect: 80
+    RegionSize: 1000
+    State: 1000
+    Protect: 2
+    Type: 1000000
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Notice how the region it picked was 0x7ffe_6000, not 0x1_0000_0000. The offending instruction is at 0x1_0002_d4fe. So the jumps can go backwards just fine. But this doesn&#x27;t really explain why the allocation at 0x1_0032_1000 failed, because it has the same state (&lt;code&gt;MEM_FREE&lt;&#x2F;code&gt;) and protection level (&lt;code&gt;PAGE_NOACCESS&lt;&#x2F;code&gt;) as the page at 0x7ffe_6000. I can&#x27;t really explain why this is the case, but I can change the code to pick a free memory region before and not after the offending instruction:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let region = process
+    .memory_regions()
+    .into_iter()
+    .rev() &#x2F;&#x2F; &amp;lt;- new                                               flipped v
+    .find(|p| (p.State &amp;amp; winnt::MEM_FREE) != 0 &amp;amp;&amp;amp; (p.BaseAddress as usize) &amp;lt; addr)
+    .unwrap();
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;Found free region at 0x7ffe6000
+thread &#x27;main&#x27; panicked at &#x27;called `Result::unwrap()` on an `Err` value: Os { code: 487, kind: Other, message: &amp;quot;Attempt to access invalid address.&amp;quot; }&#x27;, src\main.rs:151:74
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Perhaps the two regions aren&#x27;t so different after all? At least we&#x27;re picking the same region as Cheat Engine now. But why is the allocation failing? I&#x27;ll be honest, I have no idea. We do have the required &lt;code&gt;PROCESS_VM_OPERATION&lt;&#x2F;code&gt; permission. I do not think the error is caused by enclaves (and I don&#x27;t even know what those are):&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;If the address in within an enclave that you initialized, then the allocation operation fails with the &lt;code&gt;ERROR_INVALID_ADDRESS&lt;&#x2F;code&gt; error.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;It also does not seem to be an issue with reserve and commit:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Attempting to commit a specific address range by specifying &lt;code&gt;MEM_COMMIT&lt;&#x2F;code&gt; without &lt;code&gt;MEM_RESERVE&lt;&#x2F;code&gt; and a non-&lt;code&gt;NULL&lt;&#x2F;code&gt; &lt;code&gt;lpAddress&lt;&#x2F;code&gt; fails unless the entire range has already been reserved. The resulting error code is &lt;code&gt;ERROR_INVALID_ADDRESS&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;We are using both &lt;code&gt;MEM_COMMIT&lt;&#x2F;code&gt; and &lt;code&gt;MEM_RESERVE&lt;&#x2F;code&gt;, and our &lt;code&gt;lpAddress&lt;&#x2F;code&gt; is not null.&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s try reserving a memory region, but this time, from the end of the region (instead of from the beginning):&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let addr = (region.BaseAddress as usize + region.RegionSize) - 2048;
+match process.alloc(addr, 2048) {
+    Ok(addr) =&amp;gt; {
+        println!(&amp;quot;Bingo: {:x}&amp;quot;, addr);
+        process.dealloc(addr);
+    }
+    Err(_) =&amp;gt; {
+        println!(&amp;quot;Nope&amp;quot;);
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;Bingo: ffff0000
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Hey, that&#x27;s… the same value Cheat Engine writes to! At the very last&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;, we can allocate memory where we can inject our assembled code.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;code-injection-1&quot;&gt;Code injection&lt;&#x2F;h2&gt;
+&lt;p&gt;Now, we could go as far as getting our hands on some assembler, such as &lt;a href=&quot;https:&#x2F;&#x2F;nasm.us&#x2F;index.php&quot;&gt;NASM&lt;&#x2F;a&gt;, and invoke it on the input the user wishes to replace. Then we could read the output bytes of the assembled file, and write it to the desired memory location. However… that&#x27;s just a lot of tedious work that won&#x27;t teach us much (the Rust documentation already does an excellent job at teaching us how to work with files and invoke an external process). So I am going to cheat and hardcode the right bytes to complete this step of the tutorial.&lt;&#x2F;p&gt;
+&lt;p&gt;Here&#x27;s what Cheat Engine says the area we&#x27;re going to patch with the jump looks like:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;Tutorial-x86_64.exe+2D4F0 - 90                    - nop
+Tutorial-x86_64.exe+2D4F1 - 8B 9E E0070000        - mov ebx,[rsi+000007E0]
+Tutorial-x86_64.exe+2D4F7 - 83 AE E0070000 01     - sub dword ptr [rsi+000007E0],01
+Tutorial-x86_64.exe+2D4FE - 48 8D 4D F8           - lea rcx,[rbp-08]
+Tutorial-x86_64.exe+2D502 - E8 19B9FDFF           - call Tutorial-x86_64.exe+8E20
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Here&#x27;s the after:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;Tutorial-x86_64.exe+2D4F0 - 90                    - nop
+Tutorial-x86_64.exe+2D4F1 - 8B 9E E0070000        - mov ebx,[rsi+000007E0]
+Tutorial-x86_64.exe+2D4F7 - E9 042BFCFF           - jmp FFFF0000
+Tutorial-x86_64.exe+2D4FC - 66 90                 - nop 2
+Tutorial-x86_64.exe+2D4FE - 48 8D 4D F8           - lea rcx,[rbp-08]
+Tutorial-x86_64.exe+2D502 - E8 19B9FDFF           - call Tutorial-x86_64.exe+8E20
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;FFFF0000 - 83 86 E0070000 02     - add dword ptr [rsi+000007E0],02
+FFFF0007 - E9 F2D40300           - jmp Tutorial-x86_64.exe+2D4FE
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Let&#x27;s finish up this tutorial step. Don&#x27;t worry though, the addresses will still be correctly calculated. It&#x27;s just the opcodes for the ADD instruction and NOP, mostly:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let region = process
+    .memory_regions()
+    .into_iter()
+    .rev()
+    .find(|p| (p.State &amp;amp; winnt::MEM_FREE) != 0 &amp;amp;&amp;amp; (p.BaseAddress as usize) &amp;lt; addr)
+    .unwrap();
+
+let target_addr = process.alloc(region.BaseAddress as usize + region.RegionSize - 2048, 2048).unwrap();
+
+&#x2F;&#x2F; The relative JMP itself are 5 bytes, the last 2 are NOP (hence the -2 in delta calculation).
+&#x2F;&#x2F; Relative jumps add to the instruction pointer when it *ends* executing the instruction (like JMP).
+&#x2F;&#x2F;   jmp target_addr
+&#x2F;&#x2F;   nop 2
+let mut jmp = [0xE9, 0, 0, 0, 0, 0x66, 0x90];
+jmp[1..5].copy_from_slice(&amp;amp;((target_addr as isize - (addr - 2) as isize) as i32).to_le_bytes());
+process.write_memory(addr - jmp.len(), &amp;amp;jmp).unwrap();
+
+&#x2F;&#x2F; addr is already where the old instruction ended, no need to re-skip our previously written jump.
+&#x2F;&#x2F; By the end of the execution of this jump, the instruction pointer will be at (base + code len).
+&#x2F;&#x2F;   add dword ptr [rsi+000007E0], 2
+&#x2F;&#x2F;   jmp addr
+let mut injection = [0x83, 0x86, 0xE0, 0x07, 0x00, 0x00, 0x02, 0xE9, 0, 0, 0, 0];
+let inj_len = injection.len();
+injection[8..12].copy_from_slice(&amp;amp;((addr as isize - (target_addr + inj_len) as isize) as i32).to_le_bytes());
+process.write_memory(target_addr, &amp;amp;injection).unwrap();
+
+println!(&amp;quot;Replaced the SUB 1 at {:x} with ADD 2 at {:x} successfully!&amp;quot;, addr, target_addr);
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;So there we have it! The code calculates the correct relative address to jump to, depending on wherever the breakpoint was hit and wherever we ended up allocating memory. It also places in the ADD instruction, and this is enough to complete this tutorial step!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;other-code-injection-techniques&quot;&gt;Other code injection techniques&lt;&#x2F;h2&gt;
+&lt;p&gt;We have seen one way to inject more than enough code for most needs (just allocate as much as you need!), through the use of watchpoints to figure out where the offending code we want to patch is. But this is not the only way!&lt;&#x2F;p&gt;
+&lt;p&gt;There are things known as &amp;quot;Windows hooks&amp;quot; which allow us to inject entire DLLs (Dynamic Loaded Libraries). We could also try mapping an existing program into the address space of the victim thread. Or we could create a remote thread which loads the library. Here&#x27;s the more detailed &lt;a href=&quot;https:&#x2F;&#x2F;www.codeproject.com&#x2F;Articles&#x2F;4610&#x2F;Three-Ways-to-Inject-Your-Code-into-Another-Proces&quot;&gt;Three Ways to Inject Your Code into Another Process&lt;&#x2F;a&gt; article.&lt;&#x2F;p&gt;
+&lt;p&gt;When writing this post, I discovered other things, such as &lt;a href=&quot;https:&#x2F;&#x2F;duckduckgo.com&#x2F;?t=ffcm&amp;amp;q=SE_DEBUG_NAME&amp;amp;ia=web&quot;&gt;what the &lt;code&gt;SE_DEBUG_NAME&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; was and if I needed it, &lt;a href=&quot;https:&#x2F;&#x2F;forum.exetools.com&#x2F;showthread.php?t=8963&quot;&gt;why &lt;code&gt;VirtualAlloc&lt;&#x2F;code&gt; was failing&lt;&#x2F;a&gt; or &lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;a&#x2F;21683133&#x2F;&quot;&gt;why could it be failing&lt;&#x2F;a&gt;, &lt;a href=&quot;https:&#x2F;&#x2F;social.msdn.microsoft.com&#x2F;Forums&#x2F;en-US&#x2F;4ccf4dd8-eb43-4f5e-8860-c588d6a4f880&#x2F;virtualallocex-memreserve-pagereadwrite-has-failed-with-system-error-code-487&quot;&gt;what the error code meant&lt;&#x2F;a&gt;, among a couple other things. So there is definitely a lot to learn about this topic&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;finale&quot;&gt;Finale&lt;&#x2F;h2&gt;
+&lt;p&gt;This post was a bit bittersweet for me! One takeaway definitely is the need to be a bit more creative when it comes down to studying how a different program works, but after all, if Cheat Engine can do it, so can we. There are still some unknowns left, and some shortcuts which we could&#x27;ve avoided, but regardless, we&#x27;ve seen how we can make it work. Making it ergonomic or more customizable comes later. Really, sometimes you just need to &lt;a href=&quot;https:&#x2F;&#x2F;jacobian.org&#x2F;2021&#x2F;apr&#x2F;7&#x2F;embrace-the-grind&#x2F;&quot;&gt;embrace the grind&lt;&#x2F;a&gt; and get a first working version out. Don&#x27;t obsess with making it perfect or cleaner at first, it&#x27;s such a waste of time (if you &lt;em&gt;are&lt;&#x2F;em&gt; going to clean it up in the end, plan ahead, estimate how long it would take, and put aside your changes until the cleaning is done).&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lonami&#x2F;memo&quot;&gt;code for this post&lt;&#x2F;a&gt; is available over at my GitHub. You can run &lt;code&gt;git checkout step7&lt;&#x2F;code&gt; after cloning the repository to get the right version of the code. Again, only the code necessary to complete the step is included at the &lt;code&gt;step6&lt;&#x2F;code&gt; tag.&lt;&#x2F;p&gt;
+&lt;p&gt;In the next post, we&#x27;ll tackle the eighth step of the tutorial: Multilevel pointers. This step is what actually got me inspired into starting this entire series, which is why you may have felt this entry a bit more rushed. It is fairly more complicated than &lt;a href=&quot;&#x2F;blog&#x2F;woce-6&quot;&gt;part 6&lt;&#x2F;a&gt; with a single pointer, because there&#x27;s some ingenious work that needs to be done in order to efficiently, and automatically, solve it. I didn&#x27;t manage to figure it out before starting the series, but maybe we&#x27;re prepared now?&lt;&#x2F;p&gt;
+&lt;p&gt;The next post will also be the second-to-last entry in this series (the last step looks pretty tough as well!). After that, there are bonus levels of an actual graphical game, but as far as I can tell, it&#x27;s there to gain a bit more experience with something more &amp;quot;serious&amp;quot;, which I will probably leave as an exercise to the reader.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;footnotes&quot;&gt;Footnotes&lt;&#x2F;h3&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;That &amp;quot;little&amp;quot; hiccup of me trying to figure out how Cheat Engine was finding that precise working location is what put an end to my one-blog-per-week streak. Ah well, sometimes taking a break from something and coming back to it later on just makes the problem obvious (or in this case, a new simple idea which happened to work).&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;2&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;2&lt;&#x2F;sup&gt;
+&lt;p&gt;I&#x27;m still not sure why we could not allocate near the first bytes of the free region, but we could do so just fine near the end.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+</content>
+	</entry>
 	<entry xml:lang="en">
 		<title>Writing our own Cheat Engine: Pointers</title>
 		<published>2021-03-13T00:00:00+00:00</published>
@@ -20,12 +548,13 @@
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-4&quot;&gt;Part 4: Floating points&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;Part 6: Pointers&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-7&quot;&gt;Part 7: Code Injection&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In part 5 we wrote our very own debugger. We learnt that Cheat Engine is using hardware breakpoints to watch memory change, and how to do the same ourselves. We also learnt that hardware points are not the only way to achieve the effect of watchpoints, although they certainly are the fastest and cleanest approach.&lt;&#x2F;p&gt;
 &lt;p&gt;In this post, we will be reusing some of that knowledge to find out a closely related value, the &lt;em&gt;pointer&lt;&#x2F;em&gt; that points to the real value&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. As a quick reminder, a pointer is nothing but an &lt;code&gt;usize&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; representing the address of another portion of memory, in this case, the actual value we will be scanning for. A pointer is a value that, well, points elsewhere. In Rust we normally use reference instead, which are safer (typed and their lifetime is tracked) than pointers, but in the end we can achieve the same with both.&lt;&#x2F;p&gt;
 &lt;p&gt;Why care about pointers? It turns out that things, such as your current health in-game, are very unlikely to end up in the same memory position when you restart the game (or even change to another level, or even during gameplay). So, if you perform a scan and find that the address where your health is stored is &lt;code&gt;0x73AABABE&lt;&#x2F;code&gt;, you might be tempted to save it and reuse it next time you launch the game. Now you don&#x27;t need to scan for it again! Alas, as soon as you restart the game, the health is now stored at &lt;code&gt;0x5AADBEEF&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
 &lt;p&gt;Not all hope is lost! The game must &lt;em&gt;somehow&lt;&#x2F;em&gt; have a way to reliably find this value, and the way it&#x27;s done is with pointers. There will always be some base address that holds a pointer, and the game code knows where to find this pointer. If we are also able to find the pointer at said base address, and follow it ourselves (&amp;quot;dereferencing&amp;quot; it), we can perform the same steps the game is doing, and reliably find the health no matter how much we restart the game&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#3&quot;&gt;3&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;.&lt;&#x2F;p&gt;
-&lt;h2 id=&quot;code-finder&quot;&gt;Code finder&lt;&#x2F;h2&gt;
+&lt;h2 id=&quot;pointers&quot;&gt;Pointers&lt;&#x2F;h2&gt;
 &lt;details open&gt;&lt;summary&gt;Cheat Engine Tutorial: Step 6&lt;&#x2F;summary&gt;
 &lt;blockquote&gt;
 &lt;p&gt;In the previous step I explained how to use the Code finder to handle changing locations. But that method alone makes it difficult to find the address to set the values you want. That&#x27;s why there are pointers:&lt;&#x2F;p&gt;
@@ -412,7 +941,7 @@ println!(
 &lt;p&gt;So, there&#x27;s no &amp;quot;automated&amp;quot; solution to all of this? That&#x27;s the end? Well, yes, once you have a pointer you can dereference it once and then write to the given address to complete the tutorial step! I can understand how this would feel a bit underwhelming, but in all fairness, we were required to pretty-print assembly to guess what pointer address we could potentially need to look for. There is an &lt;a href=&quot;https:&#x2F;&#x2F;www.intel.com&#x2F;content&#x2F;www&#x2F;us&#x2F;en&#x2F;architecture-and-technology&#x2F;64-ia-32-architectures-software-developer-vol-2a-manual.html&quot;&gt;stupidly large amount of instructions&lt;&#x2F;a&gt;, and I&#x27;m sure a lot of them can access memory, so automating that would be rough. We were lucky that the instructions right before the one that hit the breakpoint were changing the memory address, but you could imagine this value coming from somewhere completely different. It could also be using a myriad of different techniques to apply the offset. I would argue manual intervention is a must here&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#7&quot;&gt;7&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;.&lt;&#x2F;p&gt;
 &lt;p&gt;We have learnt how to pretty-print instructions, and had a very gentle introduction to figuring out what we may need to look for. The code to retrieve the loaded modules, and their corresponding regions, will come in handy later on. Having access to this information lets us know when to stop looking for additional pointers. As soon as a pointer is found within a memory region corresponding to a base module, we&#x27;re done! Also, I know the title doesn&#x27;t really much the contents of this entry (sorry about that), but I&#x27;m just following the convention of calling it whatever the Cheat Engine tutorial calls them.&lt;&#x2F;p&gt;
 &lt;p&gt;The &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lonami&#x2F;memo&quot;&gt;code for this post&lt;&#x2F;a&gt; is available over at my GitHub. You can run &lt;code&gt;git checkout step6&lt;&#x2F;code&gt; after cloning the repository to get the right version of the code, although you will have to &lt;code&gt;checkout&lt;&#x2F;code&gt; to individual commits if you want to review, for example, how the instructions were printed out. Only the code necessary to complete the step is included at the &lt;code&gt;step6&lt;&#x2F;code&gt; tag.&lt;&#x2F;p&gt;
-&lt;p&gt;In the next post, we&#x27;ll tackle the sixth step of the tutorial: Code Injection. This will be pretty similar to part 5, but instead of writing out a simple NOP instruction, we will have to get a bit more creative.&lt;&#x2F;p&gt;
+&lt;p&gt;In the &lt;a href=&quot;&#x2F;blog&#x2F;woce-7&quot;&gt;next post&lt;&#x2F;a&gt;, we&#x27;ll tackle the seventh step of the tutorial: Code Injection. This will be pretty similar to part 5, but instead of writing out a simple NOP instruction, we will have to get a bit more creative.&lt;&#x2F;p&gt;
 &lt;h3 id=&quot;footnotes&quot;&gt;Footnotes&lt;&#x2F;h3&gt;
 &lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
 &lt;p&gt;This will only be a gentle introduction to pointers. Part 8 of this series will have to rely on more advanced techniques.&lt;&#x2F;p&gt;
@@ -451,6 +980,7 @@ println!(
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-4&quot;&gt;Part 4: Floating points&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;Part 5: Code finder&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-6&quot;&gt;Part 6: Pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-7&quot;&gt;Part 7: Code Injection&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In part 4 we spent a good deal of time trying to make our scans generic, and now we have something that works&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;! Now that the scanning is fairly powerful and all covered, the Cheat Engine tutorial shifts focus into slightly more advanced techniques that you will most certainly need in anything bigger than a toy program.&lt;&#x2F;p&gt;
 &lt;p&gt;It&#x27;s time to write our very own &lt;strong&gt;debugger&lt;&#x2F;strong&gt; in Rust!&lt;&#x2F;p&gt;
@@ -1032,6 +1562,7 @@ pub fn nop_last_instruction(&amp;amp;self, addr: usize) -&amp;gt; io::Result&amp
 &lt;li&gt;Part 4: Floating points&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-6&quot;&gt;Part 6: Pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-7&quot;&gt;Part 7: Code Injection&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In part 3 we did a fair amount of plumbing in order to support scan modes beyond the trivial &amp;quot;exact value scan&amp;quot;. As a result, we have abstracted away the &lt;code&gt;Scan&lt;&#x2F;code&gt;, &lt;code&gt;CandidateLocations&lt;&#x2F;code&gt; and &lt;code&gt;Value&lt;&#x2F;code&gt; types as a separate &lt;code&gt;enum&lt;&#x2F;code&gt; each. Scanning for changed memory regions in an opened process can now be achieved with three lines of code:&lt;&#x2F;p&gt;
 &lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let regions = process.memory_regions();
@@ -1447,6 +1978,7 @@ pub unsafe trait Scannable {
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-4&quot;&gt;Part 4: Floating points&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-6&quot;&gt;Part 6: Pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-7&quot;&gt;Part 7: Code Injection&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In part 2 we left off with a bit of a cliff-hanger. Our little program is now able to scan for an exact value, remember the couple hundred addresses pointing to said value, and perform subsequent scans to narrow the list of addresses down until we&#x27;re left with a handful of them.&lt;&#x2F;p&gt;
 &lt;p&gt;However, it is not always the case that you have an exact value to work with. The best you can do in these cases is guess what the software might be storing. For example, it could be a floating point for your current movement speed in a game, or an integer for your current health.&lt;&#x2F;p&gt;
@@ -1803,6 +2335,7 @@ Found 223791 locations
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-4&quot;&gt;Part 4: Floating points&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-6&quot;&gt;Part 6: Pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-7&quot;&gt;Part 7: Code Injection&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In the introduction, we spent a good deal of time enumerating all running processes just so we could find out the pid we cared about. With the pid now in our hands, we can do pretty much anything to its corresponding process.&lt;&#x2F;p&gt;
 &lt;p&gt;It&#x27;s now time to read the process&#x27; memory and write to it. If our process was a single-player game, this would enable us to do things like setting a very high value on the player&#x27;s current health pool, making us invincible. This technique will often not work for multi-player games, because the server likely knows your true current health (the most you could probably do is make the client render an incorrect value). However, if the server is crappy and it trusts the client, then you&#x27;re still free to mess around with your current health.&lt;&#x2F;p&gt;
@@ -2226,6 +2759,7 @@ Written 4 bytes to [15d8b90]
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-4&quot;&gt;Part 4: Floating points&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-6&quot;&gt;Part 6: Pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-7&quot;&gt;Part 7: Code Injection&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;cheatengine.org&#x2F;&quot;&gt;Cheat Engine&lt;&#x2F;a&gt; is a tool designed to modify single player games and contains other useful tools within itself that enable its users to debug games or other applications. It comes with a memory scanner, (dis)assembler, inspection tools and a handful other things. In this series, we will be writing our own tiny Cheat Engine capable of solving all steps of the tutorial, and diving into how it all works underneath.&lt;&#x2F;p&gt;
 &lt;p&gt;Needless to say, we&#x27;re doing this for private and educational purposes only. One has to make sure to not violate the EULA or ToS of the specific application we&#x27;re attaching to. This series, much like cheatengine.org, does not condone the illegal use of the code shared.&lt;&#x2F;p&gt;
@@ -4020,7 +4554,7 @@ want to start with, and drag it to the node you want it to be connected to.&lt;&
 		<link href="https://lonami.dev/blog/installing-nixos/" type="text/html"/>
 		<id>https://lonami.dev/blog/installing-nixos/</id>
 		<content type="html">&lt;h2 id=&quot;update&quot;&gt;Update&lt;&#x2F;h2&gt;
-&lt;p&gt;&lt;em&gt;Please see &lt;a href=&quot;..&#x2F;installing_nixos_2&#x2F;index.html&quot;&gt;my followup post with NixOS&lt;&#x2F;a&gt; for a far better experience with it&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;em&gt;Please see &lt;a href=&quot;&#x2F;blog&#x2F;installing-nixos-2&quot;&gt;my followup post with NixOS&lt;&#x2F;a&gt; for a far better experience with it&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;
 &lt;hr &#x2F;&gt;
 &lt;p&gt;Today I decided to install &lt;a href=&quot;http:&#x2F;&#x2F;nixos.org&#x2F;&quot;&gt;NixOS&lt;&#x2F;a&gt; as a recommendation, a purely functional Linux distribution, since &lt;a href=&quot;https:&#x2F;&#x2F;xubuntu.org&#x2F;&quot;&gt;Xubuntu&lt;&#x2F;a&gt; kept crashing. Here&#x27;s my journey, and how I managed to install it from a terminal for the first time in my life. Steps aren&#x27;t hard, but they may not seem obvious at first.&lt;&#x2F;p&gt;
 &lt;ul&gt;
