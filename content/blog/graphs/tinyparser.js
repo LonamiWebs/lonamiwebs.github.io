@@ -27,6 +27,11 @@ const mathify = content => {
       } else if (c === '_') {
           result += '<sub>';
           close = '</sub>';
+      } else if (c === '·') {
+        result += '&nbsp;'
+      } else if (c === '#') {
+          result += '<strong>';
+          close = '</strong>';
       } else if (c === ' ' || c == '\n') {
           if (close !== null) {
               result += close
@@ -49,7 +54,7 @@ const parse_maths = html => html.replaceAll(/\(\(.+?\)\)/g, match =>
 
 Array.from(document.getElementsByClassName('matrix')).forEach(matrix => {
   let result = '<table>'
-  matrix.innerHTML.trim().split('\\').forEach(row => {
+  matrix.innerHTML.trim().split('\\\\').forEach(row => {
       result += '<tr>'
       row.trim().split("'").forEach(elem => {
           result += `<td>${mathify(elem.trim())}</td>`
