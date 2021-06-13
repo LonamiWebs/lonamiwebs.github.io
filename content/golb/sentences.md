@@ -4,7 +4,7 @@ date = 2018-01-31
 updated = 2018-01-31
 +++
 
-> Don't know English? [Read the Spanish version instead](spanish.html).
+> ¿No hablas inglés? [Lee la versión en español](/golb/frases).
 
 Just a few sentences that I've been gathering among the years and I think are worthy of being kept somewhere.
 
