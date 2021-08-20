@@ -16,6 +16,7 @@ This is part 1 on the *Writing our own Cheat Engine* series:
 * [Part 5: Code finder](/blog/woce-5)
 * [Part 6: Pointers](/blog/woce-6)
 * [Part 7: Code Injection](/blog/woce-7)
+* [Part 8: Multilevel pointers](/blog/woce-8)
 
 [Cheat Engine][ce] is a tool designed to modify single player games and contains other useful tools within itself that enable its users to debug games or other applications. It comes with a memory scanner, (dis)assembler, inspection tools and a handful other things. In this series, we will be writing our own tiny Cheat Engine capable of solving all steps of the tutorial, and diving into how it all works underneath.
 

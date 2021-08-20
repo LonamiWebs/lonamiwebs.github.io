@@ -16,6 +16,7 @@ This is part 6 on the *Writing our own Cheat Engine* series:
 * [Part 5: Code finder](/blog/woce-5)
 * Part 6: Pointers
 * [Part 7: Code Injection](/blog/woce-7)
+* [Part 8: Multilevel pointers](/blog/woce-8)
 
 In part 5 we wrote our very own debugger. We learnt that Cheat Engine is using hardware breakpoints to watch memory change, and how to do the same ourselves. We also learnt that hardware points are not the only way to achieve the effect of watchpoints, although they certainly are the fastest and cleanest approach.
 

@@ -16,6 +16,7 @@ This is part 7 on the *Writing our own Cheat Engine* series:
 * [Part 5: Code finder](/blog/woce-5)
 * [Part 6: Pointers](/blog/woce-6)
 * Part 7: Code Injection
+* [Part 8: Multilevel pointers](/blog/woce-8)
 
 In part 6 we ended up spending most of the time in upgrading our breakpoint support to have a proper implementation, rather than using some hardcoded constants. We then made use of the new and improved breakpoint support to find what code accessed an specific memory address our very own debugger. To complete the tutorial, we read and understood the surrounding assembly around the code accessing our address and figured out what pointer to look for. In the end, we were left with a base address that we can rely on and follow to reach the target memory address, without having to scan for it every time.
 
@@ -472,11 +473,11 @@ When writing this post, I discovered other things, such as [what the `SE_DEBUG_N
 
 This post was a bit bittersweet for me! One takeaway definitely is the need to be a bit more creative when it comes down to studying how a different program works, but after all, if Cheat Engine can do it, so can we. There are still some unknowns left, and some shortcuts which we could've avoided, but regardless, we've seen how we can make it work. Making it ergonomic or more customizable comes later. Really, sometimes you just need to [embrace the grind][grind] and get a first working version out. Don't obsess with making it perfect or cleaner at first, it's such a waste of time (if you *are* going to clean it up in the end, plan ahead, estimate how long it would take, and put aside your changes until the cleaning is done).
 
-The [code for this post][code] is available over at my GitHub. You can run `git checkout step7` after cloning the repository to get the right version of the code. Again, only the code necessary to complete the step is included at the `step6` tag.
+The [code for this post][code] is available over at my GitHub. You can run `git checkout step7` after cloning the repository to get the right version of the code. Again, only the code necessary to complete the step is included at the `step7` tag.
 
 In the next post, we'll tackle the eighth step of the tutorial: Multilevel pointers. This step is what actually got me inspired into starting this entire series, which is why you may have felt this entry a bit more rushed. It is fairly more complicated than [part 6](/blog/woce-6) with a single pointer, because there's some ingenious work that needs to be done in order to efficiently, and automatically, solve it. I didn't manage to figure it out before starting the series, but maybe we're prepared now?
 
-The next post will also be the second-to-last entry in this series (the last step looks pretty tough as well!). After that, there are bonus levels of an actual graphical game, but as far as I can tell, it's there to gain a bit more experience with something more "serious", which I will probably leave as an exercise to the reader.
+The [next post](/blog/woce-8) will also be the second-to-last entry in this series (the last step looks pretty tough as well!). After that, there are bonus levels of an actual graphical game, but as far as I can tell, it's there to gain a bit more experience with something more "serious", which I will probably leave as an exercise to the reader.
 
 ### Footnotes
 

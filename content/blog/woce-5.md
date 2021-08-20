@@ -16,6 +16,7 @@ This is part 5 on the *Writing our own Cheat Engine* series:
 * Part 5: Code finder
 * [Part 6: Pointers](/blog/woce-6)
 * [Part 7: Code Injection](/blog/woce-7)
+* [Part 8: Multilevel pointers](/blog/woce-8)
 
 In part 4 we spent a good deal of time trying to make our scans generic, and now we have something that works[^1]! Now that the scanning is fairly powerful and all covered, the Cheat Engine tutorial shifts focus into slightly more advanced techniques that you will most certainly need in anything bigger than a toy program.
 

@@ -16,6 +16,7 @@ This is part 4 on the *Writing our own Cheat Engine* series:
 * [Part 5: Code finder](/blog/woce-5)
 * [Part 6: Pointers](/blog/woce-6)
 * [Part 7: Code Injection](/blog/woce-7)
+* [Part 8: Multilevel pointers](/blog/woce-8)
 
 In part 3 we did a fair amount of plumbing in order to support scan modes beyond the trivial "exact value scan". As a result, we have abstracted away the `Scan`, `CandidateLocations` and `Value` types as a separate `enum` each. Scanning for changed memory regions in an opened process can now be achieved with three lines of code:
 
