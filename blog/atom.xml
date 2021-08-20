@@ -4,8 +4,729 @@
 	<link href="https://lonami.dev/blog/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://lonami.dev/blog/"/>
 	<generator uri="https://www.getzola.org/">Zola</generator>
-	<updated>2021-05-08T00:00:00+00:00</updated>
+	<updated>2021-08-20T00:00:00+00:00</updated>
 	<id>https://lonami.dev/blog/atom.xml</id>
+	<entry xml:lang="en">
+		<title>Writing our own Cheat Engine: Multilevel pointers</title>
+		<published>2021-08-20T00:00:00+00:00</published>
+		<updated>2021-08-20T00:00:00+00:00</updated>
+		<link href="https://lonami.dev/blog/woce-8/" type="text/html"/>
+		<id>https://lonami.dev/blog/woce-8/</id>
+		<content type="html">&lt;p&gt;This is part 8 on the &lt;em&gt;Writing our own Cheat Engine&lt;&#x2F;em&gt; series:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-1&quot;&gt;Part 1: Introduction&lt;&#x2F;a&gt; (start here if you&#x27;re new to the series!)&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-2&quot;&gt;Part 2: Exact Value scanning&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-3&quot;&gt;Part 3: Unknown initial value&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-4&quot;&gt;Part 4: Floating points&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-6&quot;&gt;Part 6: Pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-7&quot;&gt;Part 7: Code Injection&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Part 8: Multilevel pointers&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;In part 7 we learnt how to allocate memory in the remote process, and how we can use that memory to inject our own code for the remote process to execute. Although we didn&#x27;t bother with an assembler, it shows just how strong this technique can really be. With it we&#x27;ve completed the Read, Write and eXecute trio!&lt;&#x2F;p&gt;
+&lt;p&gt;Now it&#x27;s time to find how we can make our work persist. Having to manually find where some value lives is boring. If the game is able to find the player&#x27;s health for its calculations, then why can&#x27;t we?&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;multilevel-pointers&quot;&gt;Multilevel pointers&lt;&#x2F;h2&gt;
+&lt;details open&gt;&lt;summary&gt;Cheat Engine Tutorial: Step 7&lt;&#x2F;summary&gt;
+&lt;blockquote&gt;
+&lt;p&gt;This step will explain how to use multi-level pointers.&lt;&#x2F;p&gt;
+&lt;p&gt;In step 6 you had a simple level-1 pointer, with the first address found already being the real base address. This step however is a level-4 pointer. It has a pointer to a pointer to a pointer to a pointer to a pointer to the health.&lt;&#x2F;p&gt;
+&lt;p&gt;You basicly do the same as in step 6. Find out what accesses the value, look at the instruction and what probably is the base pointer value, and what is the offset, and already fill that in or write it down. But in this case the address you&#x27;ll find will also be a pointer. You just have to find out the pointer to that pointer exactly the same way as you did with the value. Find out what accesses that address you found, look at the assembler instruction, note the probable instruction and offset, and use that, and continue till you can&#x27;t get any further (usually when the base address is a static address, shown up as green).&lt;&#x2F;p&gt;
+&lt;p&gt;Click Change Value to let the tutorial access the health. If you think you&#x27;ve found the pointer path click Change Register. The pointers and value will then change and you&#x27;ll have 3 seconds to freeze the address to 5000.&lt;&#x2F;p&gt;
+&lt;p&gt;Extra: This problem can also be solved using a auto assembler script, or using the pointer scanner.&lt;&#x2F;p&gt;
+&lt;p&gt;Extra2: In some situations it is recommended to change ce&#x27;s codefinder settings to Access violations when encountering instructions like mov eax,[eax] since debugregisters show it AFTER it was changed, making it hard to find out the the value of the pointer.&lt;&#x2F;p&gt;
+&lt;p&gt;Extra3: If you&#x27;re still reading. You might notice that when looking at the assembler instructions that the pointer is being read and filled out in the same codeblock (same routine, if you know assembler, look up till the start of the routine). This doesn&#x27;t always happen, but can be really useful in finding a pointer when debugging is troublesome.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;&#x2F;details&gt;
+&lt;h2 id=&quot;pointers-pointing-points&quot;&gt;Pointers pointing points&lt;&#x2F;h2&gt;
+&lt;p&gt;If you say &amp;quot;pointer&amp;quot; enough, you&#x27;ll end up having &lt;a href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Semantic_satiation&quot;&gt;semantic satiation&lt;&#x2F;a&gt;. My goal by the end of this post is that you actually get to experience that phenomenon. Anyway, no real program would actually have pointers pointing to pointers which themselves point to a different point (you guessed it, another pointer pointing to yet another pointer), right? That would be silly. Why would I have a value behind, say, 5 references? I&#x27;m not writing Rust code like &lt;code&gt;&amp;amp;&amp;amp;&amp;amp;&amp;amp;&amp;amp;value&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;But I am sure you are much more likely to be doing something like &lt;code&gt;game.world.areas[i].players[j].regen()&lt;&#x2F;code&gt;. And there&#x27;s a lot of references there:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt; game.world.areas[i].players[j].regen()
+^    ^           ^^^        ^^^      ^^
+|    |            |          |        \called by &amp;amp;mut ref
+|    |            |           \taking by &amp;amp;mut ref
+|    |             \taking by &amp;amp;mut ref
+|     \accessing by &amp;amp;mut ref
+ \this game is actually in a `Box` (so you&#x27;re accessing it behind other ref)
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Each of those is a different structure, with many fields each (for example, the areas also contain enemies and items dropped in different vectors. So a pointer does not necessarily point directly to the desired field! To complicate things further, the same reference to one thing may be stored in multiple locations, making it possible to find your goal address through many different paths.&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;#[repr(C)] &#x2F;&#x2F; &amp;lt;- used for clarity to get precise offsets
+struct Area {
+    &#x2F;* offset 00 *&#x2F; pub monsters: Vec&amp;lt;Monster&amp;gt;,
+    &#x2F;* offset 24 *&#x2F; pub items: Vec&amp;lt;Item&amp;gt;,
+    &#x2F;* offset 48 *&#x2F; pub kill_goal: u32,
+    &#x2F;* offset 52 *&#x2F; pub players: Vec&amp;lt;Player&amp;gt;,
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;If you have a reference to some &lt;code&gt;&amp;amp;Area&lt;&#x2F;code&gt; but access the &lt;code&gt;players&lt;&#x2F;code&gt; field, you actually need to read from &lt;code&gt;[addrof area + 52]&lt;&#x2F;code&gt;. This is why the tutorial step suggests to &amp;quot;look at the instruction&amp;quot;, because it very likely encodes the offset somewhere (if not directly, nearby). Looking at instructions to determine offsets works because normally people want their games to be fast, so they make good use of the available CPU instructions. Obfuscating hot code could slow a game way too much (but it may still be done to some degree!).&lt;&#x2F;p&gt;
+&lt;p&gt;The tutorial suggests to complete this step in the same way we did back in step 6. Add a watchpoint, find out what code is accessing this address, look around the disassembly, and write down your findings. Although this technique definitely is a valid way to approach the problem, it is quite tedious and error-prone. It would be hard to fully automate this, because who knows what shenanigans the code could be doing to calculate the right pointer and offset!&lt;&#x2F;p&gt;
+&lt;p&gt;It&#x27;s also pretty intrusive, because it requires us to attach ourselves as the debugger of the victim program. I hardly have any experience writing debuggers, leave alone writing them in a way that makes them hard to detect! I&#x27;m sure it&#x27;s a very interesting topic, but it&#x27;s not the current topic at hand, so we&#x27;ll leave it be. Furthermore, we&#x27;ve already gone that route, so it would be silly to repeat that here, just a longer version of it.&lt;&#x2F;p&gt;
+&lt;p&gt;You may have noticed the &amp;quot;extra&amp;quot; information the tutorial step provides:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Extra: This problem can also be solved using a auto assembler script, or using the pointer scanner.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;We&#x27;ve already done the &amp;quot;auto assembler script&amp;quot; part before (in part 7). I&#x27;m not sure how you would approach this problem with that technique. Maybe one could dig until the base pointer, and replace whatever read is happening there with a hardcoded value so that the game thinks that&#x27;s what it actually read? I&#x27;m not sure if it would be possible to solve with injected code without following the entire pointer chain. But anyway, we&#x27;re not doing that, no manual work will happen on this one. No, we&#x27;re interested in the &lt;span class=&quot;rainbow&quot;&gt;pointer scanner&lt;&#x2F;span&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;pointer-maps&quot;&gt;Pointer maps&lt;&#x2F;h2&gt;
+&lt;p&gt;Once you find a value in Cheat Engine, you have the option to &amp;quot;Generate pointermap&amp;quot;. This will prompt you to select a file where the generated pointermap will be stored, in &lt;code&gt;.scandata&lt;&#x2F;code&gt; format (along with its &lt;code&gt;.addresslist&lt;&#x2F;code&gt;). If you&#x27;re scanning a lot of memory, you will get to see a progress window (otherwise, it will be pretty much instant), along with some statistics:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Unique pointervalues in target.&lt;&#x2F;li&gt;
+&lt;li&gt;Scan duration.&lt;&#x2F;li&gt;
+&lt;li&gt;Paths evaluated.&lt;&#x2F;li&gt;
+&lt;li&gt;Paths &#x2F; seconds.&lt;&#x2F;li&gt;
+&lt;li&gt;Static and dynamic queue sizes.&lt;&#x2F;li&gt;
+&lt;li&gt;Results found.&lt;&#x2F;li&gt;
+&lt;li&gt;Time spent writing.&lt;&#x2F;li&gt;
+&lt;li&gt;Lowest known path.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;My guess for &amp;quot;unique pointervalues&amp;quot; is the set of pointers found so far, and the queues may be used by the way the scan is done. The rest of information is pretty much self-explanatory (lowest known path probably is the shortest &amp;quot;pointer path&amp;quot; found so far). When I&#x27;m talking about &amp;quot;pointer paths&amp;quot;, I&#x27;m referring to a known, static base address that won&#x27;t change, with a list of offsets that, when followed, arrive at some desired value in memory (for example, your character&#x27;s health). For this step, the solution found with Cheat Engine is a good example:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let offsets = [10, 18, 0, 18]; &#x2F;&#x2F; list of offsets
+let mut addr = EXE_BASE_ADDR + 0x00306B00; &#x2F;&#x2F; current addr (initialized to base addr)
+
+&#x2F;&#x2F; follow the path:
+&#x2F;&#x2F; addr_at(&amp;quot;Tutorial-x86_64.exe&amp;quot;+00306B00) -&amp;gt; 0165F260
+&#x2F;&#x2F; addr_at(10+0165F260) -&amp;gt; 01690000
+&#x2F;&#x2F; addr_at(18+01690000) -&amp;gt; 01677790
+&#x2F;&#x2F; addr_at( 0+01677790) -&amp;gt; 01601A80
+&#x2F;&#x2F;         18+01601A80  -&amp;gt; 01601A98
+for offset in offsets {
+    addr = process.read_addr_at(addr);
+    addr += offset;
+}
+
+let value = process.read_desired_value_at(addr);
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;After generating the pointermap, the idea is to force the game to change the pointer path (for example, by closing and re-opening the game again) and find your target value once again. For the tutorial, we can just change the pointer. After we find the value again, we do a &amp;quot;Pointer scan for this address&amp;quot;. The &amp;quot;Pointerscanner options&amp;quot; has a checkbox to &amp;quot;Compare results with other saved pointermap(s)&amp;quot;. Running this seems to generate a second pointermap, and after some magic, both are compared and the one true pointer path is found&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;There&#x27;s a bunch of files generated:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;.scandata&lt;&#x2F;code&gt; is a bunch of binary data that I have no idea what could contain.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;.scandata.addresslist&lt;&#x2F;code&gt; seems to contain &lt;code&gt;ADDRESS=DESCRIPTION&lt;&#x2F;code&gt;,
+one per line, of the addresses you had &amp;quot;saved&amp;quot; when the first
+pointermap was made. This seems to be used when performing the pointer
+scan and comparing results (so that you can choose the address you want
+to compare it to).&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;.PTR&lt;&#x2F;code&gt; is 1201 bytes (such an strange size) and seems to contain a list of the modules loaded by the program&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;.PTR.results.#&lt;&#x2F;code&gt;, where &lt;code&gt;#&lt;&#x2F;code&gt; is a number between 0 and 8, are mostly empty files (except for 4 which is 14 bytes).&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Now, there&#x27;s this one option under &amp;quot;advanced&amp;quot; known as &amp;quot;Compress pointerscan file&amp;quot;. The long description reads (emphasis mine):&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Compresses the generated .PTR files &lt;em&gt;slightly&lt;&#x2F;em&gt;, so they take less space on the disk and less time writing to disk. Most of the time the bottleneck of a pointerscan is disk writing, so it is recommended to use this option.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Slightly, huh. Well, for the tutorial, which is using (according to the task manager) 2&#x27;364 K, running the scan with the compression disabled generates roughly &lt;em&gt;5 gigabytes&lt;&#x2F;em&gt; across the nine &lt;code&gt;.PTR.results&lt;&#x2F;code&gt;. That&#x27;s… not too shabby for a &amp;quot;slight&amp;quot; compression.&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s guess what those files are storing. The screen with the results does say it found uh, well you know, the usual, 122&#x27;808&#x27;639 pointer paths. This is the result of scanning for an address. That&#x27;s (very) roughly 40 bytes per path, and assuming 8 bytes for each address&#x2F;offset, equates to 5 hops. I guess the math kind of checks out?&lt;&#x2F;p&gt;
+&lt;p&gt;On the other hand, &amp;quot;generate pointermap&amp;quot; just spits out the &lt;code&gt;.scandata&lt;&#x2F;code&gt; at roughly 60KB. So these two options are definitely doing something very, very different. And I have no idea what either of these are doing. Let&#x27;s dive into Cheat Engine&#x27;s &amp;quot;advanced options&amp;quot; for the pointer scan to try and gain some insight. I will be listing all the settings available in the scan form and adding a bit on whether I think they&#x27;re useful to us or not.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;scan-options&quot;&gt;Scan options&lt;&#x2F;h1&gt;
+&lt;p&gt;The &lt;em&gt;Pointerscanner scanoptions&lt;&#x2F;em&gt; window has plenty of options that are extremely valuable to gain insight of what&#x27;s going on behind the scenes without having to dig into the code. At the very top we have three modes:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Scan for address&lt;&#x2F;li&gt;
+&lt;li&gt;Scan for addresses with value&lt;&#x2F;li&gt;
+&lt;li&gt;Generate pointermap&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;The third option is what we use during the first step, and the first option for the second step.&lt;&#x2F;p&gt;
+&lt;p&gt;When using either the first or second mode, you can also check &lt;em&gt;Use saved pointermap&lt;&#x2F;em&gt; which you can use if you have created a pointermap on a system that runs the game, but you wish to do the scan on another system (or multiple systems).&lt;&#x2F;p&gt;
+&lt;p&gt;With the first or second mode, you can also &lt;em&gt;Compare results with other saved pointermap(s)&lt;&#x2F;em&gt; which, when ticked, lets you add other pointermaps which will be used to verify that the pointers it finds are correct. You do have to fill in the correct address for each pointermap provided, and one should expect at least the size of the game itself in memory for every pointermap used. We know this step is key, but we don&#x27;t know how that comparison could be possibly done.&lt;&#x2F;p&gt;
+&lt;p&gt;The checkbox &lt;em&gt;Include system modules&lt;&#x2F;em&gt; I presume also scans in system modules and not just game&#x27;s own modules, which is useful if you suspect the value lives elsewhere. Not helpful for us right now, but good to know this is a possibility.&lt;&#x2F;p&gt;
+&lt;p&gt;Apparently, Cheat Engine can improve pointerscan with gathered heap data. The heap is used to figure out the offset sizes, instead of blindly guessing them. This should greatly improve speed and a lot less useless results and give perfect pointers, but if the game allocates gigantic chunks of heap memory, and then divides it up itself, this will give wrong results. If you only allow static and heap addresses in the path, when the address searched isn&#x27;t a heap address, the scan will return 0 results. I do not really know how Cheat Engine gathers heap data here to improve the pointerscan, but since this mode is unchecked by default, we should be fine without it.&lt;&#x2F;p&gt;
+&lt;p&gt;By default, the pointer path may only be inside the region 0000000000000000-7FFFFFFFFFFFFFFF. There&#x27;s a fancier option to limit scan to specified region file, which presumably enables a more complex, discontinuous region. Or you can filter pointers so that they end with specific offsets. Or you can indicate that the base address must be in specific range, which will only mark the given range as valid base address (this reduces the number of results, and internally makes use of the &amp;quot;Only find paths with a static address&amp;quot; feature by marking the provided range as static only, so it must be enabled).&lt;&#x2F;p&gt;
+&lt;p&gt;Pointers with read-only nodes are excluded by default, so the pointerscan will throw away memory that is readonly. When it looks for paths, it won&#x27;t encounter paths that pass through read only memory blocks. This is often faster and yields less useless results, but if the game decides to mark a pointer as readonly Cheat Engine won&#x27;t find it.&lt;&#x2F;p&gt;
+&lt;p&gt;Only paths with a static address are &amp;quot;found&amp;quot;. The pointerscan will only store a path when it starts with a static address (or easily looked up address). It may miss pointers that are accessed by special paths like thread local storage (but even then they&#x27;d be useless for Cheat Engine as they will change). When it&#x27;s disabled, it finds every single pointer path. Now, this bit is interesting, because the checkbox talks about &amp;quot;find&amp;quot;, but the description talks about &amp;quot;store&amp;quot;, so we can guess there&#x27;s no trick to only &amp;quot;finding&amp;quot; correct ones. It&#x27;s going to find a lot of things, and many of them will be discarded. It also mentions thread-local storage and how we probably shouldn&#x27;t worry about it.&lt;&#x2F;p&gt;
+&lt;p&gt;Cheat Engine won&#x27;t stop traversing a path when a static has been found by default. When the pointerscanner goes through the list of pointervalues with a specific value, this will stop exploring other paths as soon as it encounters a static pointer to that value. By enabling this option, some valid results could be missed. This talks about &amp;quot;pointervalues with a specific value&amp;quot;, which is a bit too obscure for me to try and make any sense out of it.&lt;&#x2F;p&gt;
+&lt;p&gt;Addresses must be 32-bit alligned. Only pointers that are stored in an address dividable by 4 are looked at. When disabled, it won&#x27;t bother. It enables fast scans, but &amp;quot;on some horrible designed games that you shouldn&#x27;t even play it won&#x27;t find the paths&amp;quot;. Values in memory are often aligned, so reducing the search space by 75% is a no-brainer.&lt;&#x2F;p&gt;
+&lt;p&gt;Cheat Engine can optionally verify that the first element of pointerstruct must point to module (e.g vtable). Object oriented programming languages tend to implement classobjects by having a pointer in the first element to something that describes the class. With this option enabled, Cheat Engine will check if it&#x27;s a classobject by checking that rule. If not, it won&#x27;t see it as a pointer. It should yield a tremendous speed increase and almost perfect pointers, but it doesn&#x27;t work with runtime generated classes (Java, .NET). Optionally, it can also accept non-module addresses. I have no idea how this is achieved, but since it&#x27;s disabled by default, we can forget about it.&lt;&#x2F;p&gt;
+&lt;p&gt;By default, no looping pointers are allowed. This will filter out pointerpaths that ended up in a loop (for example, base-&amp;gt;p1-&amp;gt;p2-&amp;gt;p3-&amp;gt;p1-&amp;gt;p4 since you could just as well do base-&amp;gt;p1-&amp;gt;p4 then, so throw this one away (base-&amp;gt;p1-&amp;gt;p4 will be found another way)). This gives less results so less diskspace used, but slightly slows down the scan as it needs to check for loops every single iteration. The thought of how much data the 5GB scan would generate without this option makes me shiver.&lt;&#x2F;p&gt;
+&lt;p&gt;Cheat Engine will allow stack addresses of the first thread(s) to be handled as static, which allows the stack of threads to be seen as static addresses by the pointerscan. The main thread is always a sure bet that it&#x27;s the first one in the list. And often the second thread created is pretty stable as well. With more there&#x27;s a bigger chance they get created and destroyed randomly. When a program enters a function and exits it, the stack pointer decreases and increases, and the data there gets written to. The farther the game is inside function calls, the more static the older data will be. With max stack offset you can set the max size that can be deemed as static enough (the max stackoffset to be deemed static enough is 4096 by default). It finds paths otherwise never found, but since there are more results, there&#x27;s more diskspace.&lt;&#x2F;p&gt;
+&lt;p&gt;Cheat Engine by default will look at the stacks of two threads, from oldest to newest. It indicates &amp;quot;the total number of threads that should be allowed to be used as a stack lookup. Thread 1 is usually the main thread of the game, but if that one spawns another thread for game related events, you might want to have that secondary thread as well. More threads is not recommend as they may get created and destroyed on the fly, and are therefore useless as a lookup base, but it depends on the game&amp;quot;.&lt;&#x2F;p&gt;
+&lt;p&gt;Unfortunately, this option is enabled by default, so it seems pretty important, and we might need to put some work into figuring out how &amp;quot;stacks&amp;quot; are found. However, this would mean that some &amp;quot;base&amp;quot; object (like a &lt;code&gt;Game&lt;&#x2F;code&gt; instance) is passed down by reference hundreds of calls, which seems pretty annoying just to have access to something that effectively acts like a global, so hopefully games don&#x27;t make use of this.&lt;&#x2F;p&gt;
+&lt;p&gt;This can be taken a step further, and consider stack addresses as ONLY static address, if you wish to only find pointer paths with a stack address. It must be combined with &amp;quot;Only find paths with a static address&amp;quot; (default on) else this option will have no effect. You&#x27;ll only get paths from the stack, but you don&#x27;t get get paths from random DLL&#x27;s or the executable.&lt;&#x2F;p&gt;
+&lt;p&gt;The pointerscan file is by default compressed. Cheat Engine Compresses the generated .PTR files slightly so they take less space on the disk and less time writing to disk. Most of the time the bottleneck of a pointerscan is disk writing, so it is recommended to use this option (which was not available in older versions).&lt;&#x2F;p&gt;
+&lt;p&gt;Only positive offsets are scanned by default, but Cheat Engine may optionally scan for negative offsets as well (although it can not be used in combination with compressed pointerscan files; this seems to hint that the compression assumes only positive values).&lt;&#x2F;p&gt;
+&lt;p&gt;On my machine, 9 threads are scanning by default with a maximum offset value of 4095 and a maximum level (depth) of 7. The maximum different offsets per node are 3. When the pointerscan looks through the list of pointers with a specific value, it goes through every single pointer that has that value. Every time increasing the offset slightly. With this feature enabled the pointerscan will only check the first few pointers with that value. This is extremely fast, and the results have the lowest pointer paths possible, but you&#x27;ll miss a lot of pointers that might be valid too. I think this description is key, as it clearly says what the pointerscan does and maybe even how it works (although it sounds a bit inefficient, so Cheat Engine probably uses other tricks).&lt;&#x2F;p&gt;
+&lt;p&gt;Cheat Engine clearly knows this process is expensive, so it optionally allow scanners to connect at runtime. This opens a port that other systems running the pointerscanner can connect to and help out with the scan. Or it can connect to pointerscan node, which will send a broadcast message on the local network which will tell pointer scanner systems to join this scan if they are set to auto join (or &amp;quot;Setup specific IP&#x27;s to notify&amp;quot; to notify systems of this scan that are outside of the local network).&lt;&#x2F;p&gt;
+&lt;p&gt;And that&#x27;s all! In summary:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Assume addresses are 32-bit aligned (maybe even 64-bit).&lt;&#x2F;li&gt;
+&lt;li&gt;Discard paths that don&#x27;t end in a static address (bonus points if the top of the stack for the firsts two threads are also considered).&lt;&#x2F;li&gt;
+&lt;li&gt;Ignore read-only memory.&lt;&#x2F;li&gt;
+&lt;li&gt;Limit the number of offsets per pointer to something small like 3, and give up after reaching a depth greater than 7.&lt;&#x2F;li&gt;
+&lt;li&gt;Limit the offset range to &lt;code&gt;0..4096&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;Use multiple threads.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;single-threaded-naive-approach&quot;&gt;Single-threaded naive approach&lt;&#x2F;h2&gt;
+&lt;p&gt;After playing around a bit more with Cheat Engine&#x27;s scans, I realized the 14 bytes of the &lt;code&gt;.PTR.results.4&lt;&#x2F;code&gt; is because the process literally finds a single path which it places there. Running the process with compression and no previous scan to compare it to spits out roughly 750MB (so the compression does go from 5GB to 750MB, that&#x27;s a lot more reasonable).&lt;&#x2F;p&gt;
+&lt;p&gt;In any case, we&#x27;re with the &lt;code&gt;.scandata&lt;&#x2F;code&gt; now. I really do wonder what could it possibly contain? I really doubt it&#x27;s the pointer paths found, because then it would be huge. Perhaps it contains the memory regions? That would make some sense, since the sibling &lt;code&gt;.addresslist&lt;&#x2F;code&gt; &lt;em&gt;is&lt;&#x2F;em&gt; a list of all the loaded modules. Maybe the &lt;code&gt;.scandata&lt;&#x2F;code&gt; contains the memory regions for all of those loaded modules.&lt;&#x2F;p&gt;
+&lt;p&gt;For the first time in this series, I really don&#x27;t know how Cheat Engine could be working behind the scenes. Is it really evaluating millions of &lt;em&gt;paths&lt;&#x2F;em&gt;? That&#x27;s a lot of memory, no matter how you encode it! I&#x27;m really impressed at the processing speed if this is in fact the case. Let&#x27;s see how a naive approach for that could look like&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#3&quot;&gt;3&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;We start off with a single address, the address of a particular value we care about in memory (for example, the player&#x27;s health). This address is an 8-byte number (which for us is an &lt;code&gt;usize&lt;&#x2F;code&gt;), so we can look for pointer-values (values in memory that look like a pointer to a certain address) that point to this address (or close enough). Let&#x27;s call this &lt;code&gt;goal_addr&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;For every memory block, and for every pointer value &lt;code&gt;ptr_val&lt;&#x2F;code&gt; in it, we check if the distance between the &lt;code&gt;ptr_val&lt;&#x2F;code&gt; and the &lt;code&gt;goal_addr&lt;&#x2F;code&gt; falls within an arbitrary range, for example:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let process = Process::open(pid)?;
+
+let mask = winnt::PAGE_EXECUTE_READWRITE
+    | winnt::PAGE_EXECUTE_WRITECOPY
+    | winnt::PAGE_READWRITE
+    | winnt::PAGE_WRITECOPY;
+
+let regions = process
+    .memory_regions()
+    .into_iter()
+    .filter(|p| (p.Protect &amp;amp; mask) != 0) &#x2F;&#x2F; (1)
+    .collect::&amp;lt;Vec&amp;lt;_&amp;gt;&amp;gt;();
+
+let mut candidate_locations = Vec::new();
+
+for region in regions {
+    let base = region.BaseAddress as usize;
+    let block = match process.read_memory(base, region.RegionSize) {
+        Ok(block) =&amp;gt; block,
+        Err(_) =&amp;gt; continue, &#x2F;&#x2F; (2)
+    };
+
+    for (offset, chunk) in block.chunks_exact(8).enumerate() { &#x2F;&#x2F; (3)
+        let ptr_val = usize::from_ne_bytes(chunk.try_into().unwrap()); &#x2F;&#x2F; (4)
+        if (0..4096).contains(goal_addr.wrapping_sub(ptr_val)) { &#x2F;&#x2F; (5)
+            let ptr_val_addr = base + offset * 8;
+            candidate_locations.push(ptr_val_addr); &#x2F;&#x2F; (6)
+        }
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;There&#x27;s a lot of things to unpack in this small snippet:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;We&#x27;re only interested in regions that are both readable and writable, pretty much like Cheat Engine is doing.&lt;&#x2F;li&gt;
+&lt;li&gt;If we can&#x27;t read a memory region, we can just skip it. Our desired address is probably not there. There&#x27;s a lot of regions anyway so this is probably a good thing as we can reduce the scanning time!&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;chunks_exact&lt;&#x2F;code&gt; achieves multiple things:
+&lt;ul&gt;
+&lt;li&gt;It&#x27;s the most concise way to read chunks of 8 bytes in size, the alternative being having a &lt;code&gt;for i in (0..block.len())&lt;&#x2F;code&gt; and then slicing on &lt;code&gt;&amp;amp;block[i..i+8]&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;It will look on aligned addresses&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#4&quot;&gt;4&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; for free (the alternative being &lt;code&gt;.windows(8)&lt;&#x2F;code&gt;, which would also look for unaligned addresses).&lt;&#x2F;li&gt;
+&lt;li&gt;It makes sure the chunk is always 8 bytes in size, which is important&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#5&quot;&gt;5&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;, because &lt;code&gt;usize&lt;&#x2F;code&gt; is also 8 bytes in size on 64-bit machines.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Interpreting 8 bytes of memory as an &lt;code&gt;usize&lt;&#x2F;code&gt; can be safely (and efficiently!)&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#6&quot;&gt;6&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; achieved through &lt;code&gt;usize::from_ne_bytes&lt;&#x2F;code&gt;, which expects an &lt;code&gt;[u8; mem::size_of::&amp;lt;usize&amp;gt;()]&lt;&#x2F;code&gt;. Thankfully, we can convert the 8-byte-long slice into an array pretty easily with &lt;code&gt;.try_into()&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;It&#x27;s important to use &lt;code&gt;wrapping_sub&lt;&#x2F;code&gt;, because the &lt;code&gt;-&lt;&#x2F;code&gt; operator would panic on underflow on debug by default&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#7&quot;&gt;7&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. Since we&#x27;re reading all of the memory in the program, there will be a lot of values, many of which would be less than &lt;code&gt;goal_addr&lt;&#x2F;code&gt;, causing underflow. Note also how we could interpret the values as &lt;code&gt;isize&lt;&#x2F;code&gt; instead so that a negative offset could be used in the range. However, a negative offset is much less common&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#8&quot;&gt;8&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;, so it&#x27;s fine to stick with positive offsets.&lt;&#x2F;li&gt;
+&lt;li&gt;We have a candidate pointer-value, so we make sure to store its address.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;At the end of this, &lt;code&gt;candidate_locations&lt;&#x2F;code&gt; will have &lt;em&gt;many&lt;&#x2F;em&gt; memory addresses pointing to a different &lt;code&gt;ptr_val&lt;&#x2F;code&gt; each. This &lt;code&gt;ptr_val&lt;&#x2F;code&gt; points to &lt;code&gt;goal_addr&lt;&#x2F;code&gt; minus some offset (which can be calculated at any time by substracting again). These are the pointer-values at depth 0&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#9&quot;&gt;9&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Each of these &lt;code&gt;candidate_locations&lt;&#x2F;code&gt; is in itself the next &lt;code&gt;goal_addr&lt;&#x2F;code&gt;, and running the process again will produce pointer-values for depth 1. Yes, you&#x27;ve guessed it, this has exponential growth. No wonder Cheat Engine finds millions of paths. And don&#x27;t forget to somehow save &amp;quot;this address came from this other address&amp;quot;, so that you can follow the chain back after you&#x27;re done!&lt;&#x2F;p&gt;
+&lt;p&gt;Note the importance of limiting the depth: not only this growth has to stop at some point, but also think about cyclic paths. The program would get stuck as soon as &lt;code&gt;ptr_val_addr == ptr_val&lt;&#x2F;code&gt;, looking for itself over and over again! Without actively looking for cycles&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#10&quot;&gt;10&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;, and without limiting the depth, the process would never finish.&lt;&#x2F;p&gt;
+&lt;p&gt;After the full process completes (having executed multiple iterations of it at multiple depths), we would need to check every path to see if it works for us (that is, if it starts with a &amp;quot;static address&amp;quot;). You will have an obscene amount of paths, many of which won&#x27;t actually work after restarting the program (it might have been luck that some unrelated component got allocated close to your original &lt;code&gt;goal_addr&lt;&#x2F;code&gt; but now it&#x27;s not anymore). So how do we clean this mess up?&lt;&#x2F;p&gt;
+&lt;p&gt;We run the process again! Preferably, after the memory has shuffled around enough (for example, again, restarting the program). Once we have the list of paths &amp;quot;before&amp;quot; and &amp;quot;after&amp;quot;, we compare them all. The naive approach of checking, for every path in &amp;quot;before&amp;quot;, if any of the paths in &amp;quot;after&amp;quot; is the same, would yield a sweet time complexity of &lt;code&gt;O(n²)&lt;&#x2F;code&gt;, with millions of paths. This ain&#x27;t gonna cut it. We must do better. I don&#x27;t know if this is what Cheat Engine is doing (but if it is, I tip my hat to them), but since I can&#x27;t think of an efficient way to do it, we&#x27;ll be going a different route.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;speeding-up-the-scan&quot;&gt;Speeding up the scan&lt;&#x2F;h2&gt;
+&lt;p&gt;By reading an entire block of memory at a time, we&#x27;re actually doing pretty okay on that department. It would be very, very wasteful to issue millions of reads of 8 bytes, when we could instead run thousands of reads of several kilobytes (or more!). Of course, we still have to read millions of 8-bytes, but if they&#x27;re in our memory and don&#x27;t require a call to the Windows API, it&#x27;s going to be orders of magnitude faster.&lt;&#x2F;p&gt;
+&lt;p&gt;We&#x27;re only reading aligned pointers, cutting down the amount of reads and checks we perform down to &lt;code&gt;1&#x2F;8&lt;&#x2F;code&gt;. A lot of useless results are also discarded this way.&lt;&#x2F;p&gt;
+&lt;p&gt;We&#x27;re only considering positive offsets, and we&#x27;re limiting how &amp;quot;far&amp;quot; the &lt;code&gt;goal_addr&lt;&#x2F;code&gt; can be from a possible &lt;code&gt;ptr_val&lt;&#x2F;code&gt; before we stop considering said &lt;code&gt;ptr_val&lt;&#x2F;code&gt;. After all, a structure longer than 4096 bytes should hopefully be uncommon. By doing this, we only keep &amp;quot;address-like&amp;quot; values, which have a very high chance of being an actual address, although they could very well not be! We may be finding arbitrary values and think they represent an address when they actually don&#x27;t.&lt;&#x2F;p&gt;
+&lt;p&gt;We&#x27;re limiting the maximum depth we&#x27;re willing to go. This depth directly correlates to the maximum length a pointer path can have. If you&#x27;re confident the path won&#x27;t be longer than, say, 5 addressses, there&#x27;s no need to dive any deeper, and you will save on a lot of processing this way.&lt;&#x2F;p&gt;
+&lt;p&gt;This code can be made parallel trivially (after making Rust compiler happy, anyway). There is a lot of &lt;code&gt;ptr_val_addr&lt;&#x2F;code&gt; values to scan for, so if we think of &lt;code&gt;candidate_locations&lt;&#x2F;code&gt; as a &amp;quot;queue of work&amp;quot;, more than one thread can be popping from it and running the scan. This gives a nice boost on multi-core systems. It doesn&#x27;t entirely scale linearly with the number of cores, but it&#x27;s close enough to what you would expect.&lt;&#x2F;p&gt;
+&lt;p&gt;A pointer path will only be considered if it starts with a static address. This means the last address pushed must be static (the path is backwards, because we started at the end, &lt;code&gt;goal_addr&lt;&#x2F;code&gt;). This should clean-up a lot of intermediate and uninteresting addresses. If the address isn&#x27;t static, it&#x27;s not really interesting to us. Remember, the reason we&#x27;re doing all of this is so that we can reuse said address in the future, without the need to find &lt;code&gt;goal_addr&lt;&#x2F;code&gt; manually.&lt;&#x2F;p&gt;
+&lt;p&gt;Comparing the pointer paths will result in paths that very likely will work in the future. Not only is this important to reduce the number of paths drastically, but it also provides better guarantees about what is a &amp;quot;good&amp;quot;, reliable path to follow to find &lt;code&gt;goal_addr&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Next up, let&#x27;s talk about some of the more intrusive optimizations which I actually seeked to reach an acceptable runtime. This will be where I started to code this up.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;working-out-a-poc&quot;&gt;Working out a PoC&lt;&#x2F;h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Add a braindump mess enough to find pointerpaths&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;This is the commit message that made it possible to complete step 8 on the tutorial (the actual commit message has quite some more lines explaining the commit). Unlike previous entries of this series, I had a hard time making incremental progress. So let&#x27;s dissect what was done instead.&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The approach used in this commit (although really messy), consists on taking two &amp;quot;snapshots&amp;quot; of the memory, and knowing where a desired value is located in both.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;By introducing the concept of &amp;quot;snapshots&amp;quot;, we can &amp;quot;freeze&amp;quot; the process&#x27; memory at a given point in time, and scan it at our leisure, without having to worry about it changing. Not only this, but it also saves on a lot of calls to &lt;code&gt;ReadProcessMemory&lt;&#x2F;code&gt;, so it&#x27;s also more efficient. If memory is an issue, these structures could be saved to disk and streamed instead. I haven&#x27;t measured how fast this is, but having our own copy of the process&#x27; memory lets us run the scan even after the process is closed (and by then we would reclaim some of that memory), so this approach is mostly benefits.&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;#[derive(Clone, Debug, PartialEq)]
+pub struct Block {
+    pub real_addr: usize,
+    pub mem_offset: usize,
+    pub len: usize,
+    pub base: bool, &#x2F;&#x2F; is this a &amp;quot;base&amp;quot; block (i.e. `real_addr` will be static)?
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Snapshot {
+    pub memory: Vec&amp;lt;u8&amp;gt;,
+    pub blocks: Vec&amp;lt;Block&amp;gt;,
+}
+
+impl Snapshot {
+    pub fn new(process: &amp;amp;Process, regions: &amp;amp;[winapi::um::winnt::MEMORY_BASIC_INFORMATION]) -&amp;gt; Self {
+        let modules = process.enum_modules().unwrap();
+        let mut blocks = regions
+            .iter()
+            .map(|r| Block {
+                real_addr: r.BaseAddress as usize,
+                mem_offset: 0,
+                len: r.RegionSize,
+                &#x2F;&#x2F; &amp;quot;base&amp;quot; blocks are those where they start at the same address
+                &#x2F;&#x2F; as some module, as seen in the sixth entry of this series.
+                base: modules.iter().any(|module| {
+                    let base = r.AllocationBase as usize;
+                    let addr = *module as usize;
+                    base == addr
+                }),
+            })
+            .collect::&amp;lt;Vec&amp;lt;_&amp;gt;&amp;gt;();
+
+        &#x2F;&#x2F; this will be useful later
+        blocks.sort_by_key(|b| b.real_addr);
+
+        let mut memory = Vec::new();
+        let blocks = blocks
+            .into_iter()
+            .filter_map(|b| match process.read_memory(b.real_addr, b.len) {
+                Ok(mut chunk) =&amp;gt; {
+                    let len = chunk.len();
+                    let mem_offset = memory.len();
+                    memory.append(&amp;amp;mut chunk);
+                    Some(Block {
+                        real_addr: b.real_addr,
+                        mem_offset,
+                        len,
+                        base: b.base,
+                    })
+                }
+                Err(_) =&amp;gt; None,
+            })
+            .collect::&amp;lt;Vec&amp;lt;_&amp;gt;&amp;gt;();
+
+        Self {
+            memory,
+            blocks,
+        }
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Pretty straightforward. A &lt;code&gt;Snapshot&lt;&#x2F;code&gt; consists of the process&#x27; memory along with some metadata for the blocks. This lets us known, given an index into &lt;code&gt;memory&lt;&#x2F;code&gt;, what is its real address (or vice versa):&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;fn get_block_idx_from_mem_offset(&amp;amp;self, mem_offset: usize) -&amp;gt; usize {
+    match self.blocks.binary_search_by_key(&amp;amp;mem_offset, |b| b.mem_offset) {
+        Ok(index) =&amp;gt; index,
+        Err(index) =&amp;gt; index - 1,
+    }
+}
+
+fn get_block_idx_from_addr(&amp;amp;self, addr: usize) -&amp;gt; usize {
+    match self.blocks.binary_search_by_key(&amp;amp;addr, |b| b.real_addr) {
+        Ok(index) =&amp;gt; index,
+        Err(index) =&amp;gt; index - 1,
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Because we&#x27;ve sorted by &lt;code&gt;real_addr&lt;&#x2F;code&gt;, and we filled the &lt;code&gt;memory&lt;&#x2F;code&gt; in order, we can &lt;code&gt;binary_search_by_key&lt;&#x2F;code&gt; in both cases. &lt;code&gt;Process::read_memory&lt;&#x2F;code&gt; translates into &lt;code&gt;Snapshot::read_memory&lt;&#x2F;code&gt; as follows:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;pub fn read_memory(&amp;amp;self, addr: usize, n: usize) -&amp;gt; Option&amp;lt;&amp;amp;[u8]&amp;gt; {
+    let block = &amp;amp;self.blocks[self.get_block_idx_from_addr(addr)];
+    let delta = addr - block.real_addr;
+    if delta + n &amp;gt; block.len {
+        None
+    } else {
+        let offset = block.mem_offset + delta;
+        Some(&amp;amp;self.memory[offset..offset + n])
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Because this time we already own the memory, we can return a slice and avoid allocations&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#11&quot;&gt;11&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. Now that we have two snapshots of the process&#x27; memory at different points in time (so the pointer-values to &lt;code&gt;goal_addr&lt;&#x2F;code&gt; are different), we find &lt;code&gt;goal_addr&lt;&#x2F;code&gt; in both snapshots (it should be a different value, unless it so happens to be in static memory already).&lt;&#x2F;p&gt;
+&lt;p&gt;Then, the pointer value of the address is searched in the second snapshot (within a certain range, it does not need to be exact). For every value found, a certain offset will have been used. Now, the pointer value minus &lt;em&gt;this exact offset&lt;&#x2F;em&gt; &lt;strong&gt;must&lt;&#x2F;strong&gt; be found &lt;em&gt;exactly&lt;&#x2F;em&gt; on the other snapshot (it does not matter which snapshot you start with&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#12&quot;&gt;12&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;). This is the &amp;quot;aha!&amp;quot; moment, and it&#x27;s a key step, so let&#x27;s make sure we understand why we&#x27;re doing this.&lt;&#x2F;p&gt;
+&lt;p&gt;Rather than guessing candidate pointer-values which would have a given offset as a standalone step, we merge this with the comparison step, insanely reducing the amount of candidates. Before, any pointer-value close enough to &lt;code&gt;goal_addr&lt;&#x2F;code&gt; had to be considered, and in a process with megabytes or gigabytes of memory, this is going to be a lot. However, by keeping only the pointer-values (which have a given offset) that &lt;em&gt;also&lt;&#x2F;em&gt; exist on the alternate snapshot with the &lt;em&gt;exact&lt;&#x2F;em&gt; value, we&#x27;re tremendously reducing the number of false positives.&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;impl Snapshot {
+    &#x2F;&#x2F; Iterate over (memory address, pointer value at said address)
+    pub fn iter_addr(&amp;amp;self) -&amp;gt; impl Iterator&amp;lt;Item = (usize, usize)&amp;gt; + &#x27;_ {
+        let mut blocks = self.blocks.iter().peekable();
+        self.memory
+            .chunks_exact(8)
+            .enumerate()
+            .map(move |(i, chunk)| {
+                let mut block = *blocks.peek().unwrap();
+                if i * 8 &amp;gt;= block.mem_offset + block.len {
+                    &#x2F;&#x2F; Roll over to the next block.
+                    block = blocks.next().unwrap();
+                }
+
+                (
+                    block.real_addr + (i * 8 - block.mem_offset),
+                    usize::from_ne_bytes(chunk.try_into().unwrap()),
+                )
+            })
+    }
+}
+
+struct PathFinder {
+    first_snap: Snapshot,
+    second_snap: Snapshot,
+    addresses: std::cell::Cell&amp;lt;Vec&amp;lt;(bool, u8, usize)&amp;gt;&amp;gt;, &#x2F;&#x2F; (last node?, depth, real address)
+}
+
+impl PathFinder {
+    fn run(&amp;amp;self, first_addr: usize, second_addr: usize, depth: u8) -&amp;gt; bool {
+        &#x2F;&#x2F; F: first, S: second; RA: Real Address; PV: Pointer Value
+        let depth = depth - 1;
+        let mut any = false;
+        for (sra, spv) in self.second_snap.iter_addr().filter(|(_sra, spv)| {
+            if let Some(offset) = second_addr.checked_sub(*spv) {
+                offset &amp;lt;= MAX_OFFSET
+            } else {
+                false
+            }
+        }) {
+            if self.second_snap.is_base_addr(sra) {
+                unsafe { &amp;amp;mut *self.addresses.as_ptr() }.push((true, depth + 1, sra));
+                any = true;
+                continue;
+            }
+            if depth == 0 {
+                continue;
+            }
+            let offset = second_addr - spv;
+            for (fra, _fpv) in self
+                .first_snap
+                .iter_addr()
+                .filter(|(_fra, fpv)| fpv.wrapping_add(offset) == first_addr)
+            {
+                if self.run(fra, sra, depth) {
+                    unsafe { &amp;amp;mut *self.addresses.as_ptr() }.push((false, depth + 1, sra));
+                    any = true;
+                }
+            }
+        }
+
+        any
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;Snapshot::iter_addr&lt;&#x2F;code&gt; is like &lt;code&gt;read_memory&lt;&#x2F;code&gt;, but better for our needs, because it automatically returns the pointer-values and its corresponding real address efficiently. The &lt;code&gt;PathFinder&lt;&#x2F;code&gt; is a helper &lt;code&gt;struct&lt;&#x2F;code&gt; to avoid passing &lt;code&gt;first_snap&lt;&#x2F;code&gt;, &lt;code&gt;second_snap&lt;&#x2F;code&gt; and &lt;code&gt;addresses&lt;&#x2F;code&gt; as parameters on every call.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;code&gt;Snapshot::run&lt;&#x2F;code&gt; is a recursive method which is called with the &lt;code&gt;goal_addr&lt;&#x2F;code&gt; in both the first and second snapshot, along with a depth. When this depth reaches 0, the method stops recursing. The method also stops when a base (static) address is found.&lt;&#x2F;p&gt;
+&lt;p&gt;The method starts by looking for all pointer-values in the second snapshot where &lt;code&gt;ptr_value + offset = second_addr&lt;&#x2F;code&gt; for all &lt;code&gt;offset in 0..=MAX_OFFSET&lt;&#x2F;code&gt;. For every candidate &lt;code&gt;ptr_value&lt;&#x2F;code&gt; with a given &lt;code&gt;offset&lt;&#x2F;code&gt;, it looks &lt;strong&gt;exactly&lt;&#x2F;strong&gt; for &lt;code&gt;first_addr - offset&lt;&#x2F;code&gt; in the alternate snapshot (the first one). Once found, we have a candidate offset valid in &lt;em&gt;both&lt;&#x2F;em&gt; snapshots, and then we can recurse to find subsequent offsets on the real addresses of these pointer values themselves. The addresses of these pointer-values are our new &lt;code&gt;goal_addr&lt;&#x2F;code&gt; in the next depth.&lt;&#x2F;p&gt;
+&lt;p&gt;Once &lt;code&gt;run&lt;&#x2F;code&gt; returns from the top-most depth, we can convert post-process &lt;code&gt;addresses&lt;&#x2F;code&gt; into something usable, with an algorithm akin to run-length encoding (the real-code abuses the vector&#x27;s &lt;code&gt;capacity&lt;&#x2F;code&gt; and &lt;code&gt;len&lt;&#x2F;code&gt; to determine the &lt;code&gt;depth&lt;&#x2F;code&gt; and had inaccurate names, so I&#x27;ve rewritten that part for clarity):&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;struct Path {
+    addresses: Vec&amp;lt;usize&amp;gt;,
+    depth: u8,
+}
+
+let mut paths = Vec::new();
+
+for (base, depth, addr) in pf.addresses.into_inner() {
+    if base {
+        paths.push(Path { addresses: Vec::new(), depth });
+    }
+    for path in paths.iter_mut() {
+        if path.depth == depth {
+            path.addresses.push(addr);
+            &#x2F;&#x2F; remember PathFinder started at the highest depth and ended at
+            &#x2F;&#x2F; base with the lowest depth, so &amp;quot;going up&amp;quot; is &amp;quot;the way out&amp;quot;.
+            path.depth += 1;
+        }
+    }
+}
+
+&#x2F;&#x2F; `second_addr` wasn&#x27;t pushed by `PathFinder::run` as it was the starting
+&#x2F;&#x2F; point, so push it now.
+for path in paths.iter_mut() {
+    path.addresses.push(second_addr);
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Note how this process can form a tree. Any given depth can have any amount of children. For example, if the address finding yields the following addresses (where the hundreds&#x27; also represent the depth):&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;400, 300, 450, 300, 200, 100
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Then this represents the following call-stack tree:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;   100
+    |
+   200
+    |
+   300
+   &#x2F; \
+400   450
+
+&#x2F;&#x2F; or
+
+(100
+    (200
+        (300
+            (400, 450))))
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Once the many paths have been cleaned up into a separate vector each, we can turn these addresses into offsets:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;paths.into_iter().map(|path| {
+    let mut offsets = path.addresses;
+    for i in (1..offs.len()).rev() {
+        let prev_addr = offs[i - 1];
+        let ptr_value = pf.second_snap.read_memory(prev_addr, mem::size_of::&amp;lt;usize&amp;gt;()).unwrap();
+        let ptr_value = usize::from_ne_bytes(ptr_value.try_into().unwrap());
+        offs[i] -= ptr_value;
+    }
+    offsets
+}).collect::&amp;lt;Vec&amp;lt;usize&amp;gt;&amp;gt;()
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;For the example above, the result would be:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;100, 100, 100, 100
+100, 100, 100, 150
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;In order to reach &lt;code&gt;address[i]&lt;&#x2F;code&gt;, we have to read the &lt;code&gt;ptr_value&lt;&#x2F;code&gt; from &lt;code&gt;address[i - 1]&lt;&#x2F;code&gt; and add a given &lt;code&gt;offset&lt;&#x2F;code&gt;. This &lt;code&gt;offset&lt;&#x2F;code&gt; is given by &lt;code&gt;address[i] - ptr_value&lt;&#x2F;code&gt;. By iterating the list of addresses in reverse, we can neatly turn them into offsets substracting this &lt;code&gt;ptr_value&lt;&#x2F;code&gt;. Now we&#x27;re done! We can persist this list of &lt;code&gt;offsets&lt;&#x2F;code&gt; and it will work at any point in the future to get back to our original &lt;code&gt;goal_addr&lt;&#x2F;code&gt;. In pseudo-code:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;base = base addr
+for offset in offsets[..-1] {
+    base = *(base + offset)
+}
+goal_addr = base + offsets[-1]
+value = *goal_addr
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;By the way, sometimes the scan will take horribly long and find thousands of path, and sometimes it will be blazingly fast. I don&#x27;t know why this is the case, but if that happens, you can try restarting the tutorial. And do not forget to run on &lt;code&gt;--release&lt;&#x2F;code&gt; mode, or you will definitely be waiting a long, long time.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;doing-more-for-better-runtime-speed&quot;&gt;Doing more for better runtime speed&lt;&#x2F;h2&gt;
+&lt;p&gt;The recursive &lt;code&gt;PathFinder&lt;&#x2F;code&gt; implements a fairly elegant solution. Unfortunately, this is hard to parallelize, as it all runs on the same thread and there is no clean way to introduce threads here&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#13&quot;&gt;13&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. We will rewrite this version to use a queue instead, with the idea that multiple threads will be taking work from it. In order to do this, let&#x27;s introduce two new concepts:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;#[derive(Clone)]
+struct CandidateNode {
+    parent: Option&amp;lt;usize&amp;gt;,
+    addr: usize,
+}
+
+#[derive(Clone)]
+struct FutureNode {
+    node_idx: usize,
+    first_addr: usize,
+    second_addr: usize,
+    depth: u8,
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The &lt;code&gt;CandidateNode&lt;&#x2F;code&gt; should be as small as possible, because there will be one of each for the addresses of each candidate pointer-value. Without doing anything fancy, we&#x27;ll need an optional &lt;code&gt;usize&lt;&#x2F;code&gt; to build a &amp;quot;linked list&amp;quot; of the path (since we can follow the parent chain), and the address of the pointer-value.&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;code&gt;FutureNode&lt;&#x2F;code&gt; will hold temporary values, until a thread picks it up and carries on, so there&#x27;s no need to over-optimize this. For a thread to continue, it needs to know the pointer-value address and its parent (that is, the candidate node it will work on), along with the first and second goal address for a given depth.&lt;&#x2F;p&gt;
+&lt;p&gt;After the process completes (a base or static address is found), it&#x27;s enough to remember the candidate node, as we&#x27;ll later be able to follow the chain. Thus, the &lt;code&gt;PathFinder&lt;&#x2F;code&gt; needs to hold the following values:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;struct QueuePathFinder {
+    first_snap: Snapshot,
+    second_snap: Snapshot,
+    &#x2F;&#x2F;&#x2F; Indices of `nodes_walked` which are &amp;quot;good&amp;quot; (i.e. have reached a base address).
+    good_finds: Vec&amp;lt;usize&amp;gt;,
+    &#x2F;&#x2F;&#x2F; Shared &amp;quot;tree&amp;quot; of nodes we&#x27;ve walked over, so all threads can access and reference them.
+    nodes_walked: Vec&amp;lt;CandidateNode&amp;gt;,
+    &#x2F;&#x2F;&#x2F; Nodes to be used in the future, where the `FutureNode::node_idx` references `Self::nodes_walked`.
+    new_work: Vec&amp;lt;FutureNode&amp;gt;,
+}
+
+impl QueuePathFinder {
+    pub fn run(&amp;amp;mut self, first_addr: usize, second_addr: usize, depth: u8) {
+        self.add_work(None, first_addr, second_addr, depth);
+        while self.step() {}
+    }
+
+    &#x2F;&#x2F; Returns false to signal there&#x27;s no more work.
+    fn step(&amp;amp;mut self) -&amp;gt; bool {
+        &#x2F;&#x2F; Instead of getting the `goal_addr` from input parameters, we get it through the queue.
+        let future_node = if let Some(future_node) = self.new_work.pop() {
+            future_node
+        } else {
+            return false;
+        };
+
+        &#x2F;&#x2F; The same scan as `PathFinder::run` is carried away, with 2 differences.
+        let first_snap = std::mem::take(&amp;amp;mut self.first_snap);
+        let second_snap = std::mem::take(&amp;amp;mut self.second_snap);
+        for (sra, spv) in second_snap.iter_addr().filter(|(_sra, spv)| {
+            if let Some(offset) = future_node.second_addr.checked_sub(*spv) {
+                offset &amp;lt;= MAX_OFFSET
+            } else {
+                false
+            }
+        }) {
+            if second_snap.is_base_addr(sra) {
+                &#x2F;&#x2F; (1) rather than simply pushing the address (here, a `CandidateNode`),
+                &#x2F;&#x2F; we also store its index (because the candidate nodes themselves don&#x27;t
+                &#x2F;&#x2F; have any flag saying &amp;quot;I&#x27;m the bottommost one&amp;quot;).
+                self.good_finds.push(self.nodes_walked.len());
+                self.nodes_walked.push(CandidateNode {
+                    parent: Some(future_node.node_idx),
+                    addr: sra,
+                });
+                continue;
+            }
+            if future_node.depth == 0 {
+                continue;
+            }
+            let offset = future_node.second_addr - spv;
+            for (fra, _fpv) in first_snap
+                .iter_addr()
+                .filter(|(_fra, fpv)| fpv.wrapping_add(offset) == future_node.first_addr)
+            {
+                &#x2F;&#x2F; (2) rather than recursing, we add work to the queue.
+                self.add_work(Some(future_node.node_idx), fra, sra, future_node.depth - 1);
+            }
+        }
+
+        self.first_snap = first_snap;
+        self.second_snap = second_snap;
+        true
+    }
+
+    fn add_work(
+        &amp;amp;mut self,
+        parent: Option&amp;lt;usize&amp;gt;,
+        first_addr: usize,
+        second_addr: usize,
+        depth: u8,
+    ) {
+        &#x2F;&#x2F; Adding work consists on registering the `CandidateNode` and adding a `FutureNode`.
+        self.new_work.push(FutureNode {
+            node_idx: self.nodes_walked.len(),
+            first_addr,
+            second_addr,
+            depth,
+        });
+        self.nodes_walked.push(CandidateNode {
+            parent,
+            addr: second_addr,
+        });
+    }
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This version probably uses more memory, as we need to remember all &lt;code&gt;CandidateNode&lt;&#x2F;code&gt; because any live &lt;code&gt;FutureNode&lt;&#x2F;code&gt; may be referencing them, and a &lt;code&gt;CandidateNode&lt;&#x2F;code&gt; itself has parents. It should be possible to prune them if it gets too large, although a lot of indices would need to be adjusted, so for now, we don&#x27;t worry about pruning that tree (which we store as a &lt;code&gt;Vec&lt;&#x2F;code&gt; and the references to the parent are indirect through the use of indices). However, this version can use threads much more easily. It&#x27;s enough to wrap all the &lt;code&gt;Vec&lt;&#x2F;code&gt; inside a &lt;code&gt;Mutex&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;However, this version has an even better advantage. It&#x27;s now trivial to perform the search breadth-first! With the recursive version, we were stuck performing a depth-first search, which is unfortunate, because the first valid paths which would be found would be the deepest. But now that we have our own work queue, if we keep it sorted by depth, we can easily switch to running breadth-first. Shorter paths feel better, because there&#x27;s less hops to go through, and less things that could go wrong:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)] &#x2F;&#x2F; &amp;lt;- now it&#x27;s comparable
+struct FutureNode {
+    depth: u8, &#x2F;&#x2F; &amp;lt;- this used to be last but we want to sort by depth first
+    node_idx: usize,
+    first_addr: usize,
+    second_addr: usize,
+}
+
+struct QueuePathFinder {
+    ...
+    new_work: BinaryHeap&amp;lt;FutureNode&amp;gt;,
+    &#x2F;&#x2F;        ^^^^^^^^^^ this used to be a Vec
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Thanks to Rust&#x27;s wrong decision of making &lt;code&gt;BinaryHeap&lt;&#x2F;code&gt; be max-heaps&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#14&quot;&gt;14&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;, and our use of a decreasing depth as we get deeper, the ordering just works out! Next up, threads should be introduced for the next big-boost in runtime performance. This isn&#x27;t too tricky, but I would recommend you introduce &lt;code&gt;serde&lt;&#x2F;code&gt; by now and persist both &lt;code&gt;Snapshot&lt;&#x2F;code&gt; and &lt;code&gt;goal_addr&lt;&#x2F;code&gt; so that you can easily debug this. Running the program on Cheat Engine&#x27;s tutorial gets boring fast. I&#x27;ll leave both of these as an exercise to the reader. Just make sure the threads don&#x27;t end prematurely, because even if there is no work &lt;em&gt;now&lt;&#x2F;em&gt;, it doesn&#x27;t mean there won&#x27;t be a few milliseconds later. Else you will be back at single-threaded execution!&lt;&#x2F;p&gt;
+&lt;p&gt;After adding threads, I kept poking around the program and seeing how seemingly-innocent changes made runtime performance a fair bit worse. Here&#x27;s some of the insights I got:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Using &lt;code&gt;filter&lt;&#x2F;code&gt; or not (by placing the inverted condition inside the loop with a &lt;code&gt;continue&lt;&#x2F;code&gt;) can both help or hurt performance.&lt;&#x2F;li&gt;
+&lt;li&gt;Hoisting certain conditions, like &lt;code&gt;if depth == 0&lt;&#x2F;code&gt;, and duplicating the entire loop body rather than running it every time, can hurt performance.&lt;&#x2F;li&gt;
+&lt;li&gt;The moments when you should wake up threads matters (if your approach works in a way where this matters).&lt;&#x2F;li&gt;
+&lt;li&gt;Changing the order in which you compute certain values and then use them can matter.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;Option&lt;&#x2F;code&gt; introduces a fair bit of overhead due to alignment concerns, and &lt;code&gt;CandidateNode&lt;&#x2F;code&gt; can easily be reduced from 24 bytes to 16 by using a special value for &amp;quot;no-parent&amp;quot;.&lt;&#x2F;li&gt;
+&lt;li&gt;Atomics are neat, but a bit annoying to use. Crates like &lt;a href=&quot;https:&#x2F;&#x2F;crates.io&#x2F;crates&#x2F;crossbeam-utils&quot;&gt;&lt;code&gt;crossbeam-utils&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; make them easier to use while still not using locks if possible.&lt;&#x2F;li&gt;
+&lt;li&gt;You can beat Rust&#x27;s functional-style iterators performance by writing your own custom iterator, but it isn&#x27;t trivial to do so.&lt;&#x2F;li&gt;
+&lt;li&gt;Messing with larger (such as changing &lt;code&gt;depth&lt;&#x2F;code&gt; for &lt;code&gt;usize&lt;&#x2F;code&gt;) or smaller (such as changing &lt;code&gt;node_idx&lt;&#x2F;code&gt; for &lt;code&gt;u32&lt;&#x2F;code&gt;) types can hurt performance.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;It turns out &lt;code&gt;step&lt;&#x2F;code&gt; isn&#x27;t called a lot while analyzing Cheat Engine&#x27;s tutorial, so it better be fast. And one way to go fast is to do less!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;doing-less-for-better-runtime-speed&quot;&gt;Doing less for better runtime speed&lt;&#x2F;h2&gt;
+&lt;p&gt;For every future node, we have to read and compare an entire snapshot of the process&#x27; memory against a value. For 8MiB worth of memory, that&#x27;s over a million comparisons! Using threads can only scale as far as the amounnt of cores you have before degrading quickly. A lot of those comparisons won&#x27;t be useful at all, and if the method runs a hundred times, there can easily be 6MiB that you could avoid scanning at all, a hundred times.&lt;&#x2F;p&gt;
+&lt;p&gt;What if, instead, we run some sort of &amp;quot;pre-scan&amp;quot; that tells us &amp;quot;don&#x27;t bother looking around here, you will not find anything useful&amp;quot;? We totally can, and the good news is, it does improve the runtime quite a bit!&lt;&#x2F;p&gt;
+&lt;p&gt;In order to do this, we need another way of instructing the program where to look. We can do this by adding additional information to each block (either directly or indirectly) that tells us &amp;quot;which other blocks have pointer-values that point into us?&amp;quot;:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;struct Block {
+    ...,
+    &#x2F;&#x2F; Indices of the blocks that have pointer-values which point inside self.
+    pointed_from: Vec&amp;lt;usize&amp;gt;,
+}
+
+pub fn prepare_optimized_scan(snap: &amp;amp;mut Snapshot) {
+    let mut block_idx_pointed_from = (0..snap.blocks.len())
+        .map(|_| std::collections::HashSet::new())
+        .collect::&amp;lt;Vec&amp;lt;_&amp;gt;&amp;gt;();
+
+    &#x2F;&#x2F; For each block...
+    for (i, block) in snap.blocks.iter().enumerate() {
+        &#x2F;&#x2F; ...scan all the pointer-values...
+        for (ra, pv) in snap.iter_addr() {
+            &#x2F;&#x2F; ...and if any of the pointer-values points inside this block...
+            if let Some(delta) = pv.checked_sub(block.real_addr) {
+                if delta &amp;lt; block.len {
+                    &#x2F;&#x2F; ...then we know that the block with this pointer-value points to our original block.
+                    block_idx_pointed_from[i].insert(snap.get_block_idx_from_addr(ra));
+                }
+            }
+        }
+    }
+
+    &#x2F;&#x2F; Convert sets into sorted vectors and save them inside the blocks.
+    block_idx_pointed_from
+        .into_iter()
+        .zip(snap.blocks.iter_mut())
+        .for_each(|(set, block)| {
+            block.pointed_from = set.into_iter().collect::&amp;lt;Vec&amp;lt;_&amp;gt;&amp;gt;();
+            block.pointed_from.sort();
+        });
+}
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;When running the scan (via &lt;code&gt;Snapshot::step&lt;&#x2F;code&gt;), instead of running &lt;code&gt;iter_addr&lt;&#x2F;code&gt; over &lt;em&gt;all&lt;&#x2F;em&gt; addresses, we determine the block where the current &lt;code&gt;goal_addr&lt;&#x2F;code&gt; falls in and scan only on the blocks indicated by &lt;code&gt;block.pointed_from&lt;&#x2F;code&gt;. I did some math, and on the tutorial step, rather than scanning 95 blocks, we scan an average of 3.145 blocks (median 2, standard deviation 6.12), which greatly reduces the amount of work that needs to be done on a snapshot which is roughly 10 MiB.&lt;&#x2F;p&gt;
+&lt;p&gt;There&#x27;s a chance that the block we&#x27;re scanning just so happens to be very &amp;quot;busy&amp;quot; and have a lot of blocks pointing into it (which would make sense, as that&#x27;s probably an indication that the interesting things occur there). However, it is definitely possible to improve on the heuristics, all with different trade-offs.&lt;&#x2F;p&gt;
+&lt;p&gt;The simplest heuristic is &amp;quot;assume every block can point to any other block&amp;quot; (which we were doing before). A slightly better one is &amp;quot;determine which blocks have a chance of pointing into other blocks&amp;quot;. You could even narrow down the &amp;quot;scan area&amp;quot; within blocks to make them &amp;quot;smaller&amp;quot;, for example, by finding the bounding addresses of &amp;quot;interest&amp;quot; and trimming the block size. You could sort the blocks differently, perhaps prioritizing when a block points into itself, or add additional exit conditions. But this is plenty fast, even more so if you use threads for &lt;code&gt;prepare_optimized_scan&lt;&#x2F;code&gt; as well!&lt;&#x2F;p&gt;
+&lt;p&gt;Another idea would be dropping some blocks entirely (although this is partially mitigated thanks to &lt;code&gt;Block::pointed_from&lt;&#x2F;code&gt;). If a base block (i.e. it starts where a module does) doesn&#x27;t belong to the program in question (for example, it belongs to a system DLL), we could drop it, and don&#x27;t even consider it in &lt;code&gt;prepare_optimized_scan&lt;&#x2F;code&gt;. This is probably what Cheat Engine is doing with &amp;quot;Include system modules&amp;quot;, although I haven&#x27;t experimented much with that option. The downside is, if it just so happens the offsets follow a path through that block, it won&#x27;t be found. But it shouldn&#x27;t be a big deal when plenty of paths are found.&lt;&#x2F;p&gt;
+&lt;p&gt;In order to ignore system DLLs, it should be possible to find the module names and then where are they located (pretty much emulating the &lt;a href=&quot;https:&#x2F;&#x2F;docs.microsoft.com&#x2F;en-us&#x2F;windows&#x2F;win32&#x2F;dlls&#x2F;dynamic-link-library-search-order&quot;&gt;Dynamic-Link Library Search Order&lt;&#x2F;a&gt;). If it falls within system directories, then we would ignore it.&lt;&#x2F;p&gt;
+&lt;p&gt;If we want to reduce the search-space even more, we could specify a range of addresses. When any address falls outside this range, it is ignored. I believe Cheat Engine&#x27;s default 0000000000000000-7FFFFFFFFFFFFFFF range is pretty much &amp;quot;scan all of it&amp;quot;, as we&#x27;re doing, but with more knowledge of the program at hand, you could definitely narrow this down.&lt;&#x2F;p&gt;
+&lt;p&gt;Because we&#x27;re not directly working with offsets (they are calculated after, and not before finding a candidate), I&#x27;m not sure how we could accurately implement Cheat Engine&#x27;s option for &amp;quot;maximum offsets per node&amp;quot;. Perhaps by building a temporary &lt;code&gt;HashSet&lt;&#x2F;code&gt;, sorting them in descending order, and only considering the first few smallest ones? More testing would be necessary to see if this is worthwhile. Beyond this last optimization, I can&#x27;t think of any other worthwhile implementing though. We should be getting pretty close to somewhere optimal.&lt;&#x2F;p&gt;
+&lt;p&gt;Anyway, let&#x27;s finish this tutorial step, shall we?:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let addr = offset_list
+    .iter()
+    .take(offset_list.len() - 1)
+    .fold(0, |base, offset| {
+        usize::from_ne_bytes(
+            process
+                .read_memory(base + offset, 8)
+                .unwrap()
+                .try_into()
+                .unwrap(),
+        )
+    })
+    + offset_list.last().unwrap();
+
+&#x2F;&#x2F; Ta-dah!
+process.write_memory(addr, 5000).unwrap();
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;finale&quot;&gt;Finale&lt;&#x2F;h2&gt;
+&lt;p&gt;And this my dear readers concludes my ambitions with the project! I think the program is pretty useful by now, even if it can only do a small fraction of what Cheat Engine can (I don&#x27;t think I&#x27;m ready to write a form designer GUI yet… wait why was this part of Cheat Engine again?). Despite the length of this entry, we didn&#x27;t even figure out how Cheat Engine&#x27;s pointer scanner works. Maybe it really is finding millions of possible paths, perhaps storing the offsets in some compact way. Let&#x27;s recap what we do have learnt:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;We&#x27;re experts in pointers by now! Seven layers of indirection? Easy peasy.&lt;&#x2F;li&gt;
+&lt;li&gt;There&#x27;s a lot of configuration available for pointer scans: search depth, search breadth, search order, memory ranges, memory maps…&lt;&#x2F;li&gt;
+&lt;li&gt;One way to turn exponential problems into something more approachable is either finding an algorithm without the exponential growth, or trimming the amount of work to be done by &lt;em&gt;a lot&lt;&#x2F;em&gt;. And sometimes the former alternative is impossible.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;The &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lonami&#x2F;memo&quot;&gt;code for this post&lt;&#x2F;a&gt; is available over at my GitHub. You can run &lt;code&gt;git checkout step8&lt;&#x2F;code&gt; after cloning the repository to get the right version of the code. If you&#x27;re feeling up for a challenge, try to find a different, faster way (as in, less computationally-expensive) in which you can complete this tutorial step. Although ways to cut down the amount of work that needs to be done are definitely welcome, I&#x27;m looking for an entirely different approach, which can, for the most part, side-step the &amp;quot;there&#x27;s too much work&amp;quot; issue.&lt;&#x2F;p&gt;
+&lt;p&gt;In the next post, we&#x27;ll tackle the ninth step of the tutorial: Shared code. I&#x27;m hoping it won&#x27;t be too difficult, although there will be some learning that needs to be done. After that, I&#x27;ll probably conclude the series. Maybe there could be some bonus episode in the future, or some other form of progress update. Until next time!&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;footnotes&quot;&gt;Footnotes&lt;&#x2F;h3&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;I spent a good chunk of time figuring out how to get this effect on the text (and borrowing code from several sites), but I&#x27;m extremely satisfied with the result. You do need a &amp;quot;modern&amp;quot; browser to see what I mean, though. I also lost it after the fact and had to redo it. Oh well.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;2&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;2&lt;&#x2F;sup&gt;
+&lt;p&gt;Actually, over a couple hundred are often found. But there&#x27;s a high chance most of them would work just fine.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;3&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;3&lt;&#x2F;sup&gt;
+&lt;p&gt;I&#x27;ve gone through a lot of iterations for this post, with a fair amount of messy code, so this time I&#x27;ll be explaining my thought process with new code rather than embedding what I&#x27;ve actually ended up writing.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;4&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;4&lt;&#x2F;sup&gt;
+&lt;p&gt;Only if &lt;code&gt;base&lt;&#x2F;code&gt; starts off as an aligned address, of course. But I think memory regions must start at multiples of the page size, which is a (relatively) large power of two, so it&#x27;s safe to assume &lt;code&gt;base&lt;&#x2F;code&gt; is divisible by 8. You could throw in an &lt;code&gt;assert_eq!(base % 8, 0)&lt;&#x2F;code&gt; if you wanted to be extra sure.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;5&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;5&lt;&#x2F;sup&gt;
+&lt;p&gt;Although, just like we assume &lt;code&gt;base&lt;&#x2F;code&gt; is a multiple of 8, the &lt;code&gt;RegionSize&lt;&#x2F;code&gt; probably is as well.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;6&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;6&lt;&#x2F;sup&gt;
+&lt;p&gt;We could &lt;code&gt;mem::transmute&lt;&#x2F;code&gt; from &lt;code&gt;*const u8&lt;&#x2F;code&gt; to &lt;code&gt;*const usize&lt;&#x2F;code&gt; and dereference, but then we need to be careful about alignment, and &lt;code&gt;from_ne_bytes&lt;&#x2F;code&gt; seems to be plenty fast already.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;7&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;7&lt;&#x2F;sup&gt;
+&lt;p&gt;Not that we actually care about debug builds, as they run several orders of magnitude slower. But still, &lt;code&gt;wrapping_sub&lt;&#x2F;code&gt; has the right semantics here.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;8&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;8&lt;&#x2F;sup&gt;
+&lt;p&gt;Most of the time pointers point to the beginning of some structure, not its end, so accessing this structure&#x27;s fields is done by adding, and not substracting, an offset from the pointer-value. For example:&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;#[repr(C)]
+struct Vector {
+    x: i32,
+    y: i32,
+}
+
+let vec = Vector { x: 1, y: 1 };
+
+let vec_ref = &amp;amp;vec;
+let y_ref = &amp;amp;vec_ref.y;
+
+let vec_ptr_val = vec_ref as *const _ as usize;
+let y_ptr_val = y_ref as *const _ as usize;
+
+assert_eq!(vec_ptr_val + 4, y_ptr_val);
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;9&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;9&lt;&#x2F;sup&gt;
+&lt;p&gt;Or the top-depth, however you want to see it. I personally prefer starting at the highest depth so that when zero is reached, we know we&#x27;re at the end.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;10&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;10&lt;&#x2F;sup&gt;
+&lt;p&gt;Which really, I don&#x27;t think is worth it at all. If Cheat Engine is finding millions of &lt;em&gt;entire paths&lt;&#x2F;em&gt;, what kind of magic is it using to find cycles at any two depths???&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;11&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;11&lt;&#x2F;sup&gt;
+&lt;p&gt;Yes, &lt;code&gt;Process::read_memory&lt;&#x2F;code&gt; could be changed to take in a buffer as input instead, so that it can be reused. Or it could even have an internal buffer. But we won&#x27;t be using this method much anyway.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;12&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;12&lt;&#x2F;sup&gt;
+&lt;p&gt;I prefer starting on the second snapshot because it feels more &amp;quot;fresh&amp;quot;, as it&#x27;s the latest one, although it doesn&#x27;t really matter, because the path we&#x27;re looking for must be valid in both anyway.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;13&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;13&lt;&#x2F;sup&gt;
+&lt;p&gt;Maybe the recursive &lt;code&gt;run&lt;&#x2F;code&gt; could run in a pool of threads?&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;14&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;14&lt;&#x2F;sup&gt;
+&lt;p&gt;Most heaps tend to be min-heaps, and it&#x27;s not uncommon for the use of &lt;code&gt;BinaryHeap&lt;&#x2F;code&gt; in Rust to need &lt;code&gt;std::cmp::Reverse&lt;&#x2F;code&gt; in order to get &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;stable&#x2F;std&#x2F;collections&#x2F;struct.BinaryHeap.html#min-heap&quot;&gt;min-heap behaviour&lt;&#x2F;a&gt;. There&#x27;s been some discussion on internals about this, such as &lt;a href=&quot;https:&#x2F;&#x2F;internals.rust-lang.org&#x2F;t&#x2F;why-is-std-binaryheap-a-max-heap&#x2F;11498&quot;&gt;Why is std::collections::BinaryHeap a max-heap?&lt;&#x2F;a&gt; and more recently &lt;a href=&quot;https:&#x2F;&#x2F;internals.rust-lang.org&#x2F;t&#x2F;specializing-binaryheap-to-maxheap-and-minheap&#x2F;15115&quot;&gt;Specializing BinaryHeap to MaxHeap and MinHeap&lt;&#x2F;a&gt; where @matklad laments:&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;blockquote&gt;
+&lt;p&gt;I feel like our heap accumulated a bunch of problems (wrong default order, slow into-sorted, wrong into-iter, confusing naming, slow-perf due to being binary).&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+</content>
+	</entry>
 	<entry xml:lang="en">
 		<title>Writing our own Cheat Engine: Code Injection</title>
 		<published>2021-05-08T00:00:00+00:00</published>
@@ -21,6 +742,7 @@
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-6&quot;&gt;Part 6: Pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;Part 7: Code Injection&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-8&quot;&gt;Part 8: Multilevel pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In part 6 we ended up spending most of the time in upgrading our breakpoint support to have a proper implementation, rather than using some hardcoded constants. We then made use of the new and improved breakpoint support to find what code accessed an specific memory address our very own debugger. To complete the tutorial, we read and understood the surrounding assembly around the code accessing our address and figured out what pointer to look for. In the end, we were left with a base address that we can rely on and follow to reach the target memory address, without having to scan for it every time.&lt;&#x2F;p&gt;
 &lt;p&gt;In this post, we will take a look at the different techniques Cheat Engine uses to patch instructions with as many other instructions as we need.&lt;&#x2F;p&gt;
@@ -370,9 +1092,9 @@ println!(&amp;quot;Replaced the SUB 1 at {:x} with ADD 2 at {:x} successfully!&a
 &lt;p&gt;When writing this post, I discovered other things, such as &lt;a href=&quot;https:&#x2F;&#x2F;duckduckgo.com&#x2F;?t=ffcm&amp;amp;q=SE_DEBUG_NAME&amp;amp;ia=web&quot;&gt;what the &lt;code&gt;SE_DEBUG_NAME&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; was and if I needed it, &lt;a href=&quot;https:&#x2F;&#x2F;forum.exetools.com&#x2F;showthread.php?t=8963&quot;&gt;why &lt;code&gt;VirtualAlloc&lt;&#x2F;code&gt; was failing&lt;&#x2F;a&gt; or &lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;a&#x2F;21683133&#x2F;&quot;&gt;why could it be failing&lt;&#x2F;a&gt;, &lt;a href=&quot;https:&#x2F;&#x2F;social.msdn.microsoft.com&#x2F;Forums&#x2F;en-US&#x2F;4ccf4dd8-eb43-4f5e-8860-c588d6a4f880&#x2F;virtualallocex-memreserve-pagereadwrite-has-failed-with-system-error-code-487&quot;&gt;what the error code meant&lt;&#x2F;a&gt;, among a couple other things. So there is definitely a lot to learn about this topic&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;.&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;finale&quot;&gt;Finale&lt;&#x2F;h2&gt;
 &lt;p&gt;This post was a bit bittersweet for me! One takeaway definitely is the need to be a bit more creative when it comes down to studying how a different program works, but after all, if Cheat Engine can do it, so can we. There are still some unknowns left, and some shortcuts which we could&#x27;ve avoided, but regardless, we&#x27;ve seen how we can make it work. Making it ergonomic or more customizable comes later. Really, sometimes you just need to &lt;a href=&quot;https:&#x2F;&#x2F;jacobian.org&#x2F;2021&#x2F;apr&#x2F;7&#x2F;embrace-the-grind&#x2F;&quot;&gt;embrace the grind&lt;&#x2F;a&gt; and get a first working version out. Don&#x27;t obsess with making it perfect or cleaner at first, it&#x27;s such a waste of time (if you &lt;em&gt;are&lt;&#x2F;em&gt; going to clean it up in the end, plan ahead, estimate how long it would take, and put aside your changes until the cleaning is done).&lt;&#x2F;p&gt;
-&lt;p&gt;The &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lonami&#x2F;memo&quot;&gt;code for this post&lt;&#x2F;a&gt; is available over at my GitHub. You can run &lt;code&gt;git checkout step7&lt;&#x2F;code&gt; after cloning the repository to get the right version of the code. Again, only the code necessary to complete the step is included at the &lt;code&gt;step6&lt;&#x2F;code&gt; tag.&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lonami&#x2F;memo&quot;&gt;code for this post&lt;&#x2F;a&gt; is available over at my GitHub. You can run &lt;code&gt;git checkout step7&lt;&#x2F;code&gt; after cloning the repository to get the right version of the code. Again, only the code necessary to complete the step is included at the &lt;code&gt;step7&lt;&#x2F;code&gt; tag.&lt;&#x2F;p&gt;
 &lt;p&gt;In the next post, we&#x27;ll tackle the eighth step of the tutorial: Multilevel pointers. This step is what actually got me inspired into starting this entire series, which is why you may have felt this entry a bit more rushed. It is fairly more complicated than &lt;a href=&quot;&#x2F;blog&#x2F;woce-6&quot;&gt;part 6&lt;&#x2F;a&gt; with a single pointer, because there&#x27;s some ingenious work that needs to be done in order to efficiently, and automatically, solve it. I didn&#x27;t manage to figure it out before starting the series, but maybe we&#x27;re prepared now?&lt;&#x2F;p&gt;
-&lt;p&gt;The next post will also be the second-to-last entry in this series (the last step looks pretty tough as well!). After that, there are bonus levels of an actual graphical game, but as far as I can tell, it&#x27;s there to gain a bit more experience with something more &amp;quot;serious&amp;quot;, which I will probably leave as an exercise to the reader.&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;a href=&quot;&#x2F;blog&#x2F;woce-8&quot;&gt;next post&lt;&#x2F;a&gt; will also be the second-to-last entry in this series (the last step looks pretty tough as well!). After that, there are bonus levels of an actual graphical game, but as far as I can tell, it&#x27;s there to gain a bit more experience with something more &amp;quot;serious&amp;quot;, which I will probably leave as an exercise to the reader.&lt;&#x2F;p&gt;
 &lt;h3 id=&quot;footnotes&quot;&gt;Footnotes&lt;&#x2F;h3&gt;
 &lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
 &lt;p&gt;That &amp;quot;little&amp;quot; hiccup of me trying to figure out how Cheat Engine was finding that precise working location is what put an end to my one-blog-per-week streak. Ah well, sometimes taking a break from something and coming back to it later on just makes the problem obvious (or in this case, a new simple idea which happened to work).&lt;&#x2F;p&gt;
@@ -397,6 +1119,7 @@ println!(&amp;quot;Replaced the SUB 1 at {:x} with ADD 2 at {:x} successfully!&a
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;Part 6: Pointers&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-7&quot;&gt;Part 7: Code Injection&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-8&quot;&gt;Part 8: Multilevel pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In part 5 we wrote our very own debugger. We learnt that Cheat Engine is using hardware breakpoints to watch memory change, and how to do the same ourselves. We also learnt that hardware points are not the only way to achieve the effect of watchpoints, although they certainly are the fastest and cleanest approach.&lt;&#x2F;p&gt;
 &lt;p&gt;In this post, we will be reusing some of that knowledge to find out a closely related value, the &lt;em&gt;pointer&lt;&#x2F;em&gt; that points to the real value&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. As a quick reminder, a pointer is nothing but an &lt;code&gt;usize&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; representing the address of another portion of memory, in this case, the actual value we will be scanning for. A pointer is a value that, well, points elsewhere. In Rust we normally use reference instead, which are safer (typed and their lifetime is tracked) than pointers, but in the end we can achieve the same with both.&lt;&#x2F;p&gt;
@@ -829,6 +1552,7 @@ println!(
 &lt;li&gt;Part 5: Code finder&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-6&quot;&gt;Part 6: Pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-7&quot;&gt;Part 7: Code Injection&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-8&quot;&gt;Part 8: Multilevel pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In part 4 we spent a good deal of time trying to make our scans generic, and now we have something that works&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;! Now that the scanning is fairly powerful and all covered, the Cheat Engine tutorial shifts focus into slightly more advanced techniques that you will most certainly need in anything bigger than a toy program.&lt;&#x2F;p&gt;
 &lt;p&gt;It&#x27;s time to write our very own &lt;strong&gt;debugger&lt;&#x2F;strong&gt; in Rust!&lt;&#x2F;p&gt;
@@ -1411,6 +2135,7 @@ pub fn nop_last_instruction(&amp;amp;self, addr: usize) -&amp;gt; io::Result&amp
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-6&quot;&gt;Part 6: Pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-7&quot;&gt;Part 7: Code Injection&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-8&quot;&gt;Part 8: Multilevel pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In part 3 we did a fair amount of plumbing in order to support scan modes beyond the trivial &amp;quot;exact value scan&amp;quot;. As a result, we have abstracted away the &lt;code&gt;Scan&lt;&#x2F;code&gt;, &lt;code&gt;CandidateLocations&lt;&#x2F;code&gt; and &lt;code&gt;Value&lt;&#x2F;code&gt; types as a separate &lt;code&gt;enum&lt;&#x2F;code&gt; each. Scanning for changed memory regions in an opened process can now be achieved with three lines of code:&lt;&#x2F;p&gt;
 &lt;pre&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;let regions = process.memory_regions();
@@ -1827,6 +2552,7 @@ pub unsafe trait Scannable {
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-6&quot;&gt;Part 6: Pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-7&quot;&gt;Part 7: Code Injection&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-8&quot;&gt;Part 8: Multilevel pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In part 2 we left off with a bit of a cliff-hanger. Our little program is now able to scan for an exact value, remember the couple hundred addresses pointing to said value, and perform subsequent scans to narrow the list of addresses down until we&#x27;re left with a handful of them.&lt;&#x2F;p&gt;
 &lt;p&gt;However, it is not always the case that you have an exact value to work with. The best you can do in these cases is guess what the software might be storing. For example, it could be a floating point for your current movement speed in a game, or an integer for your current health.&lt;&#x2F;p&gt;
@@ -2184,6 +2910,7 @@ Found 223791 locations
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-6&quot;&gt;Part 6: Pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-7&quot;&gt;Part 7: Code Injection&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-8&quot;&gt;Part 8: Multilevel pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;In the introduction, we spent a good deal of time enumerating all running processes just so we could find out the pid we cared about. With the pid now in our hands, we can do pretty much anything to its corresponding process.&lt;&#x2F;p&gt;
 &lt;p&gt;It&#x27;s now time to read the process&#x27; memory and write to it. If our process was a single-player game, this would enable us to do things like setting a very high value on the player&#x27;s current health pool, making us invincible. This technique will often not work for multi-player games, because the server likely knows your true current health (the most you could probably do is make the client render an incorrect value). However, if the server is crappy and it trusts the client, then you&#x27;re still free to mess around with your current health.&lt;&#x2F;p&gt;
@@ -2608,6 +3335,7 @@ Written 4 bytes to [15d8b90]
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-5&quot;&gt;Part 5: Code finder&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-6&quot;&gt;Part 6: Pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-7&quot;&gt;Part 7: Code Injection&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;&#x2F;blog&#x2F;woce-8&quot;&gt;Part 8: Multilevel pointers&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;cheatengine.org&#x2F;&quot;&gt;Cheat Engine&lt;&#x2F;a&gt; is a tool designed to modify single player games and contains other useful tools within itself that enable its users to debug games or other applications. It comes with a memory scanner, (dis)assembler, inspection tools and a handful other things. In this series, we will be writing our own tiny Cheat Engine capable of solving all steps of the tutorial, and diving into how it all works underneath.&lt;&#x2F;p&gt;
 &lt;p&gt;Needless to say, we&#x27;re doing this for private and educational purposes only. One has to make sure to not violate the EULA or ToS of the specific application we&#x27;re attaching to. This series, much like cheatengine.org, does not condone the illegal use of the code shared.&lt;&#x2F;p&gt;
@@ -4255,10 +4983,9 @@ Then we just pass that list to &lt;code&gt;asyncio.wait&lt;&#x2F;code&gt;:&lt;&#
 		<updated>2017-06-02T00:00:00+00:00</updated>
 		<link href="https://lonami.dev/blog/graphs/" type="text/html"/>
 		<id>https://lonami.dev/blog/graphs/</id>
-		<content type="html">&lt;p&gt;&lt;noscript&gt;There are a few things which won&#x27;t render unless you enable
-JavaScript. No tracking, I promise!&lt;&#x2F;noscript&gt;&lt;&#x2F;p&gt;
+		<content type="html">&lt;p&gt;&lt;noscript&gt;There are a few things which won&#x27;t render unless you enable JavaScript. No tracking, I promise!&lt;&#x2F;noscript&gt;&lt;&#x2F;p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;Don&#x27;t know English? &lt;a href=&quot;https:&#x2F;&#x2F;lonami.dev&#x2F;blog&#x2F;graphs&#x2F;spanish.html&quot;&gt;Read the Spanish version instead&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;¿No hablas inglés? &lt;a href=&quot;&#x2F;golb&#x2F;graphs-es&quot;&gt;Lee la versión en español&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
 &lt;&#x2F;blockquote&gt;
 &lt;p&gt;Let&#x27;s imagine we have 5 bus stations, which we&#x27;ll denote by ((s_i)):&lt;&#x2F;p&gt;
 &lt;div class=&quot;matrix&quot;&gt;
@@ -4269,41 +4996,24 @@ s_3   &#x27;     &#x27;     &#x27;     &#x27;  V  &#x27;     \\
 s_4   &#x27;     &#x27;  V  &#x27;  V  &#x27;     &#x27;     \\
 s_5   &#x27;  V  &#x27;     &#x27;     &#x27;  V  &#x27;
 &lt;&#x2F;div&gt;
-&lt;p&gt;This is known as a &amp;quot;table of direct interconnections&amp;quot;.
-The ((V)) represent connected paths. For instance, on the first
-row starting at ((s_1)), reaching the ((V)),
-allows us to turn up to get to ((s_2)).&lt;&#x2F;p&gt;
+&lt;p&gt;This is known as a &lt;em&gt;&amp;quot;table of direct interconnections&amp;quot;&lt;&#x2F;em&gt;. The ((V)) represent connected paths. For instance, on the first row starting at ((s_1)), reaching the ((V)), allows us to turn up to get to ((s_2)).&lt;&#x2F;p&gt;
 &lt;p&gt;We can see the above table represented in a more graphical way:&lt;&#x2F;p&gt;
 &lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;lonami.dev&#x2F;blog&#x2F;graphs&#x2F;example1.svg&quot; alt=&quot;Table 1 as a Graph&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
-&lt;p&gt;This type of graph is called, well, a graph, and it&#x27;s a directed
-graph (or digraph), since the direction on which the arrows go does
-matter. It&#x27;s made up of vertices, joined together by edges (also known as
-lines or directed arcs).&lt;&#x2F;p&gt;
-&lt;p&gt;One can walk from a node to another through different paths. For
-example, ((s_4 $rightarrow s_2 $rightarrow s_5)) is an indirect path of order
-two, because we must use two edges to go from ((s_4)) to
-((s_5)).&lt;&#x2F;p&gt;
-&lt;p&gt;Let&#x27;s now represent its adjacency matrix called A which represents the
-same table, but uses 1 instead V to represent
-a connection:&lt;&#x2F;p&gt;
+&lt;p&gt;This type of graph is called, well, a graph, and it&#x27;s a directed graph (or digraph), since the direction on which the arrows go does matter. It&#x27;s made up of vertices, joined together by edges (also known as lines or directed &lt;strong&gt;arcs&lt;&#x2F;strong&gt;).&lt;&#x2F;p&gt;
+&lt;p&gt;One can walk from a node to another through different &lt;strong&gt;paths&lt;&#x2F;strong&gt;. For example, ((s_4 $rightarrow s_2 $rightarrow s_5)) is an indirect path of &lt;strong&gt;order&lt;&#x2F;strong&gt; two, because we must use two edges to go from ((s_4)) to ((s_5)).&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s now represent its &lt;strong&gt;adjacency&lt;&#x2F;strong&gt; matrix called A which represents the same table, but uses 1 instead V to represent a connection:&lt;&#x2F;p&gt;
 &lt;div class=&quot;matrix&quot;&gt;
-  0 &#x27; 1 &#x27; 0 &#x27; 0 &#x27; 0 \\
-  1 &#x27; 0 &#x27; 0 &#x27; 0 &#x27; 1 \\
-  0 &#x27; 0 &#x27; 0 &#x27; 1 &#x27; 0 \\
-  0 &#x27; 1 &#x27; 1 &#x27; 0 &#x27; 0 \\
-  1 &#x27; 0 &#x27; 0 &#x27; 1 &#x27; 0
+0 &#x27; 1 &#x27; 0 &#x27; 0 &#x27; 0 \\
+1 &#x27; 0 &#x27; 0 &#x27; 0 &#x27; 1 \\
+0 &#x27; 0 &#x27; 0 &#x27; 1 &#x27; 0 \\
+0 &#x27; 1 &#x27; 1 &#x27; 0 &#x27; 0 \\
+1 &#x27; 0 &#x27; 0 &#x27; 1 &#x27; 0
 &lt;&#x2F;div&gt;
-&lt;p&gt;This way we can see how the ((a_{2,1})) element represents the
-connection ((s_2 $rightarrow s_1)), and the ((a_{5,1})) element the
-((s_5 $rightarrow s_1)) connection, etc.&lt;&#x2F;p&gt;
-&lt;p&gt;In general, ((a_{i,j})) represents a connection from
-((s_i $rightarrow s_j))as long as ((a_{i,j}$geq 1)).&lt;&#x2F;p&gt;
-&lt;p&gt;Working with matrices allows us to have a computable representation of
-any graph, which is very useful.&lt;&#x2F;p&gt;
+&lt;p&gt;This way we can see how the ((a_{2,1})) element represents the connection ((s_2 $rightarrow s_1)), and the ((a_{5,1})) element the ((s_5 $rightarrow s_1)) connection, etc.&lt;&#x2F;p&gt;
+&lt;p&gt;In general, ((a_{i,j})) represents a connection from ((s_i $rightarrow s_j))as long as ((a_{i,j}$geq 1)).&lt;&#x2F;p&gt;
+&lt;p&gt;Working with matrices allows us to have a computable representation of any graph, which is very useful.&lt;&#x2F;p&gt;
 &lt;hr &#x2F;&gt;
-&lt;p&gt;Graphs have a lot of interesting properties besides being representable
-by a computer. What would happen if, for instance, we calculated
-((A^2))? We obtain the following matrix:&lt;&#x2F;p&gt;
+&lt;p&gt;Graphs have a lot of interesting properties besides being representable by a computer. What would happen if, for instance, we calculated ((A^2))? We obtain the following matrix:&lt;&#x2F;p&gt;
 &lt;div class=&quot;matrix&quot;&gt;
 1 &#x27; 0 &#x27; 0 &#x27; 0 &#x27; 1 \\
 1 &#x27; 1 &#x27; 0 &#x27; 1 &#x27; 0 \\
@@ -4311,37 +5021,21 @@ by a computer. What would happen if, for instance, we calculated
 1 &#x27; 0 &#x27; 0 &#x27; 1 &#x27; 1 \\
 0 &#x27; 2 &#x27; 1 &#x27; 0 &#x27; 0
 &lt;&#x2F;div&gt;
-&lt;p&gt;We can interpret this as the paths of order two.
-But what does the element ((a_{5,2}=2)) represent? It indicates
-the amount of possible ways to go from  ((s_5 $rightarrow s_i $rightarrow s_2)).&lt;&#x2F;p&gt;
-&lt;p&gt;One can manually multiply the involved row and column to determine which
-element is the one we need to pass through, this way we have the row
-(([1 0 0 1 0])) and the column (([1 0 0 1 0])) (on
-vertical). The elements ((s_i$geq 1)) are ((s_1)) and
-((s_4)). This is, we can go from ((s_5)) to
-((s_2)) via ((s_5 $rightarrow s_1 $rightarrow s_2)) or via
-((s_5 $rightarrow s_4 $rightarrow s_2)):
-&lt;img src=&quot;example2.svg&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
-&lt;p&gt;It&#x27;s important to note that graphs to not consider self-connections, this
-is, ((s_i $rightarrow s_i)) is not allowed; neither we work with multigraphs
-here (those which allow multiple connections, for instance, an arbitrary
-number ((n)) of times).&lt;&#x2F;p&gt;
+&lt;p&gt;We can interpret this as the paths of order &lt;strong&gt;two&lt;&#x2F;strong&gt;. But what does the element ((a_{5,2}=2)) represent? It indicates the amount of possible ways to go from  ((s_5 $rightarrow s_i $rightarrow s_2)).&lt;&#x2F;p&gt;
+&lt;p&gt;One can manually multiply the involved row and column to determine which element is the one we need to pass through, this way we have the row (([1 0 0 1 0])) and the column (([1 0 0 1 0])) (on vertical). The elements ((s_i·$geq 1)) are ((s_1)) and ((s_4)). This is, we can go from ((s_5)) to ((s_2)) via ((s_5 $rightarrow s_1 $rightarrow s_2)) or via ((s_5 $rightarrow s_4 $rightarrow s_2)):&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;lonami.dev&#x2F;blog&#x2F;graphs&#x2F;example2.svg&quot; alt=&quot;Previous table as a graph&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;It&#x27;s important to note that graphs to not consider self-connections, this is, ((s_i $rightarrow s_i)) is not allowed; neither we work with multigraphs here (those which allow multiple connections, for instance, an arbitrary number ((n)) of times).&lt;&#x2F;p&gt;
 &lt;div class=&quot;matrix&quot;&gt;
-1 &#x27; 1 &#x27; 0          &#x27; 1 &#x27; 0 \\
-1 &#x27; 2 &#x27; \textbf{1} &#x27; 0 &#x27; 1 \\
-1 &#x27; 0 &#x27; 0          &#x27; 1 &#x27; 1 \\
-1 &#x27; 2 &#x27; 1          &#x27; 1 &#x27; 0 \\
-2 &#x27; 0 &#x27; 0          &#x27; 1 &#x27; 2
+1 &#x27; 1 &#x27;  0  &#x27; 1 &#x27; 0 \\
+1 &#x27; 2 &#x27; #1# &#x27; 0 &#x27; 1 \\
+1 &#x27; 0 &#x27;  0  &#x27; 1 &#x27; 1 \\
+1 &#x27; 2 &#x27;  1  &#x27; 1 &#x27; 0 \\
+2 &#x27; 0 &#x27;  0  &#x27; 1 &#x27; 2
 &lt;&#x2F;div&gt;
-&lt;p&gt;We can see how the first ((1)) just appeared on the element
-((a_{2,3})), which means that the shortest path to it is at least
-of order three.&lt;&#x2F;p&gt;
+&lt;p&gt;We can see how the first ((1)) just appeared on the element ((a_{2,3})), which means that the shortest path to it is at least of order three.&lt;&#x2F;p&gt;
 &lt;hr &#x2F;&gt;
-&lt;p&gt;A graph is said to be strongly connected as long as there is a
-way to reach all its elements.&lt;&#x2F;p&gt;
-&lt;p&gt;We can see all the available paths until now by simply adding up all the
-direct and indirect ways to reach a node, so for now, we can add
-((A+A^2+A^3)) in such a way that:&lt;&#x2F;p&gt;
+&lt;p&gt;A graph is said to be &lt;strong&gt;strongly connected&lt;&#x2F;strong&gt; as long as there is a way to reach all its elements.&lt;&#x2F;p&gt;
+&lt;p&gt;We can see all the available paths until now by simply adding up all the direct and indirect ways to reach a node, so for now, we can add ((A + A^2 + A^3)) in such a way that:&lt;&#x2F;p&gt;
 &lt;div class=&quot;matrix&quot;&gt;
 2 &#x27; 2 &#x27; 0 &#x27; 1 &#x27; 1 \\
 3 &#x27; 3 &#x27; 1 &#x27; 1 &#x27; 3 \\
@@ -4349,8 +5043,7 @@ direct and indirect ways to reach a node, so for now, we can add
 2 &#x27; 3 &#x27; 2 &#x27; 2 &#x27; 1 \\
 3 &#x27; 2 &#x27; 1 &#x27; 2 &#x27; 2
 &lt;&#x2F;div&gt;
-&lt;p&gt;There isn&#x27;t a connection between ((s_1)) and ((s_3)) yet.
-If we were to calculate ((A^4)):&lt;&#x2F;p&gt;
+&lt;p&gt;There isn&#x27;t a connection between ((s_1)) and ((s_3)) yet. If we were to calculate ((A^4)):&lt;&#x2F;p&gt;
 &lt;div class=&quot;matrix&quot;&gt;
 1 &#x27; 2 &#x27; 1 &#x27;   &#x27;   \\
   &#x27;   &#x27;   &#x27;   &#x27;   \\
@@ -4358,15 +5051,11 @@ If we were to calculate ((A^4)):&lt;&#x2F;p&gt;
   &#x27;   &#x27;   &#x27;   &#x27;   \\
   &#x27;   &#x27;   &#x27;   &#x27;
 &lt;&#x2F;div&gt;
-&lt;p&gt;We don&#x27;t need to calculate anymore. We now know that the graph is
-strongly connected!&lt;&#x2F;p&gt;
+&lt;p&gt;We don&#x27;t need to calculate anymore. We now know that the graph is strongly connected!&lt;&#x2F;p&gt;
 &lt;hr &#x2F;&gt;
-&lt;p&gt;Congratulations! You&#x27;ve completed this tiny introduction to graphs.
-Now you can play around with them and design your own connections.&lt;&#x2F;p&gt;
-&lt;p&gt;Hold the left mouse button on the above area and drag it down to create
-a new node, or drag a node to this area to delete it.&lt;&#x2F;p&gt;
-&lt;p&gt;To create new connections, hold the right mouse button on the node you
-want to start with, and drag it to the node you want it to be connected to.&lt;&#x2F;p&gt;
+&lt;p&gt;Congratulations! You&#x27;ve completed this tiny introduction to graphs. Now you can play around with them and design your own connections.&lt;&#x2F;p&gt;
+&lt;p&gt;Hold the left mouse button on the above area and drag it down to create a new node, or drag a node to this area to delete it.&lt;&#x2F;p&gt;
+&lt;p&gt;To create new connections, hold the right mouse button on the node you want to start with, and drag it to the node you want it to be connected to.&lt;&#x2F;p&gt;
 &lt;p&gt;To delete the connections coming from a specific node, middle click it.&lt;&#x2F;p&gt;
 &lt;table&gt;&lt;tr&gt;&lt;td style=&quot;width:100%;&quot;&gt;
   &lt;button onclick=&quot;resetConnections()&quot;&gt;Reset connections&lt;&#x2F;button&gt;

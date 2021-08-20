@@ -277,3 +277,26 @@ em.math {
     background-color: #FFAA00;
     color: #000000;
 }
+
+@supports (background-clip: text) {
+    .rainbow {
+        background: linear-gradient(to right, #a00, #d70, #bb0, #080, #27c, #92b, #e5b, #a00);
+        background-clip: text;
+        color: transparent;
+        animation: rainbow 2s linear infinite;
+        background-size: 150% 100%;
+        font-style: italic;
+        padding: 0 0.1em;
+        white-space: pre;
+        font-family: serif;
+        font-size: larger;
+    }
+    @keyframes rainbow {
+        0% {
+            background-position: 0 0;
+        }
+        100% {
+            background-position: 300% 0;
+        }
+    }
+}
