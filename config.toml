@@ -1,5 +1,5 @@
 # primary config
-base_url = "https://lonami.dev"
+base_url = "https://buttercup.com.br"
 title = "Lonami's Site"
 default_language = "en"
 minify_html = true
