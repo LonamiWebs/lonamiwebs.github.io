@@ -1,11 +1,13 @@
 +++
 title = "Writing our own Cheat Engine: Multilevel pointers"
 date = 2021-08-20
-updated = 2021-08-20
+updated = 2021-10-17
 [taxonomies]
 category = ["sw"]
 tags = ["windows", "rust", "hacking"]
 +++
+
+> Or: Dissecting Cheat Engine's Pointermaps
 
 This is part 8 on the *Writing our own Cheat Engine* series:
 
@@ -20,7 +22,20 @@ This is part 8 on the *Writing our own Cheat Engine* series:
 
 In part 7 we learnt how to allocate memory in the remote process, and how we can use that memory to inject our own code for the remote process to execute. Although we didn't bother with an assembler, it shows just how strong this technique can really be. With it we've completed the Read, Write and eXecute trio!
 
-Now it's time to find how we can make our work persist. Having to manually find where some value lives is boring. If the game is able to find the player's health for its calculations, then why can't we?
+Now it's time to find how we can make our work persist. Having to manually find where some value lives is boring. If the game is able to find the player's health for its calculations, no matter how many times we restart it, then why can't we?
+
+This entry will review how Cheat Engine's pointermaps work, analyze them, and in the end we will approach the problem in our own way. Because this post is quite lengthy, here's a table of contents:
+
+* [Multilevel pointers](#multilevel-pointers)
+* [Pointers pointing points](#pointers-pointing-points)
+* [Pointer maps](#pointer-maps)
+* [Single-threaded naive approach](#single-threaded-naive-approach)
+* [Speeding up the scan](#speeding-up-the-scan)
+* [Working out a PoC](#working-out-a-poc)
+* [Doing more for better runtime speed](#doing-more-for-better-runtime-speed)
+* [Doing less for better runtime speed](#doing-less-for-better-runtime-speed)
+* [Retrospective](#retrospective)
+* [Finale](#finale)
 
 ## Multilevel pointers
 
@@ -44,7 +59,7 @@ Now it's time to find how we can make our work persist. Having to manually find 
 
 ## Pointers pointing points
 
-If you say "pointer" enough, you'll end up having [semantic satiation][semsat]. My goal by the end of this post is that you actually get to experience that phenomenon. Anyway, no real program would actually have pointers pointing to pointers which themselves point to a different point (you guessed it, another pointer pointing to yet another pointer), right? That would be silly. Why would I have a value behind, say, 5 references? I'm not writing Rust code like `&&&&&value`.
+If you say "pointer" enough, you'll end up having [semantic satiation][semsat]. My goal by the end of this post is that you actually get to experience that phenomenon. Anyway, no real program would actually have pointers pointing to pointers which themselves point to a different point (and, you've guessed it, this point points to another pointer pointing to yet another pointer), right? That would be silly. Why would I have a value behind, say, 5 references? I'm not writing Rust code like `&&&&&value`.
 
 But I am sure you are much more likely to be doing something like `game.world.areas[i].players[j].regen()`. And there's a lot of references there:
 
@@ -58,7 +73,7 @@ But I am sure you are much more likely to be doing something like `game.world.ar
  \this game is actually in a `Box` (so you're accessing it behind other ref)
 ```
 
-Each of those is a different structure, with many fields each (for example, the areas also contain enemies and items dropped in different vectors. So a pointer does not necessarily point directly to the desired field! To complicate things further, the same reference to one thing may be stored in multiple locations, making it possible to find your goal address through many different paths.
+Each of those is a different structure, with many fields each (for example, the areas also contain enemies and items dropped in different vectors). When there's more than one field, the pointer often points <span class="dim">(sorry)</span> to the beginning of the structure, and you need to add some offset to reach the desired field.
 
 ```rust
 #[repr(C)] // <- used for clarity to get precise offsets
@@ -72,15 +87,17 @@ struct Area {
 
 If you have a reference to some `&Area` but access the `players` field, you actually need to read from `[addrof area + 52]`. This is why the tutorial step suggests to "look at the instruction", because it very likely encodes the offset somewhere (if not directly, nearby). Looking at instructions to determine offsets works because normally people want their games to be fast, so they make good use of the available CPU instructions. Obfuscating hot code could slow a game way too much (but it may still be done to some degree!).
 
-The tutorial suggests to complete this step in the same way we did back in step 6. Add a watchpoint, find out what code is accessing this address, look around the disassembly, and write down your findings. Although this technique definitely is a valid way to approach the problem, it is quite tedious and error-prone. It would be hard to fully automate this, because who knows what shenanigans the code could be doing to calculate the right pointer and offset!
+To complicate things further, the same reference to one thing may be stored in multiple locations, making it possible to find your goal address through many different paths. In Rust, this happens when you have a shared pointer, such as `Rc<T>` or `Arc<T>` (or if you go the `unsafe` route and have the same `*const T` value scattered around).
 
-It's also pretty intrusive, because it requires us to attach ourselves as the debugger of the victim program. I hardly have any experience writing debuggers, leave alone writing them in a way that makes them hard to detect! I'm sure it's a very interesting topic, but it's not the current topic at hand, so we'll leave it be. Furthermore, we've already gone that route, so it would be silly to repeat that here, just a longer version of it.
+The tutorial suggests to complete this step in the same way we did back in step 6. Add a watchpoint, find out what code is accessing this address, look around the disassembly, and write down your findings. Although this technique definitely is a valid way to approach the problem, it is quite tedious and error-prone. It would be hard to fully automate this, because who knows what shenanigans the code could be doing to calculate the right pointer and offset! Sure, Cheat Engine's tutorial is not going to purposedly obfuscate the instructions manipulating our target address. But other programs may be dynamically reading the offset from somewhere.
+
+This technique is also pretty intrusive, because it requires us to attach ourselves as the debugger of the victim program. I hardly have any experience writing debuggers, leave alone writing them in a way that makes them hard to detect! I'm sure it's a very interesting topic, but it's not the current topic at hand, so we'll leave it be. If you know of good resources for this, let me know so I can link them here. Furthermore, we've already gone this route before, so it would be silly to repeat that here, just to end up with a longer version of it.
 
 You may have noticed the "extra" information the tutorial step provides:
 
 > Extra: This problem can also be solved using a auto assembler script, or using the pointer scanner.
 
-We've already done the "auto assembler script" part before (in part 7). I'm not sure how you would approach this problem with that technique. Maybe one could dig until the base pointer, and replace whatever read is happening there with a hardcoded value so that the game thinks that's what it actually read? I'm not sure if it would be possible to solve with injected code without following the entire pointer chain. But anyway, we're not doing that, no manual work will happen on this one. No, we're interested in the <span class="rainbow">pointer scanner</span>[^1].
+We've already done the "auto assembler script" part before (in part 7). I'm not sure how you would approach this problem with that technique. Maybe one could dig until the base pointer, and replace whatever read is happening there with a hardcoded value so that the game thinks that's what it actually read? I'm not sure if it would be possible to solve with injected code without following the entire pointer chain. Or maybe you could instead patch the write to use a fixed value. But anyway, we're not doing that, no manual work will happen on this one. No, we're interested in the <span class="rainbow">pointer scanner</span>[^1].
 
 ## Pointer maps
 
@@ -95,7 +112,7 @@ Once you find a value in Cheat Engine, you have the option to "Generate pointerm
 * Time spent writing.
 * Lowest known path.
 
-My guess for "unique pointervalues" is the set of pointers found so far, and the queues may be used by the way the scan is done. The rest of information is pretty much self-explanatory (lowest known path probably is the shortest "pointer path" found so far). When I'm talking about "pointer paths", I'm referring to a known, static base address that won't change, with a list of offsets that, when followed, arrive at some desired value in memory (for example, your character's health). For this step, the solution found with Cheat Engine is a good example:
+My guess for "unique pointervalues" is the set of pointers found so far, and the queues may be used by the way the scan is done, presumably hinting at an implementation detail. The rest of information is pretty much self-explanatory (lowest known path probably is the shortest "pointer path" found so far). When I talk about "pointer paths", I'm referring to a known, static base address that won't change, with a list of offsets that, when followed, arrive at some desired value in memory (for example, your character's health). In essence, it's a path made out of pointers, with a new pointer to follow at each step. The solution found with Cheat Engine for this tutorial step makes for a good example:
 
 ```rust
 let offsets = [10, 18, 0, 18]; // list of offsets
@@ -115,7 +132,7 @@ for offset in offsets {
 let value = process.read_desired_value_at(addr);
 ```
 
-After generating the pointermap, the idea is to force the game to change the pointer path (for example, by closing and re-opening the game again) and find your target value once again. For the tutorial, we can just change the pointer. After we find the value again, we do a "Pointer scan for this address". The "Pointerscanner options" has a checkbox to "Compare results with other saved pointermap(s)". Running this seems to generate a second pointermap, and after some magic, both are compared and the one true pointer path is found[^2].
+Let's get back to talking about Cheat Engine's scan. After generating the pointermap, the idea is to force the game to change the pointer path (for example, by closing and re-opening the game again) and find your target value once again. For the tutorial, we can just change the pointer. After we find the value again, we do a "Pointer scan for this address". The "Pointerscanner options" has a checkbox to "Compare results with other saved pointermap(s)". Running this seems to generate a second pointermap, and after some magic, both are compared and the one true pointer path is found[^2].
 
 There's a bunch of files generated:
 
@@ -156,17 +173,17 @@ The checkbox *Include system modules* I presume also scans in system modules and
 
 Apparently, Cheat Engine can improve pointerscan with gathered heap data. The heap is used to figure out the offset sizes, instead of blindly guessing them. This should greatly improve speed and a lot less useless results and give perfect pointers, but if the game allocates gigantic chunks of heap memory, and then divides it up itself, this will give wrong results. If you only allow static and heap addresses in the path, when the address searched isn't a heap address, the scan will return 0 results. I do not really know how Cheat Engine gathers heap data here to improve the pointerscan, but since this mode is unchecked by default, we should be fine without it.
 
-By default, the pointer path may only be inside the region 0000000000000000-7FFFFFFFFFFFFFFF. There's a fancier option to limit scan to specified region file, which presumably enables a more complex, discontinuous region. Or you can filter pointers so that they end with specific offsets. Or you can indicate that the base address must be in specific range, which will only mark the given range as valid base address (this reduces the number of results, and internally makes use of the "Only find paths with a static address" feature by marking the provided range as static only, so it must be enabled).
+By default, the pointer path may only be inside the region 0000000000000000-7FFFFFFFFFFFFFFF. There's a fancier option to limit scan to specified region file, which presumably enables a more complex, discontinuous region. Or you can filter pointers so that they end with specific offsets[^15]. Or you can indicate that the base address must be in specific range, which will only mark the given range as valid base address (this reduces the number of results, and internally makes use of the "Only find paths with a static address" feature by marking the provided range as static only, so it must be enabled).
 
 Pointers with read-only nodes are excluded by default, so the pointerscan will throw away memory that is readonly. When it looks for paths, it won't encounter paths that pass through read only memory blocks. This is often faster and yields less useless results, but if the game decides to mark a pointer as readonly Cheat Engine won't find it.
 
-Only paths with a static address are "found". The pointerscan will only store a path when it starts with a static address (or easily looked up address). It may miss pointers that are accessed by special paths like thread local storage (but even then they'd be useless for Cheat Engine as they will change). When it's disabled, it finds every single pointer path. Now, this bit is interesting, because the checkbox talks about "find", but the description talks about "store", so we can guess there's no trick to only "finding" correct ones. It's going to find a lot of things, and many of them will be discarded. It also mentions thread-local storage and how we probably shouldn't worry about it.
+Only paths with a static address are "found". The pointerscan will only store a path when it starts with a static address (or easily looked up address). It may miss pointers that are accessed through special paths like thread local storage (but even then they'd be useless for Cheat Engine as they will change). When it's disabled, it finds every single pointer path. Now, this bit is interesting, because the checkbox talks about "find", but the description talks about "store", so we can guess there's no trick to only "finding" correct ones. It's going to find a lot of things, and many of them will be discarded. It also mentions thread-local storage and how we probably shouldn't worry about it.
 
 Cheat Engine won't stop traversing a path when a static has been found by default. When the pointerscanner goes through the list of pointervalues with a specific value, this will stop exploring other paths as soon as it encounters a static pointer to that value. By enabling this option, some valid results could be missed. This talks about "pointervalues with a specific value", which is a bit too obscure for me to try and make any sense out of it.
 
-Addresses must be 32-bit alligned. Only pointers that are stored in an address dividable by 4 are looked at. When disabled, it won't bother. It enables fast scans, but "on some horrible designed games that you shouldn't even play it won't find the paths". Values in memory are often aligned, so reducing the search space by 75% is a no-brainer.
+Addresses must be 32-bit alligned. Only pointers that are stored in an address dividable by 4 are looked at. When disabled, it won't bother. It enables fast scans, but "on some horrible designed games that you shouldn't even play it won't find the paths". Values in memory are often aligned, so reducing the search space by 75%[^16] is a no-brainer.
 
-Cheat Engine can optionally verify that the first element of pointerstruct must point to module (e.g vtable). Object oriented programming languages tend to implement classobjects by having a pointer in the first element to something that describes the class. With this option enabled, Cheat Engine will check if it's a classobject by checking that rule. If not, it won't see it as a pointer. It should yield a tremendous speed increase and almost perfect pointers, but it doesn't work with runtime generated classes (Java, .NET). Optionally, it can also accept non-module addresses. I have no idea how this is achieved, but since it's disabled by default, we can forget about it.
+Cheat Engine can optionally verify that the first element of pointerstruct must point to module (e.g vtable). Object oriented programming languages tend to implement classobjects by having a pointer in the first element to something that describes the class. With this option enabled, Cheat Engine will check if it's a classobject by checking that rule. If not, it won't see it as a pointer. It should yield a tremendous speed increase and almost perfect pointers, but it doesn't work with runtime generated classes (Java, .NET). Optionally, it can also accept non-module addresses. I have no idea how this is achieved, but since it's disabled by default, we should be able to safely ignore it.
 
 By default, no looping pointers are allowed. This will filter out pointerpaths that ended up in a loop (for example, base->p1->p2->p3->p1->p4 since you could just as well do base->p1->p4 then, so throw this one away (base->p1->p4 will be found another way)). This gives less results so less diskspace used, but slightly slows down the scan as it needs to check for loops every single iteration. The thought of how much data the 5GB scan would generate without this option makes me shiver.
 
@@ -274,13 +291,13 @@ We're limiting the maximum depth we're willing to go. This depth directly correl
 
 This code can be made parallel trivially (after making Rust compiler happy, anyway). There is a lot of `ptr_val_addr` values to scan for, so if we think of `candidate_locations` as a "queue of work", more than one thread can be popping from it and running the scan. This gives a nice boost on multi-core systems. It doesn't entirely scale linearly with the number of cores, but it's close enough to what you would expect.
 
-A pointer path will only be considered if it starts with a static address. This means the last address pushed must be static (the path is backwards, because we started at the end, `goal_addr`). This should clean-up a lot of intermediate and uninteresting addresses. If the address isn't static, it's not really interesting to us. Remember, the reason we're doing all of this is so that we can reuse said address in the future, without the need to find `goal_addr` manually.
+A pointer path will only be considered if it starts with a static address. This means the last address pushed must be static (the path will have been built backwards, because we started at the end, `goal_addr`). This should clean-up a lot of intermediate and uninteresting addresses. If the address isn't static, it's not really interesting to us. Remember, the reason we're doing all of this is so that we can reuse said address in the future, without the need to find `goal_addr` manually.
 
 Comparing the pointer paths will result in paths that very likely will work in the future. Not only is this important to reduce the number of paths drastically, but it also provides better guarantees about what is a "good", reliable path to follow to find `goal_addr`.
 
 Next up, let's talk about some of the more intrusive optimizations which I actually seeked to reach an acceptable runtime. This will be where I started to code this up.
 
-## Working out a PoC
+## Working out a <abbr title="Proof of Concept">PoC</abbr>
 
 > Add a braindump mess enough to find pointerpaths
 
@@ -307,7 +324,10 @@ pub struct Snapshot {
 
 impl Snapshot {
     pub fn new(process: &Process, regions: &[winapi::um::winnt::MEMORY_BASIC_INFORMATION]) -> Self {
+        // These are used to determine "base" blocks.
         let modules = process.enum_modules().unwrap();
+
+        // Adapt all regions used by the program into our friendlier structure.
         let mut blocks = regions
             .iter()
             .map(|r| Block {
@@ -324,9 +344,10 @@ impl Snapshot {
             })
             .collect::<Vec<_>>();
 
-        // this will be useful later
+        // This will come in useful later.
         blocks.sort_by_key(|b| b.real_addr);
 
+        // Put all the memory in a flat vector. The blocks will tell us where each index belongs.
         let mut memory = Vec::new();
         let blocks = blocks
             .into_iter()
@@ -354,7 +375,7 @@ impl Snapshot {
 }
 ```
 
-Pretty straightforward. A `Snapshot` consists of the process' memory along with some metadata for the blocks. This lets us known, given an index into `memory`, what is its real address (or vice versa):
+Pretty straightforward. A `Snapshot` consists of the process' memory along with some metadata for the blocks. This lets us know, given an index into `memory`, what its real address (or vice versa):
 
 ```rust
 fn get_block_idx_from_mem_offset(&self, mem_offset: usize) -> usize {
@@ -387,9 +408,9 @@ pub fn read_memory(&self, addr: usize, n: usize) -> Option<&[u8]> {
 }
 ```
 
-Because this time we already own the memory, we can return a slice and avoid allocations[^11]. Now that we have two snapshots of the process' memory at different points in time (so the pointer-values to `goal_addr` are different), we find `goal_addr` in both snapshots (it should be a different value, unless it so happens to be in static memory already).
+Because this time we already own the memory, we can return a slice and avoid allocations[^11]. Now that we have two snapshots of the process' memory at different points in time (so the pointer-values to `goal_addr` are different), we find `goal_addr` in both snapshots (it should be a different pointer-value, unless it so happens to be in static memory already).
 
-Then, the pointer value of the address is searched in the second snapshot (within a certain range, it does not need to be exact). For every value found, a certain offset will have been used. Now, the pointer value minus *this exact offset* **must** be found *exactly* on the other snapshot (it does not matter which snapshot you start with[^12]). This is the "aha!" moment, and it's a key step, so let's make sure we understand why we're doing this.
+Then, the pointer value of the address is searched in the second snapshot (within a certain range, it does not need to be exact). For every value found, a certain offset will have been used. Now, the pointer value minus *this exact offset* **must** be found *exactly* on the other snapshot (it does not matter which snapshot you start with[^12]). This was my "aha!" moment, and it's a key step, so let's make sure we understand why we're doing this.
 
 Rather than guessing candidate pointer-values which would have a given offset as a standalone step, we merge this with the comparison step, insanely reducing the amount of candidates. Before, any pointer-value close enough to `goal_addr` had to be considered, and in a process with megabytes or gigabytes of memory, this is going to be a lot. However, by keeping only the pointer-values (which have a given offset) that *also* exist on the alternate snapshot with the *exact* value, we're tremendously reducing the number of false positives.
 
@@ -577,7 +598,7 @@ struct FutureNode {
 }
 ```
 
-The `CandidateNode` should be as small as possible, because there will be one of each for the addresses of each candidate pointer-value. Without doing anything fancy, we'll need an optional `usize` to build a "linked list" of the path (since we can follow the parent chain), and the address of the pointer-value.
+The `CandidateNode` should be as small as possible, because there will be one `CandidateNode` for every address of the candidate pointer-values. Without doing anything fancy, we'll need an optional `usize` to build a "linked list" of the path, and the address of the pointer-value. With the `parent` field, we can trace all of the parent candidate nodes all the way back up to the root node.
 
 The `FutureNode` will hold temporary values, until a thread picks it up and carries on, so there's no need to over-optimize this. For a thread to continue, it needs to know the pointer-value address and its parent (that is, the candidate node it will work on), along with the first and second goal address for a given depth.
 
@@ -673,7 +694,7 @@ impl QueuePathFinder {
 
 This version probably uses more memory, as we need to remember all `CandidateNode` because any live `FutureNode` may be referencing them, and a `CandidateNode` itself has parents. It should be possible to prune them if it gets too large, although a lot of indices would need to be adjusted, so for now, we don't worry about pruning that tree (which we store as a `Vec` and the references to the parent are indirect through the use of indices). However, this version can use threads much more easily. It's enough to wrap all the `Vec` inside a `Mutex`.
 
-However, this version has an even better advantage. It's now trivial to perform the search breadth-first! With the recursive version, we were stuck performing a depth-first search, which is unfortunate, because the first valid paths which would be found would be the deepest. But now that we have our own work queue, if we keep it sorted by depth, we can easily switch to running breadth-first. Shorter paths feel better, because there's less hops to go through, and less things that could go wrong:
+And what's more, it is now trivial to perform the search breadth-first instead! With the recursive version, we were stuck performing a depth-first search, which is unfortunate, because the first valid paths which would be found would be the deepest. But now that we have our own work queue, if we keep it sorted by depth, we can easily switch to running breadth-first. Shorter paths feel better, because there's less hops to go through, and less things that could go wrong:
 
 ```rust
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)] // <- now it's comparable
@@ -699,7 +720,7 @@ After adding threads, I kept poking around the program and seeing how seemingly-
 * Hoisting certain conditions, like `if depth == 0`, and duplicating the entire loop body rather than running it every time, can hurt performance.
 * The moments when you should wake up threads matters (if your approach works in a way where this matters).
 * Changing the order in which you compute certain values and then use them can matter.
-* `Option` introduces a fair bit of overhead due to alignment concerns, and `CandidateNode` can easily be reduced from 24 bytes to 16 by using a special value for "no-parent".
+* `Option` introduces a fair bit of overhead due to alignment concerns, and `CandidateNode` can easily be reduced from 24 bytes to 16 by getting rid of the `Option` and instead using a special value to signal "no-parent".
 * Atomics are neat, but a bit annoying to use. Crates like [`crossbeam-utils`] make them easier to use while still not using locks if possible.
 * You can beat Rust's functional-style iterators performance by writing your own custom iterator, but it isn't trivial to do so.
 * Messing with larger (such as changing `depth` for `usize`) or smaller (such as changing `node_idx` for `u32`) types can hurt performance.
@@ -786,9 +807,23 @@ let addr = offset_list
 process.write_memory(addr, 5000).unwrap();
 ```
 
+## Retrospective
+
+<span class="dim"><em>This section was added in a later edit.</em></span>
+
+After letting this post settle down on me, I realized we probably managed to re-invent the way Cheat Engine works, or at least most of it, something I'm quite proud of! If you want to have this idea "click" in your head by yourself, you can skip this section. But really, there's an awful lot of similarities, and even matching terminology to some extent. Recall back in the [scan options](#scan-options) section, the two primary modes were *Scan for address* and *Generate pointermap*.
+
+Scanning for an address with the setting "Compare results with other saved pointermap(s)" straight up sounds like the solution we came up with. We take two snapshots (the older one being equivalent to Cheat Engine's "saved pointermap") and perform a scan for the desired address, while comparing our intermediate results with the other pointermap to make sure it is still valid. Its job is to find all candidate paths, and if you were not comparing it to anything, obviously this would lead to a lot of false positives, which is why Cheat Engine advices against it.
+
+Remember when we talked about "the pointerscanner goes through the list of pointervalues with a specific value"? This sounds a lot like our queue, too. The scan settings even mention "Static and dynamic queue sizes", possibly hinting at this implementation detail (as opposed to using unbounded recursion).
+
+And what could a pointermap be other than… a mapping between pointers? This sounds like an awful lot to our "pre-scan" which scanned all the regions to find out "which regions could contain valid pointers into which other regions". That's a mapping of regions as determined by the pointers contained within them, and perhaps Cheat Engine only cares to store worthwhile snapshots of the memory and the corresponding regions. Maybe this is what Cheat Engine means by limiting the scan only to certain regions!
+
+
+
 ## Finale
 
-And this my dear readers concludes my ambitions with the project! I think the program is pretty useful by now, even if it can only do a small fraction of what Cheat Engine can (I don't think I'm ready to write a form designer GUI yet… wait why was this part of Cheat Engine again?). Despite the length of this entry, we didn't even figure out how Cheat Engine's pointer scanner works. Maybe it really is finding millions of possible paths, perhaps storing the offsets in some compact way. Let's recap what we do have learnt:
+And this my dear readers concludes my ambitions with the project! I think the program is pretty useful by now, even if it can only do a small fraction of what Cheat Engine can (I don't think I'm ready to write a form designer GUI yet… wait why was this part of Cheat Engine again?). ~~Despite the length of this entry, we didn't even figure out how Cheat Engine's pointer scanner works. Maybe it really is finding millions of possible paths, perhaps storing the offsets in some compact way~~. Although we can't know for sure what Cheat Engine is doing behind the scenes without studying its source code, we came pretty darn close to it. Let's recap what we do have learnt:
 
 * We're experts in pointers by now! Seven layers of indirection? Easy peasy.
 * There's a lot of configuration available for pointer scans: search depth, search breadth, search order, memory ranges, memory maps…
@@ -847,6 +882,10 @@ assert_eq!(vec_ptr_val + 4, y_ptr_val);
 [^14]: Most heaps tend to be min-heaps, and it's not uncommon for the use of `BinaryHeap` in Rust to need `std::cmp::Reverse` in order to get [min-heap behaviour][minheap]. There's been some discussion on internals about this, such as [Why is std::collections::BinaryHeap a max-heap?][whymaxheap] and more recently [Specializing BinaryHeap to MaxHeap and MinHeap][maxtominheap] where @matklad laments:
 
 > I feel like our heap accumulated a bunch of problems (wrong default order, slow into-sorted, wrong into-iter, confusing naming, slow-perf due to being binary).
+
+[^15]: This sounds like it would be most useful when you've already put the work before, and is now time for a re-scan. In this scenario, you already know that there's probably some golden "offset" into the structure you care about.
+
+[^16]: 87.5% for us, thanks to having 8-byte sized pointers!
 
 [semsat]: https://en.wikipedia.org/wiki/Semantic_satiation
 [`crossbeam-utils`]: https://crates.io/crates/crossbeam-utils
