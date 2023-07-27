@@ -7,12 +7,12 @@ updated = 2016-03-05
 Índice
 ------
 
-* [Qué es](#qué_es)
-* [En qué consiste](#en_qué_consiste)
-* [Límites](#límites)
-* [Tipos de inteligencia artificial](#tipos_de_inteligencia_artificial)
-* [Aplicaciones prácticas](#aplicaciones_prácticas)
-* [Implicaciones éticas](#implicaciones_éticas)
+* [Qué es](#que-es)
+* [En qué consiste](#en-que-consiste)
+* [Límites](#limites)
+* [Tipos de inteligencia artificial](#tipos-de-inteligencia-artificial)
+* [Aplicaciones prácticas](#aplicaciones-practicas)
+* [Implicaciones éticas](#implicaciones-eticas)
 * [Ejemplos](#ejemplos)
 * [Conceptos](#conceptos)
 * [Fuentes](#fuentes)

@@ -11,11 +11,11 @@ Index
 -----
 
 * [Background](#background)
-* [Input / Output](#input_output)
-* [Diving In](#diving_in)
-* [A Toy Example](#a_toy_example)
-* [A Real Example](#a_real_example)
-* [Extra Material](#extra_material)
+* [Input / Output](#input-output)
+* [Diving In](#diving-in)
+* [A Toy Example](#a-toy-example)
+* [A Real Example](#a-real-example)
+* [Extra Material](#extra-material)
 
 
 Background
