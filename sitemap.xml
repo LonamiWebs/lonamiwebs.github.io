@@ -185,6 +185,10 @@
         <lastmod>2020-03-27T11:04:45+00:00</lastmod>
     </url>
     <url>
+        <loc>https://lonami.dev/blog/stalebots/</loc>
+        <lastmod>2023-07-27</lastmod>
+    </url>
+    <url>
         <loc>https://lonami.dev/blog/tips-outpost/</loc>
         <lastmod>2020-05-22</lastmod>
     </url>
@@ -241,6 +245,9 @@
         <loc>https://lonami.dev/category/hw/</loc>
     </url>
     <url>
+        <loc>https://lonami.dev/category/opensource/</loc>
+    </url>
+    <url>
         <loc>https://lonami.dev/category/sw/</loc>
     </url>
     <url>
@@ -284,6 +291,9 @@
         <loc>https://lonami.dev/tags/asyncio/</loc>
     </url>
     <url>
+        <loc>https://lonami.dev/tags/automation/</loc>
+    </url>
+    <url>
         <loc>https://lonami.dev/tags/bigdata/</loc>
     </url>
     <url>
@@ -302,6 +312,9 @@
         <loc>https://lonami.dev/tags/foodforthought/</loc>
     </url>
     <url>
+        <loc>https://lonami.dev/tags/github/</loc>
+    </url>
+    <url>
         <loc>https://lonami.dev/tags/graphics/</loc>
     </url>
     <url>
@@ -315,6 +328,9 @@
     </url>
     <url>
         <loc>https://lonami.dev/tags/nixos/</loc>
+    </url>
+    <url>
+        <loc>https://lonami.dev/tags/opensource/</loc>
     </url>
     <url>
         <loc>https://lonami.dev/tags/optimization/</loc>
