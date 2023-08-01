@@ -55,31 +55,16 @@
 <body>
 <div id="main">
   <h1>Donate to Lonami</h1>
-  <p>First, thank you for liking my work! If you have no money to spend,
-  feel free to join the
-  <a href="https://t.me/LonamiWebs" target="_blank">LonamiWebs</a> Telegram
-  group. I appreciate when someone tells me they like what I do!</p>
+  <p>First, thank you for liking my work! I don't have a need for your money,
+  but if you want to reach me out regardless to say something nice, feel free
+  to <a href="https://t.me/lonami">reach me out on Telegram</a> (but please
+  say more than just "hi"; I'll likely ignore the message if it looks like
+  it's spam!)</p>
+
+  <p><em>If</em> you insist on sending money my way, here are some links:</p>
 
   <h3><a href="https://www.paypal.me/lonamiwebs" target="_blank">Link to PayPal.me</a></h3>
+  <h3><a href="https://github.com/sponsors/Lonami" target="_blank">Link to GitHub sponsors</a></h3>
 </div>
-<script>
-bitcoinAddr = document.getElementById('bitcoinAddr');
-copyBtcAddr = document.getElementById('copyBtcAddr');
-
-function copyBitcoinAddr() {
-  bitcoinAddr.select();
-
-  try {
-    var ok = document.execCommand('copy');
-    copyBtcAddr.innerHTML = ok ? 'Copied!' : 'Copying failed :(';
-  } catch (err) {
-    copyBtcAddr.innerHTML = 'Not supported :(';
-  }
-
-  setTimeout(function() {
-    copyBtcAddr.innerHTML = 'Copy';
-  }, 2000);
-}
-</script>
 </body>
 </html>
