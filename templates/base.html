@@ -48,7 +48,13 @@
             </div>
         </footer>
     </article>
-    <p class="abyss" onclick="document.getElementById('player').play()">Gaze into the abyss… Oh hi there!</p>
-    <audio id="player" style="display:none;" controls="" autoplay="" preload="none" src="https://oriath.net/Audio/Dialogue/NPC/ShaperCombat/SH25b.dialogue.ogg"></audio>
+    <p class="abyss" onclick="egg()">Gaze into the abyss… Oh hi there!</p>
+    <script>
+const egg = () => {
+    const audio = document.createElement('audio')
+    audio.src = 'https://oriath.net/Audio/Dialogue/NPC/ShaperCombat/SH25b.dialogue.ogg'
+    audio.play()
+}
+    </script>
 </body>
 </html>
