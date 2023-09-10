@@ -1,7 +1,7 @@
 +++
 title = "In defense of stale-bots"
 date = 2023-07-27
-updated = 2023-07-27
+updated = 2023-08-12
 [taxonomies]
 category = ["opensource"]
 tags = ["opensource", "github", "automation"]
@@ -87,9 +87,11 @@ The maintainer is simply sharing their work. There's no responsibility to keep i
 
 Certainly. But when browsing through the issues, there is no denying that there is a lot less clutter. And if your goal is to take a look every now and then, it works great.
 
-> Stale bots waste everyone's time. Those interested need to actively keep the issues open to prevent automatic closing.
+> Stale bots waste everyone's time. It's not always obvious that they are being used, and those interested need to actively keep the issues open to prevent automatic closing.
 
 That's a choice the users make. The maintainer's stance is clear: the stale bot runs on the issue board. It is not the maintainer's problem that some users insist, even after it's clear that they maintainer doesn't care.
+
+The lack of discoverability on whether stale bots are being used or not is a fair point. However, if the repository lacks contribution guidelines, you might want to spare a minute to check for the existence of a "stale" label, or do a quick search to figure out if issues are closed as "stale". By doing this, you don't need to commit to creating well-detailed reports if you're not willing to put up with the fact that it might just get closed without the author reading it.
 
 > Stale bots create fatigue for everyone, as duplicate issues are created and those watching get pinged. This is rude on part of the maintainer.
 
@@ -107,7 +109,7 @@ Users have their own expectations. There's an issue tracker, so I can report bug
 
 Forking is always an option. Become a maintainer who is more engaged in building a community yourself. Triage the issues. This is not for everyone.
 
-Stale bots are simply automating a task. One solution of many. And like every solution, it comes with trade-offs. Yes, it feels more "humane" for the maintainer to close the report as "won't-fix" with an explanation. Not everyone has time for that, or the temper to do so. The maintainer does not necessarily feel "shame" for having a lot of issues open. They might simply want to keep a small amount of them open.
+Stale bots are simply automating a task. One solution of many. And like every solution, it comes with trade-offs. Yes, it feels more "humane" for the maintainer to close the report as "won't-fix" with an explanation. Not everyone has time for that, or the temperament to do so. The maintainer does not necessarily feel "shame" for having a lot of issues open. They might simply want to keep a small amount of them open.
 
 It's true. The maintainer may not care about your issues. But those are *your* issues, not *theirs*. They're free to spend their free time however they wish. And if they wish, they can choose to ignore and close said issues, while keeping a public project page up. If the maintainer's stance is not clear, take the opportunity to educate them on why it's important to make it clear. There are unspoken rules they may not be aware of.
 
