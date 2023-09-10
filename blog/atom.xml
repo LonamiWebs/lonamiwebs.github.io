@@ -4,12 +4,12 @@
 	<link href="https://lonami.dev/blog/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://lonami.dev/blog/"/>
 	<generator uri="https://www.getzola.org/">Zola</generator>
-	<updated>2023-07-27T00:00:00+00:00</updated>
+	<updated>2023-08-12T00:00:00+00:00</updated>
 	<id>https://lonami.dev/blog/atom.xml</id>
 	<entry xml:lang="en">
 		<title>In defense of stale-bots</title>
 		<published>2023-07-27T00:00:00+00:00</published>
-		<updated>2023-07-27T00:00:00+00:00</updated>
+		<updated>2023-08-12T00:00:00+00:00</updated>
 		<link rel="alternate" href="https://lonami.dev/blog/stalebots/" type="text/html"/>
 		<id>https://lonami.dev/blog/stalebots/</id>
 		<content type="html">&lt;p&gt;You are a young developer. You&#x27;re only getting started, and learning new things as you go, but you love the idea of telling computers what to do. &lt;em&gt;Automating&lt;&#x2F;em&gt; mundane tasks. It&#x27;s really exciting to have this much freedom and control over something you own. Your only limit is your imagination!&lt;&#x2F;p&gt;
@@ -77,9 +77,10 @@
 &lt;&#x2F;blockquote&gt;
 &lt;p&gt;Certainly. But when browsing through the issues, there is no denying that there is a lot less clutter. And if your goal is to take a look every now and then, it works great.&lt;&#x2F;p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;Stale bots waste everyone&#x27;s time. Those interested need to actively keep the issues open to prevent automatic closing.&lt;&#x2F;p&gt;
+&lt;p&gt;Stale bots waste everyone&#x27;s time. It&#x27;s not always obvious that they are being used, and those interested need to actively keep the issues open to prevent automatic closing.&lt;&#x2F;p&gt;
 &lt;&#x2F;blockquote&gt;
 &lt;p&gt;That&#x27;s a choice the users make. The maintainer&#x27;s stance is clear: the stale bot runs on the issue board. It is not the maintainer&#x27;s problem that some users insist, even after it&#x27;s clear that they maintainer doesn&#x27;t care.&lt;&#x2F;p&gt;
+&lt;p&gt;The lack of discoverability on whether stale bots are being used or not is a fair point. However, if the repository lacks contribution guidelines, you might want to spare a minute to check for the existence of a &amp;quot;stale&amp;quot; label, or do a quick search to figure out if issues are closed as &amp;quot;stale&amp;quot;. By doing this, you don&#x27;t need to commit to creating well-detailed reports if you&#x27;re not willing to put up with the fact that it might just get closed without the author reading it.&lt;&#x2F;p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;Stale bots create fatigue for everyone, as duplicate issues are created and those watching get pinged. This is rude on part of the maintainer.&lt;&#x2F;p&gt;
 &lt;&#x2F;blockquote&gt;
@@ -92,7 +93,7 @@
 &lt;p&gt;As unsatisfying as it is, it&#x27;s a choice the maintainer can make. They may be aware of this problem and actively try to document how contributions are handled. But they don&#x27;t have to. GitHub enables the issue tracker by default. The maintainer may want to keep it for their own use. They may not want to build a community.&lt;&#x2F;p&gt;
 &lt;p&gt;Users have their own expectations. There&#x27;s an issue tracker, so I can report bugs, right? Well, yes. You can report issues. But that doesn&#x27;t mean the maintainer has to read them. And this does not make them a bad person.&lt;&#x2F;p&gt;
 &lt;p&gt;Forking is always an option. Become a maintainer who is more engaged in building a community yourself. Triage the issues. This is not for everyone.&lt;&#x2F;p&gt;
-&lt;p&gt;Stale bots are simply automating a task. One solution of many. And like every solution, it comes with trade-offs. Yes, it feels more &amp;quot;humane&amp;quot; for the maintainer to close the report as &amp;quot;won&#x27;t-fix&amp;quot; with an explanation. Not everyone has time for that, or the temper to do so. The maintainer does not necessarily feel &amp;quot;shame&amp;quot; for having a lot of issues open. They might simply want to keep a small amount of them open.&lt;&#x2F;p&gt;
+&lt;p&gt;Stale bots are simply automating a task. One solution of many. And like every solution, it comes with trade-offs. Yes, it feels more &amp;quot;humane&amp;quot; for the maintainer to close the report as &amp;quot;won&#x27;t-fix&amp;quot; with an explanation. Not everyone has time for that, or the temperament to do so. The maintainer does not necessarily feel &amp;quot;shame&amp;quot; for having a lot of issues open. They might simply want to keep a small amount of them open.&lt;&#x2F;p&gt;
 &lt;p&gt;It&#x27;s true. The maintainer may not care about your issues. But those are &lt;em&gt;your&lt;&#x2F;em&gt; issues, not &lt;em&gt;theirs&lt;&#x2F;em&gt;. They&#x27;re free to spend their free time however they wish. And if they wish, they can choose to ignore and close said issues, while keeping a public project page up. If the maintainer&#x27;s stance is not clear, take the opportunity to educate them on why it&#x27;s important to make it clear. There are unspoken rules they may not be aware of.&lt;&#x2F;p&gt;
 &lt;p&gt;If your expectations don&#x27;t match those of the maintainer, don&#x27;t get angry at the maintainer. You can consider their use of stale bots as their stance on the matter. You can disagree. Take a step back. Read the contribution rules and don&#x27;t engage if you disagree. Save yourself a bad time.&lt;&#x2F;p&gt;
 &lt;p&gt;To make it clear: this post&#x27;s protagonist is a hobbyst. Of course, everyone&#x27;s situation is different, and stale bots used by companies are a whole other matter. But don&#x27;t go making other people&#x27;s lives miserable. There&#x27;s enough of that already. Some just want to code, not build a community. Harassing maintainers is never okay.&lt;&#x2F;p&gt;

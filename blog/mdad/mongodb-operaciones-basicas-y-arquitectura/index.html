@@ -184,4 +184,8 @@ WriteResult({ "nRemoved" : 1 })
     "ok" : 1
 }
 </code></pre><p>Si queremos más de un atributo en el índice lo haremos así:<pre><code>> db.mycol.ensureIndex({"title":1,"description":-1})
-</code></pre><p>Los valores que puede tomar son <code>+1</code> para ascendente o <code>-1</code> para descendente.<h3 id=referencias>Referencias</h3><ul><li>Manual MongoDB. (n.d.). <a href=https://docs.mongodb.com/manual/>https://docs.mongodb.com/manual/</a><li>MongoDB Tutorial – Tutorialspoint. (n.d.). – <a href=https://www.tutorialspoint.com/mongodb/index.htm>https://www.tutorialspoint.com/mongodb/index.htm</a></ul></main><footer><div><p>Share your thoughts! — <a href=mailto:totufals@hotmail.com><img alt=Mail src=/img/mail.svg></a></div></footer></article><p onclick="document.getElementById('player').play()" class=abyss>Gaze into the abyss… Oh hi there!</p><audio autoplay controls id=player preload=none src=https://oriath.net/Audio/Dialogue/NPC/ShaperCombat/SH25b.dialogue.ogg style=display:none;></audio>
+</code></pre><p>Los valores que puede tomar son <code>+1</code> para ascendente o <code>-1</code> para descendente.<h3 id=referencias>Referencias</h3><ul><li>Manual MongoDB. (n.d.). <a href=https://docs.mongodb.com/manual/>https://docs.mongodb.com/manual/</a><li>MongoDB Tutorial – Tutorialspoint. (n.d.). – <a href=https://www.tutorialspoint.com/mongodb/index.htm>https://www.tutorialspoint.com/mongodb/index.htm</a></ul></main><footer><div><p>Share your thoughts! — <a href=mailto:totufals@hotmail.com><img alt=Mail src=/img/mail.svg></a></div></footer></article><p class=abyss onclick=egg()>Gaze into the abyss… Oh hi there!</p><script>const egg = () => {
+    const audio = document.createElement('audio')
+    audio.src = 'https://oriath.net/Audio/Dialogue/NPC/ShaperCombat/SH25b.dialogue.ogg'
+    audio.play()
+}</script>

@@ -86,4 +86,8 @@ part-r-00000  _SUCCESS
 $ cat results/part-r-00000
 1901	317
 1902	244
-</code></pre><p>It worked! Now this example was obviously tiny, but hopefully enough to demonstrate how to get the basics running on real world data.</main><footer><div><p>Share your thoughts! — <a href=mailto:totufals@hotmail.com><img alt=Mail src=/img/mail.svg></a></div></footer></article><p onclick="document.getElementById('player').play()" class=abyss>Gaze into the abyss… Oh hi there!</p><audio autoplay controls id=player preload=none src=https://oriath.net/Audio/Dialogue/NPC/ShaperCombat/SH25b.dialogue.ogg style=display:none;></audio>
+</code></pre><p>It worked! Now this example was obviously tiny, but hopefully enough to demonstrate how to get the basics running on real world data.</main><footer><div><p>Share your thoughts! — <a href=mailto:totufals@hotmail.com><img alt=Mail src=/img/mail.svg></a></div></footer></article><p class=abyss onclick=egg()>Gaze into the abyss… Oh hi there!</p><script>const egg = () => {
+    const audio = document.createElement('audio')
+    audio.src = 'https://oriath.net/Audio/Dialogue/NPC/ShaperCombat/SH25b.dialogue.ogg'
+    audio.play()
+}</script>
