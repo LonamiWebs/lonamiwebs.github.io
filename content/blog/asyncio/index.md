@@ -1,7 +1,7 @@
 +++
 title = "An Introduction to Asyncio"
 date = 2018-06-13
-updated = 2020-10-03
+updated = 2023-11-22
 [taxonomies]
 category = ["sw"]
 tags = ["python", "asyncio"]
@@ -138,7 +138,7 @@ async def method(request):
     process request
     return result
 
-run in parallel (
+run concurrently (
 	method with request 1,
 	method with request 2,
 )
