@@ -33,6 +33,8 @@ Culture
 * [Contempt Culture](https://blog.aurynn.com/2015/12/16-contempt-culture). Or why you should not speak crap about your non-favourite programming languages.
 * [Well-Kept Gardens Die By Pacifism](https://www.lesswrong.com/posts/tscc3e5eujrsEeFN4/well-kept-gardens-die-by-pacifism). Risks any online community can run into.
 * [It's Nicky Case!](https://ncase.me/) They make some cool things worth checking out, I really like "we become what we behold".
+* [On a technicality](https://eev.ee/blog/2016/07/22/on-a-technicality/). A timeless classic on online communities.
+* [The Asshole Filter](https://siderea.dreamwidth.org/1209794.html). You might have one!
 
 
 Debate
