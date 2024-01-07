@@ -4,8 +4,69 @@
 	<link href="https://lonami.dev/blog/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://lonami.dev/blog/"/>
 	<generator uri="https://www.getzola.org/">Zola</generator>
-	<updated>2023-08-12T00:00:00+00:00</updated>
+	<updated>2023-11-22T00:00:00+00:00</updated>
 	<id>https://lonami.dev/blog/atom.xml</id>
+	<entry xml:lang="en">
+		<title>Downloading Minecraft modpacks without using adware launchers</title>
+		<published>2023-08-05T00:00:00+00:00</published>
+		<updated>2023-08-05T00:00:00+00:00</updated>
+		<link rel="alternate" href="https://lonami.dev/blog/inspecting-tls-traffic/" type="text/html"/>
+		<id>https://lonami.dev/blog/inspecting-tls-traffic/</id>
+		<content type="html">&lt;p&gt;Every now and then, I get the urge to download and install a &lt;a href=&quot;https:&#x2F;&#x2F;www.minecraft.net&#x2F;&quot;&gt;Minecraft&lt;&#x2F;a&gt; modpack. Mind you, it&#x27;s often the case that I go through the installation process, and only then realize I don&#x27;t &lt;em&gt;actually&lt;&#x2F;em&gt; want to play it, because I might not be in the mood to do so.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.curseforge.com&#x2F;&quot;&gt;CurseForge&lt;&#x2F;a&gt; has pretty much become the de-facto place to find and download mods. Or at least, that&#x27;s the impression I get when looking for Minecraft mods.&lt;&#x2F;p&gt;
+&lt;p&gt;There&#x27;s just one tiny problem. They really, &lt;em&gt;really&lt;&#x2F;em&gt; want you to use their desktop application, either from the &lt;a href=&quot;https:&#x2F;&#x2F;www.overwolf.com&#x2F;&quot;&gt;Overwolf&lt;&#x2F;a&gt; launcher or the &amp;quot;standalone&amp;quot;.&lt;&#x2F;p&gt;
+&lt;p&gt;It used to be the case that you were able to go into the Files of a specific mod project and download a single ZIP with all the &lt;code&gt;.jar&lt;&#x2F;code&gt; mods. I can no longer find this. Some projects offer a &amp;quot;server&amp;quot; download, which is very handy, because it has all the mods, but it might not work directly for the client installation of your Minecraft launcher.&lt;&#x2F;p&gt;
+&lt;p&gt;It seems your only choice is to painstakingly download the mods one by one, or use their ad-filled launchers. I haven&#x27;t done a lot of analysis on these launchers, but it&#x27;s probably safe to call them spyware. At least, the amount of ad-vendors they list when you open it to accept the privacy policy (because of course there&#x27;s one, it&#x27;s really just a webpage bundled into an executable file!) is concerning to me (the scrollbar is &lt;em&gt;long&lt;&#x2F;em&gt;).&lt;&#x2F;p&gt;
+&lt;p&gt;I don&#x27;t like either option, so I&#x27;m making up a third and a fourth.&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;This post is about me figuring the whole thing out, so it&#x27;s a bit all over the place. You&#x27;ve been warned!&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;h2 id=&quot;automating-the-browser&quot;&gt;Automating the browser&lt;&#x2F;h2&gt;
+&lt;p&gt;My first instinct was to automate the browser. Using something like &lt;a href=&quot;https:&#x2F;&#x2F;selenium-python.readthedocs.io&quot;&gt;Selenium from Python&lt;&#x2F;a&gt; didn&#x27;t sound too bad, since I&#x27;m familiar with Python already.&lt;&#x2F;p&gt;
+&lt;p&gt;It shouldn&#x27;t be too bad, either. It is possible to download a ZIP file for the modpack which contains some configuration overrides along with the list of mods. Nice!&lt;&#x2F;p&gt;
+&lt;p&gt;In theory, all we would need to do is grab the link for the modpack we desire, click on the Download button, inspect the ZIP, and figure out the next URLs. Cool!&lt;&#x2F;p&gt;
+&lt;p&gt;Except, the download starts automatically, so you probably want a &lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;a&#x2F;29777967&quot;&gt;custom download folder&lt;&#x2F;a&gt;. &lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;q&#x2F;46470473&quot;&gt;Experimenting with preference values at runtime is just as annoying&lt;&#x2F;a&gt;. As far as I can tell, there&#x27;s no clean way to detect these, so one would instead watch the directory and figure out when new files are added. And there are cookie banners that block the view and can appear at any time.&lt;&#x2F;p&gt;
+&lt;p&gt;Overall, automating web interaction sounds extremely annoying. It could be done, but it&#x27;s not really fun to me. And the idea of running &lt;em&gt;an entire web browser&lt;&#x2F;em&gt; to download a few files does not sit right with me.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;inspecting-the-app-s-traffic&quot;&gt;Inspecting the app&#x27;s traffic&lt;&#x2F;h2&gt;
+&lt;p&gt;Now, to do this, of course we will need to install one of those two launchers. It sucks, but it&#x27;s only temporary. So go ahead and install one (or wait until we have the rest of the tools in place). You could use a virtual machine for this, but I cannot be bothered.&lt;&#x2F;p&gt;
+&lt;p&gt;We&#x27;ll obviously need a tool that can help us reading the network traffic of the launcher. I&#x27;ve lost track on how many times I&#x27;ve installed and uninstalled &lt;a href=&quot;https:&#x2F;&#x2F;www.wireshark.org&#x2F;&quot;&gt;Wireshark&lt;&#x2F;a&gt;. It&#x27;s really great, but I use it very sparingly and I am terrible at it, so I uninstall it after I&#x27;m done. Perhaps one day I&#x27;ll finally get the hang of it and be able to do cool things.&lt;&#x2F;p&gt;
+&lt;p&gt;Unfortunately, &lt;a href=&quot;https:&#x2F;&#x2F;wiki.wireshark.org&#x2F;TLS&quot;&gt;Wireshark alone won&#x27;t do&lt;&#x2F;a&gt;. The launcher, like most &amp;quot;applications&amp;quot; nowadays is really just a browser in disguise connecting and accessing resources via HTTPS. It&#x27;s that &amp;quot;S&amp;quot; in &amp;quot;HTTPS&amp;quot; that bothers me. Because the connection is secure, the traffic is encrypted, and I cannot be bothered to figure out how the application uses TLS to try and have it spit the secrets.&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;a href=&quot;https:&#x2F;&#x2F;wiki.wireshark.org&#x2F;TLS&quot;&gt;Wireshark wiki does include some tips&lt;&#x2F;a&gt;. It would&#x27;ve been wise of me to at least try these first, such as running the &lt;code&gt;CurseForge.exe&lt;&#x2F;code&gt; from Git Bash with &lt;code&gt;SSLKEYLOGFILE=lol.log&lt;&#x2F;code&gt;, and it &lt;em&gt;actually&lt;&#x2F;em&gt; creates the file! But this is not what I did, so we won&#x27;t go this route. It&#x27;s also less widely applicable, so it&#x27;s nice to explore more &amp;quot;general&amp;quot; solutions.&lt;&#x2F;p&gt;
+&lt;p&gt;I had recently read the &lt;a href=&quot;https:&#x2F;&#x2F;jade.fyi&#x2F;blog&#x2F;announcing-clipper&#x2F;&quot;&gt;announcement post for Clipper&lt;&#x2F;a&gt;, claiming to offer &amp;quot;TLS-transparent HTTP debugging for native apps&amp;quot;. Sounds neat, that&#x27;s just what I want! Except, &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lf-&#x2F;clipper#development&quot;&gt;the easy way to build it is with Nix&lt;&#x2F;a&gt;. I could boot into my Linux partition and try to use CurseForge there. I could even try WSL. But neither are in a workable state, so those options are out.&lt;&#x2F;p&gt;
+&lt;p&gt;After &lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;q&#x2F;57306192&quot;&gt;asking around the internet some more&lt;&#x2F;a&gt;, one might discover &lt;a href=&quot;https:&#x2F;&#x2F;www.netresec.com&#x2F;?page=PolarProxy&quot;&gt;PolarProxy&lt;&#x2F;a&gt;. Sounds like it could work! After download, we can run it with:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;sh&quot; class=&quot;language-sh &quot;&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;PolarProxy -p 443,80 -o pcaplog -f proxyflows.log -x polarproxy.cer --httpconnect 10443 --certhttp 10080 --pcapoverip 57012
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Where:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;-p&lt;&#x2F;code&gt; sets the LISTEN-PORT &amp;quot;TCP port to bind proxy to&amp;quot; and DECRYPTED-PORT &amp;quot;TCP server port to use for decrypted traffic in PCAP&amp;quot;. I&#x27;m not entirely sure what this does, but it was in their examples.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;-o&lt;&#x2F;code&gt; sets the &amp;quot;output directory for hourly rotated PCAP files&amp;quot;. Make sure you create that folder first! It makes it convenient to keep the traffic saved as we can later analyse it at our leisure.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;-f&lt;&#x2F;code&gt; to &amp;quot;[l]og flow metadata for proxied sessions&amp;quot;. Again, not sure what this is for. Probably not needed, but doesn&#x27;t hurt.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;-x&lt;&#x2F;code&gt; to &amp;quot;[e]xport DER encoded public CA certificate&amp;quot;. We need this, because we want to Install Certificate to the Local Machine and to place it in the &amp;quot;Trusted Root Certification Authorities&amp;quot;. This is explained in the same &lt;a href=&quot;https:&#x2F;&#x2F;www.netresec.com&#x2F;?page=PolarProxy&quot;&gt;PolarProxy&lt;&#x2F;a&gt; page. You shouldn&#x27;t need this for subsequent runs though.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;--httpconnect&lt;&#x2F;code&gt; to &amp;quot;[r]un local HTTP CONNECT proxy server&amp;quot;. I had to use this when configuring proxy settings.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;--certhttp&lt;&#x2F;code&gt; to &amp;quot;host the X.509 root CA cert&amp;quot;. Probably not needed.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;--pcapoverip&lt;&#x2F;code&gt; to &amp;quot;[s]erve decrypted TLS data as PCAP-over-IP&amp;quot;. This makes it so that one can run Wireshark with &lt;code&gt;wireshark -k -i TCP@127.0.0.1:57012&lt;&#x2F;code&gt;, which is convenient to do it live.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;We can then Change proxy settings in our System settings by enabling Use a proxy server with the address shown from the &lt;code&gt;ipconfig&lt;&#x2F;code&gt; command and this same port. (You probably could use &lt;code&gt;127.0.0.1&lt;&#x2F;code&gt; too.)&lt;&#x2F;p&gt;
+&lt;p&gt;Now! With all that done, if we run the CurseForge application, we should be generating some PCAP files or, alternatively, getting the decrypted traffic in Wireshark! Go ahead and download the modpack you want from it, and once it&#x27;s done, our PCAP should be complete. You can then stop the capture to reduce the amount of information we need to go through.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;understanding-the-app-s-traffic&quot;&gt;Understanding the app&#x27;s traffic&lt;&#x2F;h2&gt;
+&lt;p&gt;Great, now we have a packet capture with a lot of data in it. How do we go about finding the right things in there?&lt;&#x2F;p&gt;
+&lt;p&gt;We can then type &lt;code&gt;http&lt;&#x2F;code&gt; into the filter to get suggestions for &lt;code&gt;http.request.full_uri or http2.request.full_uri&lt;&#x2F;code&gt;. Using that, we can filter the packets and see some paths in the Info column, as it will display anything with a full URI in it.&lt;&#x2F;p&gt;
+&lt;p&gt;You should see GET requests to places like &lt;code&gt;&#x2F;monsdk&#x2F;electron&#x2F;...&lt;&#x2F;code&gt; (how unsurprising) and, more interestingly, to &lt;code&gt;&#x2F;v1&#x2F;minecraft&#x2F;modloader&lt;&#x2F;code&gt;! Clicking here we can see that it&#x27;s making the request to the host api.curseforge.com! You can go ahead and colorize the TCP conversation to see related messages. If you&#x27;re confident that it looks promising, you can also Follow the HTTP conversation entirely (which is a bit slower because it needs to run a new filter).&lt;&#x2F;p&gt;
+&lt;p&gt;If you look into the HTTP data Wireshark decoded, you will spot... bingo! The &lt;code&gt;x-api-key&lt;&#x2F;code&gt; header! You can also see the &lt;code&gt;User-Agent&lt;&#x2F;code&gt; among other headers, so we can fully recreate this on our own now!&lt;&#x2F;p&gt;
+&lt;p&gt;Now that we know this &lt;code&gt;x-api-key&lt;&#x2F;code&gt; is used, we can filter by it with &lt;code&gt;http contains &amp;quot;API ID PASTED HERE&amp;quot;&lt;&#x2F;code&gt;, and we will get all the traffic sent using that API key. In my capture, it seems like there are two conversations.&lt;&#x2F;p&gt;
+&lt;p&gt;Feel free to go ahead and right-click the columns to change your Column Preferences to display other information you might want to go through. Simply set the Field to anything you want from the &lt;code&gt;http&lt;&#x2F;code&gt; namespace. And be sure to check the source and destination to know the direction a message is going in!&lt;&#x2F;p&gt;
+&lt;p&gt;In my case, the second conversation is the one requesting the modpack I am interested in. Following that conversation and then displaying only the outgoing messages, it is very easy to see all the GET and POST requests being made:&lt;&#x2F;p&gt;
+&lt;pre&gt;&lt;code&gt;GET &amp;#x2F;v1&amp;#x2F;mods&amp;#x2F;MODID
+GET &amp;#x2F;v1&amp;#x2F;mods&amp;#x2F;MODID&amp;#x2F;files&amp;#x2F;FILEID
+POST &amp;#x2F;v1&amp;#x2F;mods
+GET &amp;#x2F;v1&amp;#x2F;mods&amp;#x2F;ANOTHER-MODID&amp;#x2F;files&amp;#x2F;ANOTHER-FILEID
+...
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It seems like first it will request information about the mod (or modpack) you are interested in. This presumably returns a list of files, and likely the latest one is chosen. After a POST to &lt;code&gt;&#x2F;v1&#x2F;mods&lt;&#x2F;code&gt;, a long trail of &lt;code&gt;GET&lt;&#x2F;code&gt; to various files is made. We can save the conversation to a file to more easily analyze it (such as disabling word-wrap to easily see where requests start and end).&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;q&#x2F;8903815&quot;&gt;You might be able to use other tools to export the request-response&lt;&#x2F;a&gt;, but I just post-processed the text file a bit ot make it nicer to read (as there is no newline after response bodies). Nothing a simple &lt;code&gt;([^\n])((?:GET|POST) &#x2F;)&lt;&#x2F;code&gt; regexp can&#x27;t fix.&lt;&#x2F;p&gt;
+&lt;p&gt;After this, the rest is history! We managed to read through the encrypted traffic to extract the API key, which &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;Lonami&#x2F;curseforge-downloader&quot;&gt;can be used to write a custom downloader&lt;&#x2F;a&gt;. I won&#x27;t go into the details, because the API could change any time, so that&#x27;s left as an exercise to the reader. Enjoy!&lt;&#x2F;p&gt;
+</content>
+	</entry>
 	<entry xml:lang="en">
 		<title>In defense of stale-bots</title>
 		<published>2023-07-27T00:00:00+00:00</published>
@@ -4674,7 +4735,7 @@ fsType = &amp;quot;ext4&amp;quot;;
 	<entry xml:lang="en">
 		<title>An Introduction to Asyncio</title>
 		<published>2018-06-13T00:00:00+00:00</published>
-		<updated>2020-10-03T00:00:00+00:00</updated>
+		<updated>2023-11-22T00:00:00+00:00</updated>
 		<link rel="alternate" href="https://lonami.dev/blog/asyncio/" type="text/html"/>
 		<id>https://lonami.dev/blog/asyncio/</id>
 		<content type="html">&lt;h2 id=&quot;index&quot;&gt;Index&lt;&#x2F;h2&gt;
@@ -4765,7 +4826,7 @@ print(response.decode())
     process request
     return result
 
-run in parallel (
+run concurrently (
 	method with request 1,
 	method with request 2,
 )
@@ -5043,6 +5104,8 @@ Then we just pass that list to &lt;code&gt;asyncio.wait&lt;&#x2F;code&gt;:&lt;&#
 &lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;blog.aurynn.com&#x2F;2015&#x2F;12&#x2F;16-contempt-culture&quot;&gt;Contempt Culture&lt;&#x2F;a&gt;. Or why you should not speak crap about your non-favourite programming languages.&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.lesswrong.com&#x2F;posts&#x2F;tscc3e5eujrsEeFN4&#x2F;well-kept-gardens-die-by-pacifism&quot;&gt;Well-Kept Gardens Die By Pacifism&lt;&#x2F;a&gt;. Risks any online community can run into.&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;ncase.me&#x2F;&quot;&gt;It&#x27;s Nicky Case!&lt;&#x2F;a&gt; They make some cool things worth checking out, I really like &amp;quot;we become what we behold&amp;quot;.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;eev.ee&#x2F;blog&#x2F;2016&#x2F;07&#x2F;22&#x2F;on-a-technicality&#x2F;&quot;&gt;On a technicality&lt;&#x2F;a&gt;. A timeless classic on online communities.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;siderea.dreamwidth.org&#x2F;1209794.html&quot;&gt;The Asshole Filter&lt;&#x2F;a&gt;. You might have one!&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;h2 id=&quot;debate&quot;&gt;Debate&lt;&#x2F;h2&gt;
 &lt;ul&gt;

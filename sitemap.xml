@@ -8,7 +8,7 @@
     </url>
     <url>
         <loc>https://lonami.dev/blog/asyncio/</loc>
-        <lastmod>2020-10-03</lastmod>
+        <lastmod>2023-11-22</lastmod>
     </url>
     <url>
         <loc>https://lonami.dev/blog/breaking-ror/</loc>
@@ -21,6 +21,10 @@
     <url>
         <loc>https://lonami.dev/blog/graphs/</loc>
         <lastmod>2017-06-02</lastmod>
+    </url>
+    <url>
+        <loc>https://lonami.dev/blog/inspecting-tls-traffic/</loc>
+        <lastmod>2023-08-05</lastmod>
     </url>
     <url>
         <loc>https://lonami.dev/blog/installing-nixos-2/</loc>
@@ -245,6 +249,9 @@
         <loc>https://lonami.dev/category/hw/</loc>
     </url>
     <url>
+        <loc>https://lonami.dev/category/network/</loc>
+    </url>
+    <url>
         <loc>https://lonami.dev/category/opensource/</loc>
     </url>
     <url>
@@ -352,6 +359,9 @@
     </url>
     <url>
         <loc>https://lonami.dev/tags/tips/</loc>
+    </url>
+    <url>
+        <loc>https://lonami.dev/tags/tls/</loc>
     </url>
     <url>
         <loc>https://lonami.dev/tags/windows/</loc>
