@@ -1,0 +1,1969 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgo=">
+    <title>scratch</title>
+    <style>
+        pre {
+            line-height: 125%;
+        }
+
+        td.linenos .normal {
+            color: inherit;
+            background-color: transparent;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+
+        span.linenos {
+            color: inherit;
+            background-color: transparent;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+
+        td.linenos .special {
+            color: #000000;
+            background-color: #ffffc0;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+
+        span.linenos.special {
+            color: #000000;
+            background-color: #ffffc0;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+
+        .highlight .hll {
+            background-color: #ffffcc
+        }
+
+        .highlight {
+            background: #f8f8f8;
+        }
+
+        .highlight .c {
+            color: #3D7B7B;
+            font-style: italic
+        }
+
+        /* Comment */
+        .highlight .err {
+            border: 1px solid #FF0000
+        }
+
+        /* Error */
+        .highlight .k {
+            color: #008000;
+            font-weight: bold
+        }
+
+        /* Keyword */
+        .highlight .o {
+            color: #666666
+        }
+
+        /* Operator */
+        .highlight .ch {
+            color: #3D7B7B;
+            font-style: italic
+        }
+
+        /* Comment.Hashbang */
+        .highlight .cm {
+            color: #3D7B7B;
+            font-style: italic
+        }
+
+        /* Comment.Multiline */
+        .highlight .cp {
+            color: #9C6500
+        }
+
+        /* Comment.Preproc */
+        .highlight .cpf {
+            color: #3D7B7B;
+            font-style: italic
+        }
+
+        /* Comment.PreprocFile */
+        .highlight .c1 {
+            color: #3D7B7B;
+            font-style: italic
+        }
+
+        /* Comment.Single */
+        .highlight .cs {
+            color: #3D7B7B;
+            font-style: italic
+        }
+
+        /* Comment.Special */
+        .highlight .gd {
+            color: #A00000
+        }
+
+        /* Generic.Deleted */
+        .highlight .ge {
+            font-style: italic
+        }
+
+        /* Generic.Emph */
+        .highlight .ges {
+            font-weight: bold;
+            font-style: italic
+        }
+
+        /* Generic.EmphStrong */
+        .highlight .gr {
+            color: #E40000
+        }
+
+        /* Generic.Error */
+        .highlight .gh {
+            color: #000080;
+            font-weight: bold
+        }
+
+        /* Generic.Heading */
+        .highlight .gi {
+            color: #008400
+        }
+
+        /* Generic.Inserted */
+        .highlight .go {
+            color: #717171
+        }
+
+        /* Generic.Output */
+        .highlight .gp {
+            color: #000080;
+            font-weight: bold
+        }
+
+        /* Generic.Prompt */
+        .highlight .gs {
+            font-weight: bold
+        }
+
+        /* Generic.Strong */
+        .highlight .gu {
+            color: #800080;
+            font-weight: bold
+        }
+
+        /* Generic.Subheading */
+        .highlight .gt {
+            color: #0044DD
+        }
+
+        /* Generic.Traceback */
+        .highlight .kc {
+            color: #008000;
+            font-weight: bold
+        }
+
+        /* Keyword.Constant */
+        .highlight .kd {
+            color: #008000;
+            font-weight: bold
+        }
+
+        /* Keyword.Declaration */
+        .highlight .kn {
+            color: #008000;
+            font-weight: bold
+        }
+
+        /* Keyword.Namespace */
+        .highlight .kp {
+            color: #008000
+        }
+
+        /* Keyword.Pseudo */
+        .highlight .kr {
+            color: #008000;
+            font-weight: bold
+        }
+
+        /* Keyword.Reserved */
+        .highlight .kt {
+            color: #B00040
+        }
+
+        /* Keyword.Type */
+        .highlight .m {
+            color: #666666
+        }
+
+        /* Literal.Number */
+        .highlight .s {
+            color: #BA2121
+        }
+
+        /* Literal.String */
+        .highlight .na {
+            color: #687822
+        }
+
+        /* Name.Attribute */
+        .highlight .nb {
+            color: #008000
+        }
+
+        /* Name.Builtin */
+        .highlight .nc {
+            color: #0000FF;
+            font-weight: bold
+        }
+
+        /* Name.Class */
+        .highlight .no {
+            color: #880000
+        }
+
+        /* Name.Constant */
+        .highlight .nd {
+            color: #AA22FF
+        }
+
+        /* Name.Decorator */
+        .highlight .ni {
+            color: #717171;
+            font-weight: bold
+        }
+
+        /* Name.Entity */
+        .highlight .ne {
+            color: #CB3F38;
+            font-weight: bold
+        }
+
+        /* Name.Exception */
+        .highlight .nf {
+            color: #0000FF
+        }
+
+        /* Name.Function */
+        .highlight .nl {
+            color: #767600
+        }
+
+        /* Name.Label */
+        .highlight .nn {
+            color: #0000FF;
+            font-weight: bold
+        }
+
+        /* Name.Namespace */
+        .highlight .nt {
+            color: #008000;
+            font-weight: bold
+        }
+
+        /* Name.Tag */
+        .highlight .nv {
+            color: #19177C
+        }
+
+        /* Name.Variable */
+        .highlight .ow {
+            color: #AA22FF;
+            font-weight: bold
+        }
+
+        /* Operator.Word */
+        .highlight .w {
+            color: #bbbbbb
+        }
+
+        /* Text.Whitespace */
+        .highlight .mb {
+            color: #666666
+        }
+
+        /* Literal.Number.Bin */
+        .highlight .mf {
+            color: #666666
+        }
+
+        /* Literal.Number.Float */
+        .highlight .mh {
+            color: #666666
+        }
+
+        /* Literal.Number.Hex */
+        .highlight .mi {
+            color: #666666
+        }
+
+        /* Literal.Number.Integer */
+        .highlight .mo {
+            color: #666666
+        }
+
+        /* Literal.Number.Oct */
+        .highlight .sa {
+            color: #BA2121
+        }
+
+        /* Literal.String.Affix */
+        .highlight .sb {
+            color: #BA2121
+        }
+
+        /* Literal.String.Backtick */
+        .highlight .sc {
+            color: #BA2121
+        }
+
+        /* Literal.String.Char */
+        .highlight .dl {
+            color: #BA2121
+        }
+
+        /* Literal.String.Delimiter */
+        .highlight .sd {
+            color: #BA2121;
+            font-style: italic
+        }
+
+        /* Literal.String.Doc */
+        .highlight .s2 {
+            color: #BA2121
+        }
+
+        /* Literal.String.Double */
+        .highlight .se {
+            color: #AA5D1F;
+            font-weight: bold
+        }
+
+        /* Literal.String.Escape */
+        .highlight .sh {
+            color: #BA2121
+        }
+
+        /* Literal.String.Heredoc */
+        .highlight .si {
+            color: #A45A77;
+            font-weight: bold
+        }
+
+        /* Literal.String.Interpol */
+        .highlight .sx {
+            color: #008000
+        }
+
+        /* Literal.String.Other */
+        .highlight .sr {
+            color: #A45A77
+        }
+
+        /* Literal.String.Regex */
+        .highlight .s1 {
+            color: #BA2121
+        }
+
+        /* Literal.String.Single */
+        .highlight .ss {
+            color: #19177C
+        }
+
+        /* Literal.String.Symbol */
+        .highlight .bp {
+            color: #008000
+        }
+
+        /* Name.Builtin.Pseudo */
+        .highlight .fm {
+            color: #0000FF
+        }
+
+        /* Name.Function.Magic */
+        .highlight .vc {
+            color: #19177C
+        }
+
+        /* Name.Variable.Class */
+        .highlight .vg {
+            color: #19177C
+        }
+
+        /* Name.Variable.Global */
+        .highlight .vi {
+            color: #19177C
+        }
+
+        /* Name.Variable.Instance */
+        .highlight .vm {
+            color: #19177C
+        }
+
+        /* Name.Variable.Magic */
+        .highlight .il {
+            color: #666666
+        }
+
+        /* Literal.Number.Integer.Long */
+    </style>
+    <style>
+        body {
+            background: #eee;
+        }
+
+        main {
+            max-width: 50em;
+            margin: 0 auto 20em;
+            background: #fff;
+            padding: 1em;
+            border-radius: 4px;
+        }
+
+        pre {
+            overflow: auto;
+            margin: 0;
+        }
+
+        menu {
+            list-style-type: none;
+            line-height: 1.5em;
+            padding-left: 0;
+        }
+
+        .sideContainer {
+            display: flex;
+            gap: 1em;
+        }
+    </style>
+
+</head>
+
+<body>
+    <main>
+        <h1>Fitting large trees in small screens</h1>
+        <p>I recently spent a week trying to figure out how to display a very large inheritance tree on a limited amount
+            of screen space.</p>
+        <p>As great as libraries like <a href="https://d3js.org/">D3</a> are to create <a
+                href="https://d3js.org/d3-hierarchy/hierarchy">hierarchies</a>,
+            <a href="https://d3js.org/d3-hierarchy/tree">trees</a> or <a
+                href="https://d3js.org/d3-hierarchy/cluster">clusters</a>,
+            they tend to like to put all nodes of a certain depth or all leaf nodes together. This just won't cut it!
+        </p>
+        <p>Placing all nodes of a certain depth together will lead to very wide diagrams when there is a lot of
+            siblings. Now, for <em>this</em> particular case, you could render the inheritance tree growing from
+            left-to-right,
+            as opposed to the usual top-to-bottom. But that's no fun. Trees were never meant to grow sideways.</p>
+        <h2>Generating random words</h2>
+        <p><em>Feel free to <a href="#generating-random-trees">skip this detour</a>.</em></p>
+        <p>Everybody knows words grow on trees. So to generate our tree, we'll first need to generate words.</p>
+        <p>I won't go <em>super</em> overboard with this, but I also don't want completely random letters, as that
+            doesn't make words that are easy to read. Still, we'll want some helpers to make our life a bit easier.</p>
+        <p>We'll be grabbing the <a
+                href="https://www3.nd.edu/~busiforc/handouts/cryptography/Letter%20Frequencies.html">Letter Frequencies
+                in the English Language</a>.
+            We won't worry about bigrams, trigrams, quadrigrams, or <a
+                href="https://en.wikipedia.org/wiki/Markov_chain">Markov chains</a>,
+            as this is not the main focus of the blog post.
+            But the letter frequencies will be nice to make a biased random function.</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="c1">// https://www3.nd.edu/~busiforc/handouts/cryptography/Letter%20Frequencies.html</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">LETTERS_FREQ</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">0.08167</span><span class="p">,</span><span class="w"> </span><span class="mf">0.01492</span><span class="p">,</span><span class="w"> </span><span class="mf">0.02782</span><span class="p">,</span><span class="w"> </span><span class="mf">0.04253</span><span class="p">,</span><span class="w"> </span><span class="mf">0.12702</span><span class="p">,</span><span class="w"> </span><span class="mf">0.02228</span><span class="p">,</span><span class="w"> </span><span class="mf">0.02015</span><span class="p">,</span><span class="w"> </span><span class="mf">0.06094</span><span class="p">,</span><span class="w"> </span><span class="mf">0.06966</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00153</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00772</span><span class="p">,</span><span class="w"> </span><span class="mf">0.04025</span><span class="p">,</span><span class="w"> </span><span class="mf">0.02406</span><span class="p">,</span><span class="w"> </span><span class="mf">0.06749</span><span class="p">,</span><span class="w"> </span><span class="mf">0.07507</span><span class="p">,</span><span class="w"> </span><span class="mf">0.01929</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00095</span><span class="p">,</span><span class="w"> </span><span class="mf">0.05987</span><span class="p">,</span><span class="w"> </span><span class="mf">0.06327</span><span class="p">,</span><span class="w"> </span><span class="mf">0.09056</span><span class="p">,</span><span class="w"> </span><span class="mf">0.02758</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00978</span><span class="p">,</span><span class="w"> </span><span class="mf">0.02360</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00150</span><span class="p">,</span><span class="w"> </span><span class="mf">0.01974</span><span class="p">,</span><span class="w"> </span><span class="mf">0.00074</span><span class="p">]</span>
+</pre>
+        </div>
+        </code></pre>
+        <p>With the list of frequencies in hand, we can accumulate them and normalize them to 1 (to account for floating
+            point errors):</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">cumulativeFrequencies</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">letters</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;a&#39;</span><span class="p">.</span><span class="nx">charCodeAt</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">freq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[...</span><span class="nx">letters</span><span class="p">].</span><span class="nx">map</span><span class="p">((</span><span class="nx">c</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">LETTERS_FREQ</span><span class="p">[</span><span class="nx">c</span><span class="p">.</span><span class="nx">charCodeAt</span><span class="p">(</span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">a</span><span class="p">])</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">freq</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">freq</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nx">freq</span><span class="p">[</span><span class="nx">i</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">freq</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">value</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">value</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">freq</span><span class="p">[</span><span class="nx">freq</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">])</span>
+<span class="p">}</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">VOWELS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;aeiou&#39;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">CONSONANTS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;bcdfghjklmnpqrstvwxyz&#39;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">VOWELS_CUM_FREQ</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">cumulativeFrequencies</span><span class="p">(</span><span class="nx">VOWELS</span><span class="p">)</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">CONSONANTS_CUM_FREQ</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">cumulativeFrequencies</span><span class="p">(</span><span class="nx">CONSONANTS</span><span class="p">)</span>
+</pre>
+        </div>
+        </code></pre>
+        <details>
+            <summary>Additional utility functions</summary>
+            <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">randRange</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">low</span><span class="p">,</span><span class="w"> </span><span class="nx">high</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span>
+<span class="w">    </span><span class="nx">low</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="nx">high</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">low</span><span class="p">))</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">binarySearchIndex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">arr</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">low</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">high</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">arr</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="nx">low</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="nx">high</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">mid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">((</span><span class="nx">low</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">high</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">arr</span><span class="p">[</span><span class="nx">mid</span><span class="p">]</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">mid</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">arr</span><span class="p">[</span><span class="nx">mid</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">low</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">mid</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">high</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">mid</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">low</span>
+<span class="p">}</span>
+</pre>
+            </div>
+            </code></pre>
+        </details>
+        <p>Separating vowels from consonants will let us alternate them to make sure we don't end with consonant pairs
+            we can't pronounce:</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">randWord</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">length</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span>
+<span class="w">    </span><span class="nb">Array</span><span class="p">(</span><span class="nx">length</span><span class="p">).</span><span class="nx">fill</span><span class="p">(</span><span class="kc">undefined</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span>
+<span class="w">        </span><span class="p">(</span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">i</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span>
+<span class="w">            </span><span class="nx">CONSONANTS</span><span class="p">[</span><span class="nx">binarySearchIndex</span><span class="p">(</span><span class="nx">CONSONANTS_CUM_FREQ</span><span class="p">,</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">())]</span>
+<span class="w">            </span><span class="o">:</span><span class="w"> </span><span class="nx">VOWELS</span><span class="p">[</span><span class="nx">binarySearchIndex</span><span class="p">(</span><span class="nx">VOWELS_CUM_FREQ</span><span class="p">,</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">())]</span>
+<span class="w">    </span><span class="p">).</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+</pre>
+        </div>
+        </code></pre>
+        <p>Even Shakespeare would be amazed at the words we're able to create:</p>
+        <div class="sideContainer">
+            <button id="randWordButton">Speak!</button>
+            <span id="randWordSpan"></span>
+        </div>
+        <p>Now, moving on onto something more useful…</p>
+        <h2>Generating random trees</h2>
+        <p>A wooden tree has a single trunk. This will be true for our virtual tree too, by having a single root node.
+        </p>
+        <p>We'll define a simple text format with the parent node on the left, separated by &quot;-&gt;&quot;, and then
+            a word for each children:</p>
+        <div id="treeVis0"></div><svg id="measureSvg" xmlns='http://www.w3.org/2000/svg' width="0" height="0"></svg>
+        <p>To toggle between text and the rendered tree, click on the &quot;<span
+                id="toggleViewTextSpan">View</span>&quot; button on the left menu.
+            Of course, we haven't implemented anything yet, so the visualization is looking pretty barebones.</p>
+        <p>The default text was chosen to highlight the problems we will encounter during our adventure, but feel free
+            to change it as much as you'd like.</p>
+        <p>These controls will follow us as we iterate on the algorithm. Let's get right into it!</p>
+        <h2>Rendering a single node</h2>
+        <p>While this might not seem very interesting at first, it's actually quite important to get this right, or the
+            positioning won't work at all.</p>
+        <p>Our nodes will be little boxes with the text centered inside, despite this being one of the <a
+                href="https://tonsky.me/blog/centering/">Hardest Problems in Computer Science</a>.</p>
+        <p>A node object will consist of its identifier (under the <code>.id</code> property) and a position (under the
+            <code>.pos</code> property).</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">renderNode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">displayText</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">createElementNS</span><span class="p">(</span><span class="nx">measureSvg</span><span class="p">.</span><span class="nx">namespaceURI</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;text&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">text</span><span class="p">.</span><span class="nx">textContent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">displayText</span>
+<span class="w">    </span><span class="nx">text</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;dominant-baseline&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;central&#39;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">bbox</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">measureBbox</span><span class="p">(</span><span class="nx">text</span><span class="p">)</span><span class="w"> </span><span class="c1">// .getBBox()</span>
+<span class="w">    </span><span class="nx">text</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">PADDING_X</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">STROKE_WIDTH</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">text</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">PADDING_Y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">STROKE_WIDTH</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">bbox</span><span class="p">.</span><span class="nx">height</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">rect</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">createElementNS</span><span class="p">(</span><span class="nx">measureSvg</span><span class="p">.</span><span class="nx">namespaceURI</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;rect&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">rect</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">STROKE_WIDTH</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">rect</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">STROKE_WIDTH</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">rect</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;width&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">PADDING_X</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">rect</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;height&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">bbox</span><span class="p">.</span><span class="nx">height</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">PADDING_Y</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">2</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">rect</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;fill&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;none&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">rect</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;stroke&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;#000&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">rect</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;stroke-width&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">STROKE_WIDTH</span><span class="p">)</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">createElementNS</span><span class="p">(</span><span class="nx">measureSvg</span><span class="p">.</span><span class="nx">namespaceURI</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;g&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">g</span><span class="p">.</span><span class="nx">replaceChildren</span><span class="p">(</span><span class="nx">text</span><span class="p">,</span><span class="w"> </span><span class="nx">rect</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">g</span>
+<span class="p">}</span>
+</pre>
+        </div>
+        </code></pre>
+        <p>The <code>renderNode</code> function will return a single <a
+                href="https://developer.mozilla.org/en-US/docs/Web/SVG/Element/g"><code>&lt;g&gt;</code> element</a>
+            that we can easily <a
+                href="https://developer.mozilla.org/en-US/docs/Web/CSS/transform"><code>transform</code></a> to position
+            it.</p>
+        <p>The (not shown) helper <code>measureBbox</code> function contains some boilerplate to <a
+                href="https://developer.mozilla.org/en-US/docs/Web/API/Element/getBBox"><code>getBBox</code></a> of the
+            rendered text, which we can use to create an appropriately-sized rectangle around it:</p>
+        <div class="sideContainer">
+            <button id="randNodeButton">Render!</button>
+            <svg id="randNodeSvg" width="0" height="0"></svg>
+        </div>
+        <p>Now that we can render a single node, we can take it up a notch and…</p>
+        <h2>Rendering a pair of nodes</h2>
+        <p>The nodes will need to be connected by lines, or we won't be able to tell that they are related at all.</p>
+        <p>To achieve this, we can use a <a
+                href="https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths">path</a> with 4 points to create
+            a &quot;step&quot; connection style. We will start from the botton edge of the parent at its center, go
+            downwards a bit, move horizontally to the center of the child, and finally move the remaining distance
+            downwards.</p>
+        <p>We will command the line to <code>M</code>ove to its starting position, and then <code>V</code>ertically or
+            <code>H</code>orizontally as needed.
+            To avoid having to recompute a node's bounding box, we will cache it in its <code>.bbox</code> property.</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">SPACING_X</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">16</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">SPACING_Y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">16</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">renderLink_V0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">parent</span><span class="p">,</span><span class="w"> </span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">x0</span><span class="p">,</span><span class="w"> </span><span class="nx">y0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="nx">parent</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">parent</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">parent</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">parent</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">height</span><span class="p">,</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">y1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">y0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_Y</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">x1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">y2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">y</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">createElementNS</span><span class="p">(</span><span class="nx">measureSvg</span><span class="p">.</span><span class="nx">namespaceURI</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;path&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">path</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span><span class="w"> </span><span class="sb">`M</span><span class="si">${</span><span class="nx">x0</span><span class="si">}</span><span class="sb"> </span><span class="si">${</span><span class="nx">y0</span><span class="si">}</span><span class="sb"> V</span><span class="si">${</span><span class="nx">y1</span><span class="si">}</span><span class="sb"> H</span><span class="si">${</span><span class="nx">x1</span><span class="si">}</span><span class="sb"> V</span><span class="si">${</span><span class="nx">y2</span><span class="si">}</span><span class="sb">`</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">path</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;fill&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;none&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">path</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;stroke&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;#000&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">path</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;stroke-width&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">STROKE_WIDTH</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">path</span>
+<span class="p">}</span>
+</pre>
+        </div>
+        </code></pre>
+        <div class="sideContainer">
+            <button id="randPairButton">Render!</button>
+            <svg id="randPairSvg" width="0" height="0"></svg>
+        </div>
+        <p>This will be good enough for now, although as you can probably tell by the function's name, this won't be the
+            last version of the function.</p>
+        <h2>A crude tree visualization</h2>
+        <p>Our tree will be laid down by arranging all the nodes into columns and rows.
+            Within a column, all children will be centered. Within a row, all children will be laid after each other.
+            We can call these our &quot;layout elements&quot;:</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">LEAF</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Symbol</span><span class="p">(</span><span class="s1">&#39;leaf&#39;</span><span class="p">)</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">COLUMN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Symbol</span><span class="p">(</span><span class="s1">&#39;column&#39;</span><span class="p">)</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">ROW</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Symbol</span><span class="p">(</span><span class="s1">&#39;row&#39;</span><span class="p">)</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">defaultBbox</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">({</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nx">width</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nx">height</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nx">right</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nx">bottom</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="p">})</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">makeLeaf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">node</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">({</span>
+<span class="w">    </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="nx">LEAF</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="nx">node</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">childrenIds</span><span class="o">:</span><span class="w"> </span><span class="nx">node</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">id</span><span class="p">),</span>
+<span class="w">    </span><span class="nx">bbox</span><span class="o">:</span><span class="w"> </span><span class="nx">defaultBbox</span><span class="p">(),</span>
+<span class="w">    </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">width</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="nx">height</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="p">},</span>
+<span class="p">})</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">makeColumn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(...</span><span class="nx">children</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">({</span>
+<span class="w">    </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="nx">COLUMN</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">children</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">bbox</span><span class="o">:</span><span class="w"> </span><span class="nx">defaultBbox</span><span class="p">(),</span>
+<span class="w">    </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">width</span><span class="o">:</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">size</span><span class="p">.</span><span class="nx">width</span><span class="p">)),</span>
+<span class="w">        </span><span class="nx">height</span><span class="o">:</span><span class="w"> </span><span class="nx">children</span><span class="p">.</span><span class="nx">reduce</span><span class="p">((</span><span class="nx">acc</span><span class="p">,</span><span class="w"> </span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">acc</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">size</span><span class="p">.</span><span class="nx">height</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">),</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="p">})</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">makeRow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(...</span><span class="nx">children</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">({</span>
+<span class="w">    </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="nx">ROW</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">children</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">bbox</span><span class="o">:</span><span class="w"> </span><span class="nx">defaultBbox</span><span class="p">(),</span>
+<span class="w">    </span><span class="nx">size</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">width</span><span class="o">:</span><span class="w"> </span><span class="nx">children</span><span class="p">.</span><span class="nx">reduce</span><span class="p">((</span><span class="nx">acc</span><span class="p">,</span><span class="w"> </span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">acc</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">size</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">height</span><span class="o">:</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">size</span><span class="p">.</span><span class="nx">height</span><span class="p">)),</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="p">})</span>
+</pre>
+        </div>
+        </code></pre>
+        <p>Leaf nodes will have a size of 1x1, as they are a single node themselves.
+            Columns will be as wide as the widest child is, whereas rows will be as tall as the tallest child is.
+            Lastly, columns are as tall as the sum of all their children is, whereas rows are as wide as the sum of all
+            their children is.</p>
+        <p>We cache these sizes inside the objects themselves. This will help us make informed decisions later on.</p>
+        <p>We persist the link between parent and its children in the leaf nodes, since we'll need it to draw the path
+            linking them.
+            This will let us go from the identifiers to the corresponding leaf node after it's been created.
+            Using references via identifiers saves us from having to maintain the link while creating the layout.</p>
+        <p>To actually construct the layout, we can recursively place all parent-children pairs inside a column, with
+            all the children being placed in a row:</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">createLayout_V0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">rootNode</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span>
+<span class="w">    </span><span class="nx">rootNode</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span>
+<span class="w">        </span><span class="o">?</span><span class="w"> </span><span class="nx">makeColumn</span><span class="p">(</span>
+<span class="w">            </span><span class="nx">makeLeaf</span><span class="p">(</span><span class="nx">rootNode</span><span class="p">),</span>
+<span class="w">            </span><span class="nx">makeRow</span><span class="p">(...</span><span class="nx">rootNode</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">createLayout_V0</span><span class="p">)),</span>
+<span class="w">        </span><span class="p">)</span>
+<span class="w">        </span><span class="o">:</span><span class="w"> </span><span class="nx">makeLeaf</span><span class="p">(</span><span class="nx">rootNode</span><span class="p">)</span>
+</pre>
+        </div>
+        </code></pre>
+        <p>And finally, let's adjust the bounding boxes to be correct with what we've described:</p>
+        <details>
+            <summary>Additional helpers</summary>
+            <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">updateBbox</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">layoutElement</span><span class="p">,</span><span class="w"> </span><span class="nx">newValues</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">(</span><span class="nx">layoutElement</span><span class="p">.</span><span class="nx">bbox</span><span class="p">,</span><span class="w"> </span><span class="nx">newValues</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">layoutElement</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">layoutElement</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">layoutElement</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span>
+<span class="w">    </span><span class="nx">layoutElement</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">bottom</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">layoutElement</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">layoutElement</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">height</span>
+<span class="p">}</span>
+
+<span class="kd">function</span><span class="o">*</span><span class="w"> </span><span class="nx">pairwise</span><span class="p">(</span><span class="nx">arr</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">arr</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">yield</span><span class="w"> </span><span class="p">[</span><span class="nx">arr</span><span class="p">[</span><span class="nx">i</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">],</span><span class="w"> </span><span class="nx">arr</span><span class="p">[</span><span class="nx">i</span><span class="p">]]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">lastChild</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">layoutElement</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">layoutElement</span><span class="p">.</span><span class="nx">children</span><span class="p">[</span><span class="nx">layoutElement</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">1</span><span class="p">]</span>
+</pre>
+            </div>
+            </code></pre>
+        </details>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">initLayoutBbox_V0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">layoutElement</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="nx">layoutElement</span><span class="p">.</span><span class="nx">type</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="nx">LEAF</span><span class="o">:</span><span class="w"> </span><span class="nx">initLeafBbox_V0</span><span class="p">(</span><span class="nx">layoutElement</span><span class="p">);</span><span class="w"> </span><span class="k">break</span>
+<span class="w">        </span><span class="c1">// Inject the current method so that we can reuse them in later versions</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="nx">COLUMN</span><span class="o">:</span><span class="w"> </span><span class="nx">initColumnBbox_V0</span><span class="p">(</span><span class="nx">initLayoutBbox_V0</span><span class="p">,</span><span class="w"> </span><span class="nx">layoutElement</span><span class="p">);</span><span class="w"> </span><span class="k">break</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="nx">ROW</span><span class="o">:</span><span class="w"> </span><span class="nx">initRowBbox_V0</span><span class="p">(</span><span class="nx">initLayoutBbox_V0</span><span class="p">,</span><span class="w"> </span><span class="nx">layoutElement</span><span class="p">);</span><span class="w"> </span><span class="k">break</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">initLeafBbox_V0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">leaf</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">width</span><span class="p">,</span><span class="w"> </span><span class="nx">height</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">measureBbox</span><span class="p">(</span><span class="nx">renderNode</span><span class="p">(</span><span class="nx">leaf</span><span class="p">.</span><span class="nx">id</span><span class="p">))</span>
+<span class="w">    </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">leaf</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">width</span><span class="p">,</span><span class="w"> </span><span class="nx">height</span><span class="w"> </span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">initColumnBbox_V0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">initLayoutBbox</span><span class="p">,</span><span class="w"> </span><span class="nx">column</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">column</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">initLayoutBbox</span><span class="p">)</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">maxWidth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">column</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="p">))</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">prev</span><span class="p">,</span><span class="w"> </span><span class="nx">child</span><span class="p">]</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">pairwise</span><span class="p">(</span><span class="nx">column</span><span class="p">.</span><span class="nx">children</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="nx">maxWidth</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="c1">// center</span>
+<span class="w">            </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="nx">prev</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">prev</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">bottom</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_Y</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="c1">// below previous</span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">column</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">width</span><span class="o">:</span><span class="w"> </span><span class="nx">maxWidth</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">height</span><span class="o">:</span><span class="w"> </span><span class="nx">lastChild</span><span class="p">(</span><span class="nx">column</span><span class="p">).</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">bottom</span><span class="p">,</span>
+<span class="w">    </span><span class="p">})</span>
+<span class="p">}</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">initRowBbox_V0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">initLayoutBbox</span><span class="p">,</span><span class="w"> </span><span class="nx">row</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">row</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">initLayoutBbox</span><span class="p">)</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">maxHeight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">row</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">height</span><span class="p">))</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">prev</span><span class="p">,</span><span class="w"> </span><span class="nx">child</span><span class="p">]</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">pairwise</span><span class="p">(</span><span class="nx">row</span><span class="p">.</span><span class="nx">children</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="nx">prev</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">prev</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_X</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="c1">// after previous</span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">row</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">width</span><span class="o">:</span><span class="w"> </span><span class="nx">lastChild</span><span class="p">(</span><span class="nx">row</span><span class="p">).</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">height</span><span class="o">:</span><span class="w"> </span><span class="nx">maxHeight</span><span class="p">,</span>
+<span class="w">    </span><span class="p">})</span>
+<span class="p">}</span>
+</pre>
+        </div>
+        </code></pre>
+        <p>Voila!</p>
+        <div id="treeVis1"></div>
+        <h2>Reducing horizontal growth</h2>
+        <p>The problem with rows is that they place all nodes to the side, at the same vertical position.
+            While these are suitable in certain cases, there are times when we can do better.</p>
+        <p>We can introduce a row type that staggers its children, one below the other.
+            This will almost make it behave like a column, in that its width remains roughly constant.</p>
+        <p>Let's call this new group a stair:</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">makeStair</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(...</span><span class="nx">children</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">({</span>
+<span class="w">    </span><span class="p">...</span><span class="nx">makeColumn</span><span class="p">(...</span><span class="nx">children</span><span class="p">),</span>
+<span class="w">    </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="nx">STAIR</span><span class="p">,</span>
+<span class="p">})</span>
+</pre>
+        </div>
+        </code></pre>
+        <p>Our layout can now make use of this new type:</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">createLayout_V1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">rootNode</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span>
+<span class="w">    </span><span class="nx">rootNode</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span>
+<span class="w">        </span><span class="o">?</span><span class="w"> </span><span class="nx">makeColumn</span><span class="p">(</span>
+<span class="w">            </span><span class="nx">makeLeaf</span><span class="p">(</span><span class="nx">rootNode</span><span class="p">),</span>
+<span class="w">            </span><span class="nx">makeStair</span><span class="p">(...</span><span class="nx">rootNode</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">createLayout_V1</span><span class="p">)),</span>
+<span class="w">            </span><span class="c1">// ^----- for now we&#39;ll replace rows with stairs completely</span>
+<span class="w">        </span><span class="p">)</span>
+<span class="w">        </span><span class="o">:</span><span class="w"> </span><span class="nx">makeLeaf</span><span class="p">(</span><span class="nx">rootNode</span><span class="p">)</span>
+</pre>
+        </div>
+        </code></pre>
+        <p>When positioning it, we'll need to stagger the nodes:</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">initLayoutBbox_V1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">layoutElement</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="nx">layoutElement</span><span class="p">.</span><span class="nx">type</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="nx">LEAF</span><span class="o">:</span><span class="w"> </span><span class="nx">initLeafBbox_V0</span><span class="p">(</span><span class="nx">layoutElement</span><span class="p">);</span><span class="w"> </span><span class="k">break</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="nx">COLUMN</span><span class="o">:</span><span class="w"> </span><span class="nx">initColumnBbox_V0</span><span class="p">(</span><span class="nx">initLayoutBbox_V1</span><span class="p">,</span><span class="w"> </span><span class="nx">layoutElement</span><span class="p">);</span><span class="w"> </span><span class="k">break</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="nx">ROW</span><span class="o">:</span><span class="w"> </span><span class="nx">initRowBbox_V0</span><span class="p">(</span><span class="nx">initLayoutBbox_V1</span><span class="p">,</span><span class="w"> </span><span class="nx">layoutElement</span><span class="p">);</span><span class="w"> </span><span class="k">break</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="nx">STAIR</span><span class="o">:</span><span class="w"> </span><span class="nx">initStairBbox_V0</span><span class="p">(</span><span class="nx">initLayoutBbox_V1</span><span class="p">,</span><span class="w"> </span><span class="nx">layoutElement</span><span class="p">);</span><span class="w"> </span><span class="k">break</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">initStairBbox_V0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">initLayoutBbox</span><span class="p">,</span><span class="w"> </span><span class="nx">stair</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">initLayoutBbox</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">prev</span><span class="p">,</span><span class="w"> </span><span class="nx">child</span><span class="p">]</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">pairwise</span><span class="p">(</span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="nx">prev</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">prev</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_X</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="nx">prev</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">prev</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">bottom</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_Y</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">stair</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">width</span><span class="o">:</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="p">)),</span>
+<span class="w">        </span><span class="nx">height</span><span class="o">:</span><span class="w"> </span><span class="nx">lastChild</span><span class="p">(</span><span class="nx">stair</span><span class="p">).</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">bottom</span><span class="p">,</span>
+<span class="w">    </span><span class="p">})</span>
+<span class="p">}</span>
+</pre>
+        </div>
+        </code></pre>
+        <div id="treeVis2"></div>
+        <p>Oh no. That's not looking good.</p>
+        <p>Okay, let's stagger <em>only</em> if all the children are leaves:</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">createLayout_V2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">rootNode</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">leaf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">makeLeaf</span><span class="p">(</span><span class="nx">rootNode</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">rootNode</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">leaf</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">children</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">rootNode</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">createLayout_V2</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">children</span><span class="p">.</span><span class="nx">every</span><span class="p">((</span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">type</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">LEAF</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">makeColumn</span><span class="p">(</span><span class="nx">leaf</span><span class="p">,</span><span class="w"> </span><span class="nx">makeStair</span><span class="p">(...</span><span class="nx">children</span><span class="p">))</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">makeColumn</span><span class="p">(</span><span class="nx">leaf</span><span class="p">,</span><span class="w"> </span><span class="nx">makeRow</span><span class="p">(...</span><span class="nx">children</span><span class="p">))</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre>
+        </div>
+        </code></pre>
+        <div id="treeVis3"></div>
+        <p>That's an improvement. There's a lot less lines crossing eachother, but… it still happens.</p>
+        <h2>Improving link connections</h2>
+        <p>When rendering a stair, we can't connect to the center, because it might be occluded. We can solve this in
+            either of two ways:</p>
+        <ul>
+            <li>When creating the stair, mark all children after the first as &quot;occluded&quot;.
+                This will need more housekeeping if we shuffle things around, and only works for stairs.</li>
+            <li>When rendering a parent-to-child link, check if any of its children would get in the way.
+                This is a bit more expensive, but will work no matter what.</li>
+        </ul>
+        <p>Let's go with the second option. Our trees are large, but not large enough where performance should be a
+            problem.</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">renderLink_V1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">parent</span><span class="p">,</span><span class="w"> </span><span class="nx">child</span><span class="p">,</span><span class="w"> </span><span class="nx">leafMap</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">x0</span><span class="p">,</span><span class="w"> </span><span class="nx">y0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="nx">parent</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">parent</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">parent</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">parent</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">height</span><span class="p">,</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">y1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">y0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_Y</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">centerX1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">isOccluded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">parent</span><span class="p">.</span><span class="nx">childrenIds</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">id</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">leafMap</span><span class="p">[</span><span class="nx">id</span><span class="p">]).</span><span class="nx">some</span><span class="p">((</span><span class="nx">c</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span>
+<span class="w">        </span><span class="nx">c</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="nx">child</span>
+<span class="w">        </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">y</span>
+<span class="w">        </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">SPACING_X</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">centerX1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">centerX1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_X</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span>
+<span class="w">    </span><span class="p">)</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">x1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">isOccluded</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">SPACING_X</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="nx">centerX1</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">y2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">y</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">createElementNS</span><span class="p">(</span><span class="nx">measureSvg</span><span class="p">.</span><span class="nx">namespaceURI</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;path&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">path</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span><span class="w"> </span><span class="sb">`M</span><span class="si">${</span><span class="nx">x0</span><span class="si">}</span><span class="sb"> </span><span class="si">${</span><span class="nx">y0</span><span class="si">}</span><span class="sb"> V</span><span class="si">${</span><span class="nx">y1</span><span class="si">}</span><span class="sb"> H</span><span class="si">${</span><span class="nx">x1</span><span class="si">}</span><span class="sb"> V</span><span class="si">${</span><span class="nx">y2</span><span class="si">}</span><span class="sb">`</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">path</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;fill&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;none&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">path</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;stroke&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;#000&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">path</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;stroke-width&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">STROKE_WIDTH</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">path</span>
+<span class="p">}</span>
+</pre>
+        </div>
+        </code></pre>
+        <div id="treeVis4"></div>
+        <p>Very nice! But there's one thing bothering me. Some links are jagged, even though they could be a straight
+            line.</p>
+        <p>If the bounding box of the children is within the center of the parent, we can make a straight line. Let's
+            fix that while we're at it:</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">renderLink_V2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">parent</span><span class="p">,</span><span class="w"> </span><span class="nx">child</span><span class="p">,</span><span class="w"> </span><span class="nx">leafMap</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">x0</span><span class="p">,</span><span class="w"> </span><span class="nx">y0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="nx">parent</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">parent</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">parent</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">parent</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">height</span><span class="p">,</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">y1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">y0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_Y</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">withinParent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_X</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">x0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">x0</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">SPACING_X</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">centerX1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">withinParent</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">x0</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">isOccluded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">parent</span><span class="p">.</span><span class="nx">childrenIds</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">id</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">leafMap</span><span class="p">[</span><span class="nx">id</span><span class="p">]).</span><span class="nx">some</span><span class="p">((</span><span class="nx">c</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span>
+<span class="w">        </span><span class="nx">c</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="nx">child</span>
+<span class="w">        </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">y</span>
+<span class="w">        </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">SPACING_X</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">centerX1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">centerX1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_X</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span>
+<span class="w">    </span><span class="p">)</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">x1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">isOccluded</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">SPACING_X</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="nx">centerX1</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">y2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">y</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">createElementNS</span><span class="p">(</span><span class="nx">measureSvg</span><span class="p">.</span><span class="nx">namespaceURI</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;path&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">path</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span><span class="w"> </span><span class="sb">`M</span><span class="si">${</span><span class="nx">x0</span><span class="si">}</span><span class="sb"> </span><span class="si">${</span><span class="nx">y0</span><span class="si">}</span><span class="sb"> V</span><span class="si">${</span><span class="nx">y1</span><span class="si">}</span><span class="sb"> H</span><span class="si">${</span><span class="nx">x1</span><span class="si">}</span><span class="sb"> V</span><span class="si">${</span><span class="nx">y2</span><span class="si">}</span><span class="sb">`</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">path</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;fill&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;none&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">path</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;stroke&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;#000&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">path</span><span class="p">.</span><span class="nx">setAttribute</span><span class="p">(</span><span class="s1">&#39;stroke-width&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">STROKE_WIDTH</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">path</span>
+<span class="p">}</span>
+</pre>
+        </div>
+        </code></pre>
+        <div id="treeVis5"></div>
+        <p>Very satisfying, if I do say so myself!</p>
+        <h2>Making better use of the space</h2>
+        <p>Notice however how the shorter child extends the stair to the right a tiny bit, even though it would fit
+            perfectly under its other sibling.</p>
+        <p>We can fix this by sorting the shorter children first:</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">initStairBbox_V1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">initLayoutBbox</span><span class="p">,</span><span class="w"> </span><span class="nx">stair</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">initLayoutBbox</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">sort</span><span class="p">((</span><span class="nx">a</span><span class="p">,</span><span class="w"> </span><span class="nx">b</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="p">)</span><span class="w"> </span><span class="c1">// &lt;- new</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">prev</span><span class="p">,</span><span class="w"> </span><span class="nx">child</span><span class="p">]</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">pairwise</span><span class="p">(</span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="nx">prev</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">prev</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_X</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="nx">prev</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">prev</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">bottom</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_Y</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">stair</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">width</span><span class="o">:</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="p">)),</span>
+<span class="w">        </span><span class="nx">height</span><span class="o">:</span><span class="w"> </span><span class="nx">lastChild</span><span class="p">(</span><span class="nx">stair</span><span class="p">).</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">bottom</span><span class="p">,</span>
+<span class="w">    </span><span class="p">})</span>
+<span class="p">}</span>
+</pre>
+        </div>
+        </code></pre>
+        <div id="treeVis6"></div>
+        <p>Now we've managed to make even better use of the available space, as the shorter child fits comfortably
+            within the larger one.
+            But we have run into a new problem.</p>
+        <p>The X position of the stair children is going into the negatives, escaping the bounding box of the stair
+            itself.
+            To correct this, we'll need to find the lowest X position, and subtract it from all children to push them
+            back to the 0 offset:</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">initStairBbox_V2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">initLayoutBbox</span><span class="p">,</span><span class="w"> </span><span class="nx">stair</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">initLayoutBbox</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">sort</span><span class="p">((</span><span class="nx">a</span><span class="p">,</span><span class="w"> </span><span class="nx">b</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">prev</span><span class="p">,</span><span class="w"> </span><span class="nx">child</span><span class="p">]</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">pairwise</span><span class="p">(</span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="nx">prev</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">prev</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_X</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="nx">prev</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">prev</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">bottom</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_Y</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">minX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(...</span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">x</span><span class="p">))</span><span class="w"> </span><span class="c1">// &lt;- new</span>
+<span class="w">    </span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">minX</span><span class="w"> </span><span class="p">}))</span>
+
+<span class="w">    </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">stair</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">width</span><span class="o">:</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="p">)),</span>
+<span class="w">        </span><span class="nx">height</span><span class="o">:</span><span class="w"> </span><span class="nx">lastChild</span><span class="p">(</span><span class="nx">stair</span><span class="p">).</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">bottom</span><span class="p">,</span>
+<span class="w">    </span><span class="p">})</span>
+<span class="p">}</span>
+</pre>
+        </div>
+        </code></pre>
+        <div id="treeVis7"></div>
+        <h2>Nesting groups inside stairs</h2>
+        <p>As a final optimization, we can place more than just leaves inside stairs.
+            There's no reason to not put other groups in a stair.</p>
+        <p>Still, we don't want stairs that grow too tall.
+            Preferably, we should aim for an overall rectangular shape that can fit comfortably on a monitor.
+            If your primary target is mobile users in portrait, you can of course make different tradeoffs.</p>
+        <p>To get this &quot;square-shape&quot;, we can create multiple buckets, depending on the amount of children we
+            have, or the area they occupy.
+            Each bucket will contain a stair, and the buckets themselves will be arranged in a row.</p>
+        <p>To keep it simple, let's add 1 bucket for every 3 children.
+            When adding children to the buckets, we will choose the one with the smallest area so far:</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">indexOfSmallest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="nx">arr</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">sizeFn</span><span class="p">,</span>
+<span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">smallestIndex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">smallestSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sizeFn</span><span class="p">(</span><span class="nx">arr</span><span class="p">[</span><span class="nx">smallestIndex</span><span class="p">])</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">let</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">arr</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">currentSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">sizeFn</span><span class="p">(</span><span class="nx">arr</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">currentSize</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">smallestSize</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">smallestSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">currentSize</span>
+<span class="w">            </span><span class="nx">smallestIndex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">i</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">smallestIndex</span>
+<span class="p">}</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">createLayout_V3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">rootNode</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">leaf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">makeLeaf</span><span class="p">(</span><span class="nx">rootNode</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">rootNode</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">leaf</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">children</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">rootNode</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">createLayout_V2</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">makeColumn</span><span class="p">(</span><span class="nx">leaf</span><span class="p">,</span><span class="w"> </span><span class="nx">children</span><span class="p">[</span><span class="mf">0</span><span class="p">])</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">children</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">3</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">children</span><span class="p">.</span><span class="nx">every</span><span class="p">((</span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">type</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">LEAF</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">makeColumn</span><span class="p">(</span><span class="nx">leaf</span><span class="p">,</span><span class="w"> </span><span class="nx">makeStair</span><span class="p">(...</span><span class="nx">children</span><span class="p">))</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">buckets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Array</span><span class="p">(</span><span class="mf">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">3</span><span class="p">)).</span><span class="nx">fill</span><span class="p">(</span><span class="kc">undefined</span><span class="p">).</span><span class="nx">map</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">[])</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">child</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">children</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">indexOfSmallest</span><span class="p">(</span><span class="nx">buckets</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">arr</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span>
+<span class="w">            </span><span class="nx">arr</span><span class="p">.</span><span class="nx">reduce</span><span class="p">((</span><span class="nx">acc</span><span class="p">,</span><span class="w"> </span><span class="nx">c</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">acc</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">size</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nx">c</span><span class="p">.</span><span class="nx">size</span><span class="p">.</span><span class="nx">height</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">))</span>
+<span class="w">        </span><span class="nx">buckets</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">push</span><span class="p">(</span><span class="nx">child</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">makeColumn</span><span class="p">(</span>
+<span class="w">        </span><span class="nx">leaf</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">makeRow</span><span class="p">(...</span><span class="nx">buckets</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">bucket</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span>
+<span class="w">            </span><span class="nx">bucket</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">bucket</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="nx">makeStair</span><span class="p">(...</span><span class="nx">bucket</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">}</span>
+</pre>
+        </div>
+        </code></pre>
+        <div id="treeVis8"></div>
+        <p>Agh! Nested columns default to centering the children, but just like the links,
+            the nodes themselves need to peek from the right to be able to make a clean connection.</p>
+        <p>Because this is only a problem when a stair renders a column, we can fix it directly there:</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">initStairBbox_V3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">initLayoutBbox</span><span class="p">,</span><span class="w"> </span><span class="nx">stair</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">initLayoutBbox</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">sort</span><span class="p">((</span><span class="nx">a</span><span class="p">,</span><span class="w"> </span><span class="nx">b</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">b</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">prev</span><span class="p">,</span><span class="w"> </span><span class="nx">child</span><span class="p">]</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">pairwise</span><span class="p">(</span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">prev</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">type</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">COLUMN</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">child</span><span class="p">.</span><span class="nx">children</span><span class="p">[</span><span class="mf">0</span><span class="p">],</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">children</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span>
+<span class="w">            </span><span class="p">})</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="nx">prev</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">prev</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_X</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="nx">prev</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">prev</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">bottom</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_Y</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">2</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">minX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(...</span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">x</span><span class="p">))</span>
+<span class="w">    </span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">minX</span><span class="w"> </span><span class="p">}))</span>
+
+
+
+<span class="w">    </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">stair</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">width</span><span class="o">:</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">stair</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="p">)),</span>
+<span class="w">        </span><span class="nx">height</span><span class="o">:</span><span class="w"> </span><span class="nx">lastChild</span><span class="p">(</span><span class="nx">stair</span><span class="p">).</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">bottom</span><span class="p">,</span>
+<span class="w">    </span><span class="p">})</span>
+<span class="p">}</span>
+</pre>
+        </div>
+        </code></pre>
+        <div id="treeVis9"></div>
+        <p>Now, this is starting to feel a bit like a hack, as it relies on knowledge
+            on how the columns are doing things (and the fact the first child is always a leaf we'll want to connect
+            to).</p>
+        <p>The problem is, the only other way to fix this would be, when initializing the layout of the column, to know
+            we're &quot;a child of a stair, but not the first&quot;.
+            Even determining who's the first is tricky! Because that relies on knowing the final width (since we sort
+            children by it), which is only known after the layout is finished.</p>
+        <p>Perhaps there would be a better way to <em>position</em> elements, separate of calculating the sizes.
+            But because the position helps calculate the size, it's a chicken-and-egg problem.</p>
+        <p>In any case, we're on the home stretch!
+            The last improvement can be made when rendering rows.</p>
+        <p>All this rendering of stairs and tendency to shift things right means we're prone to creating large gaps on
+            the left,
+            with the bounding box of a stair with very wide last children only occupying the space below everything
+            else.
+            This isn't an issue on the default text, but it's very apparent on larger trees.</p>
+        <p>To fix this, we can look at where the previous child &quot;ends&quot; its Y-position.
+            Then, we can calculate the difference between the leftmost X-position of the leaves in the current child
+            below and above that.
+            This will give us that &quot;gap&quot; that we can use to push the current child inside the bounding box of
+            the previous child,
+            but without rendering on top of it, because all the nodes that could collide are actually below!</p>
+        <pre><code class="language-js"><div class="highlight"><pre><span></span><span class="kd">function</span><span class="o">*</span><span class="w"> </span><span class="nx">leafPositions</span><span class="p">(</span>
+<span class="w">    </span><span class="nx">layoutElement</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">offset</span><span class="p">,</span>
+<span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">pos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="nx">layoutElement</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">offset</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="nx">layoutElement</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">offset</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">layoutElement</span><span class="p">.</span><span class="nx">type</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">LEAF</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">yield</span><span class="w"> </span><span class="nx">pos</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">child</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">layoutElement</span><span class="p">.</span><span class="nx">children</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">yield</span><span class="o">*</span><span class="w"> </span><span class="nx">leafPositions</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span><span class="w"> </span><span class="nx">pos</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">findSafeOffsetGap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">prev</span><span class="p">,</span><span class="w"> </span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">edgeY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">prev</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">bottom</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_Y</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">minXAbove</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">Infinity</span>
+<span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="nx">minXBelow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">Infinity</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">pos</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">leafPositions</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="p">}))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">pos</span><span class="p">.</span><span class="nx">y</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nx">edgeY</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">minXBelow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">minXBelow</span><span class="p">,</span><span class="w"> </span><span class="nx">pos</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">minXAbove</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">minXAbove</span><span class="p">,</span><span class="w"> </span><span class="nx">pos</span><span class="p">.</span><span class="nx">x</span><span class="p">)</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">gap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">minXBelow</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">minXAbove</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">gap</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="kc">Infinity</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">gap</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">gap</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0</span>
+<span class="p">}</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">initRowBbox_V1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">initLayoutBbox</span><span class="p">,</span><span class="w"> </span><span class="nx">row</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">row</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">initLayoutBbox</span><span class="p">)</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">maxHeight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(...</span><span class="nx">row</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">child</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">height</span><span class="p">))</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">prev</span><span class="p">,</span><span class="w"> </span><span class="nx">child</span><span class="p">]</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">pairwise</span><span class="p">(</span><span class="nx">row</span><span class="p">.</span><span class="nx">children</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="nx">prev</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">prev</span><span class="p">.</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">SPACING_X</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nx">findSafeOffsetGap</span><span class="p">(</span><span class="nx">prev</span><span class="p">,</span><span class="w"> </span><span class="nx">child</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">updateBbox</span><span class="p">(</span><span class="nx">row</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">width</span><span class="o">:</span><span class="w"> </span><span class="nx">lastChild</span><span class="p">(</span><span class="nx">row</span><span class="p">).</span><span class="nx">bbox</span><span class="p">.</span><span class="nx">right</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">height</span><span class="o">:</span><span class="w"> </span><span class="nx">maxHeight</span><span class="p">,</span>
+<span class="w">    </span><span class="p">})</span>
+<span class="p">}</span>
+</pre>
+        </div>
+        </code></pre>
+        <div id="treeVis10"></div>
+        <p>This solution is not perfect, as don't check every X-position at every Y-position. But nonetheless, I hope
+            you enjoyed this journey!</p>
+        <p>If you're up for the challenge of trying to improve it even further, or know of someone who has done a better
+            job than I have, don't hesitate to contact me!
+            This is definitely a hard (and fun) problem to try to solve.</p>
+        <script>// https://www3.nd.edu/~busiforc/handouts/cryptography/Letter%20Frequencies.html
+            const LETTERS_FREQ = [0.08167, 0.01492, 0.02782, 0.04253, 0.12702, 0.02228, 0.02015, 0.06094, 0.06966, 0.00153, 0.00772, 0.04025, 0.02406, 0.06749, 0.07507, 0.01929, 0.00095, 0.05987, 0.06327, 0.09056, 0.02758, 0.00978, 0.02360, 0.00150, 0.01974, 0.00074]
+            const cumulativeFrequencies = (letters) => {
+                const a = 'a'.charCodeAt(0)
+                const freq = [...letters].map((c) => LETTERS_FREQ[c.charCodeAt(0) - a])
+                for (let i = 1; i < freq.length; i += 1) {
+                    freq[i] += freq[i - 1]
+                }
+                return freq.map((value) => value / freq[freq.length - 1])
+            }
+
+            const VOWELS = 'aeiou'
+            const CONSONANTS = 'bcdfghjklmnpqrstvwxyz'
+            const VOWELS_CUM_FREQ = cumulativeFrequencies(VOWELS)
+            const CONSONANTS_CUM_FREQ = cumulativeFrequencies(CONSONANTS)
+            const randRange = (low, high) =>
+                low + Math.floor(Math.random() * (high - low))
+
+            const binarySearchIndex = (arr, value) => {
+                let low = 0
+                let high = arr.length - 1
+                while (low <= high) {
+                    let mid = Math.floor((low + high) * 0.5)
+                    if (arr[mid] === value) {
+                        return mid
+                    } else if (arr[mid] < value) {
+                        low = mid + 1
+                    } else {
+                        high = mid - 1
+                    }
+                }
+                return low
+            }
+            const randWord = (length) =>
+                Array(length).fill(undefined).map(
+                    (_, i) => i % 2 === 0 ?
+                        CONSONANTS[binarySearchIndex(CONSONANTS_CUM_FREQ, Math.random())]
+                        : VOWELS[binarySearchIndex(VOWELS_CUM_FREQ, Math.random())]
+                ).join('')
+            const MIN_WORD_LENGTH = 4
+            const MAX_WORD_LENGTH = 16
+
+            const randWordButton = document.getElementById('randWordButton')
+            const randWordSpan = document.getElementById('randWordSpan')
+            let randWordClickCount = 0
+            randWordButton.onclick = () => {
+                randWordClickCount += 1
+                const word = randWord(randRange(MIN_WORD_LENGTH, MAX_WORD_LENGTH))
+                if (randWordClickCount > 9) {
+                    randWordSpan.innerHTML = `${word}<br><em>The words are random! If you click it enough that it says something naughty, that's on you.</em>`
+                } else {
+                    randWordSpan.textContent = word
+                }
+            }
+            const PADDING_X = 4
+            const PADDING_Y = 2
+            const STROKE_WIDTH = 1
+
+            const measureSvg = document.getElementById('measureSvg')
+            const toggleViewTextSpan = document.getElementById('toggleViewTextSpan')
+
+            const nodeStartingText = `root -> very-long-child1 child2 child3
+very-long-child1 -> long-grandchild1
+child2 -> gchil2
+child3 -> long-grandchild3 gchild4
+gchil2 -> grand-grandchild3`
+
+            let _uniqueId = 0;
+            const genUniqueId = () => {
+                _uniqueId += 1
+                return `:r${_uniqueId}:`
+            }
+
+            const initMenuButton = (text, onclick) => {
+                const li = document.createElement('li')
+                const button = li.appendChild(document.createElement('button'))
+                button.textContent = text
+                button.onclick = onclick
+                return [li, button]
+            }
+
+            const initMenuCheckbox = (text, onchange) => {
+                const li = document.createElement('li')
+                const input = li.appendChild(document.createElement('input'))
+                const id = genUniqueId()
+                input.setAttribute('id', id)
+                input.setAttribute('type', 'checkbox')
+                input.onchange = onchange
+                const label = li.appendChild(document.createElement('label'))
+                label.setAttribute('for', id)
+                label.textContent = text
+                return [li, input]
+            }
+
+            function* randNodeTextRows(parent, depth, childCountFn) {
+                const childCount = childCountFn(depth)
+                if (!childCount) {
+                    return
+                }
+                const children = Array(childCount).fill(undefined)
+                    .map(() => randWord(randRange(MIN_WORD_LENGTH, MAX_WORD_LENGTH)))
+
+                yield `${parent} -> ${children.join(' ')}`
+                for (const child of children) {
+                    yield* randNodeTextRows(child, depth + 1, childCountFn)
+                }
+            }
+
+            const measureBbox = (element) => {
+                measureSvg.appendChild(element)
+                try {
+                    return element.getBBox()
+                } finally {
+                    measureSvg.removeChild(element)
+                }
+            }
+
+            const parseSourceTree = (sourceText) => {
+                const sourceNodes = sourceText.split('\n').map((line) => {
+                    const [parentLine, childrenLine] = line.split('->')
+                    const parent = parentLine.trim()
+                    const children = childrenLine?.split(' ').map((child) => child.trim()).filter(Boolean)
+                    return (parent && children?.length) ? [parent, children] : undefined
+                }).filter(Boolean)
+
+                if (!sourceNodes.length) {
+                    return undefined
+                }
+
+                const nodesById = {}
+                for (const [parentId, childrenId] of sourceNodes) {
+                    for (const id of [parentId, ...childrenId]) {
+                        if (nodesById[id] === undefined) {
+                            nodesById[id] = {
+                                id,
+                                children: [],
+                                parent: undefined,
+                            }
+                        }
+                    }
+                }
+                for (const [parentId, childrenId] of sourceNodes) {
+                    const parent = nodesById[parentId]
+                    for (const childId of childrenId) {
+                        const child = nodesById[childId]
+                        child.parent = parent
+                        parent.children.push(child)
+                    }
+                }
+
+                const rootNodeId = sourceNodes[0][0]
+                return nodesById[rootNodeId]
+            }
+
+            const allTreeVis = []
+            const initTreeVis = (element, renderFn) => {
+                element.classList.add('sideContainer')
+
+                const menu = document.createElement('menu')
+
+                const first = allTreeVis.length === 0
+                const [li0, viewButton] = initMenuButton(first ? 'View' : 'Edit', () => {
+                    if (textarea.style.display === 'none') {
+                        viewButton.textContent = 'View'
+                        textarea.style.display = ''
+                        div.style.display = 'none'
+                    } else {
+                        viewButton.textContent = 'Edit'
+                        textarea.style.display = 'none'
+                        div.style.display = ''
+                    }
+                    if (first) {
+                        toggleViewTextSpan.textContent = viewButton.textContent
+                    }
+                })
+
+                const setSource = (text) => {
+                    const parsed = parseSourceTree(text)
+                    if (parsed) {
+                        allTreeVis.forEach((treeVis) => {
+                            treeVis.textarea.value = text
+
+                            const g = document.createElementNS(measureSvg.namespaceURI, 'g')
+                            g.replaceChildren(...treeVis.renderFn(parsed, treeVis.debugCheckbox.checked))
+                            const bbox = measureBbox(g)
+
+                            treeVis.svg.replaceChildren(...g.children)
+                            // 1.5 multiplier to account for half stroke (top) and a full stroke (bottom)
+                            treeVis.svg.setAttribute('width', bbox.width + STROKE_WIDTH * 1.5)
+                            treeVis.svg.setAttribute('height', bbox.height + STROKE_WIDTH * 1.5)
+                        })
+                    }
+                }
+
+                const [li1, debugCheckbox] = initMenuCheckbox('Debug', () => {
+                    setSource(textarea.value)
+                })
+                const [li2, randomiseSmallButton] = initMenuButton('Small', () => {
+                    const childCountFn = (depth) => depth < 2 ? randRange(1, 3) : 0
+                    setSource([...randNodeTextRows('root', 0, childCountFn)].join('\n'))
+                })
+                const [li3, randomiseMediumButton] = initMenuButton('Medium', () => {
+                    const childCountFn = (depth) => depth < 3 ? randRange(2 - depth, 5 - depth) : 0
+                    setSource([...randNodeTextRows('root', 0, childCountFn)].join('\n'))
+                })
+                const [li4, randomiseLargeButton] = initMenuButton('Large', () => {
+                    const childCountFn = (depth) => depth === 0 ? randRange(6, 12) : randRange(0, 9 - depth * depth)
+                    setSource([...randNodeTextRows('root', 0, childCountFn)].join('\n'))
+                })
+                const [li5, resetButton] = initMenuButton('Reset', () => {
+                    setSource(nodeStartingText)
+                })
+
+                menu.replaceChildren(li0, li1, li2, li3, li4, li5)
+
+                const textarea = document.createElement('textarea')
+                textarea.onblur = () => setSource(textarea.value)
+                textarea.setAttribute('rows', 10)
+                textarea.setAttribute('cols', 80)
+                textarea.setAttribute('spellcheck', 'false')
+                if (!first) {
+                    textarea.style.display = 'none'
+                }
+
+                const svg = document.createElementNS(measureSvg.namespaceURI, 'svg')
+                svg.setAttribute('width', 0)
+                svg.setAttribute('height', 0)
+
+                const div = document.createElement('div')
+                div.replaceChildren(svg)
+                div.style.overflow = 'auto' // svg can't have overflow
+                div.style.maxHeight = '400px';
+                if (first) {
+                    div.style.display = 'none'
+                }
+
+                element.replaceChildren(menu, textarea, div)
+
+                allTreeVis.push({ textarea, svg, div, debugCheckbox, renderFn })
+
+                setSource(nodeStartingText)
+            }
+
+            initTreeVis(document.getElementById('treeVis0'), (root, debug) => {
+                const text = document.createElementNS(measureSvg.namespaceURI, 'text')
+                text.textContent = `Nothing to ${debug ? 'debug' : 'render'} yet!`
+                text.setAttribute('dominant-baseline', 'hanging')
+                return [text]
+            })
+            const renderNode = (displayText) => {
+                const text = document.createElementNS(measureSvg.namespaceURI, 'text')
+                text.textContent = displayText
+                text.setAttribute('dominant-baseline', 'central')
+
+                const bbox = measureBbox(text) // .getBBox()
+                text.setAttribute('x', PADDING_X + STROKE_WIDTH / 2)
+                text.setAttribute('y', PADDING_Y + STROKE_WIDTH / 2 + bbox.height / 2)
+
+                const rect = document.createElementNS(measureSvg.namespaceURI, 'rect')
+                rect.setAttribute('x', STROKE_WIDTH / 2)
+                rect.setAttribute('y', STROKE_WIDTH / 2)
+                rect.setAttribute('width', bbox.width + PADDING_X * 2)
+                rect.setAttribute('height', bbox.height + PADDING_Y * 2)
+                rect.setAttribute('fill', 'none')
+                rect.setAttribute('stroke', '#000')
+                rect.setAttribute('stroke-width', STROKE_WIDTH)
+
+                const g = document.createElementNS(measureSvg.namespaceURI, 'g')
+                g.replaceChildren(text, rect)
+                return g
+            }
+            const randNodeButton = document.getElementById('randNodeButton')
+            const randNodeSvg = document.getElementById('randNodeSvg')
+            randNodeButton.onclick = () => {
+                const word = randWord(randRange(MIN_WORD_LENGTH, MAX_WORD_LENGTH))
+                const g = renderNode(word)
+                const bbox = measureBbox(g)
+
+                randNodeSvg.replaceChildren(g)
+                randNodeSvg.setAttribute('width', bbox.width)
+                randNodeSvg.setAttribute('height', bbox.height)
+            }
+            const SPACING_X = 16
+            const SPACING_Y = 16
+
+            const renderLink_V0 = (parent, child) => {
+                const [x0, y0] = [
+                    parent.bbox.x + parent.bbox.width / 2,
+                    parent.bbox.y + parent.bbox.height,
+                ]
+                const y1 = y0 + SPACING_Y / 2
+                const x1 = child.bbox.x + child.bbox.width / 2
+                const y2 = child.bbox.y
+
+                const path = document.createElementNS(measureSvg.namespaceURI, 'path')
+                path.setAttribute('d', `M${x0} ${y0} V${y1} H${x1} V${y2}`)
+                path.setAttribute('fill', 'none')
+                path.setAttribute('stroke', '#000')
+                path.setAttribute('stroke-width', STROKE_WIDTH)
+                return path
+            }
+            const randPairButton = document.getElementById('randPairButton')
+            const randPairSvg = document.getElementById('randPairSvg')
+            randPairButton.onclick = () => {
+                const g0 = renderNode(randWord(randRange(MIN_WORD_LENGTH, MAX_WORD_LENGTH)))
+                const bbox0 = measureBbox(g0)
+
+                const g1 = renderNode(randWord(randRange(MIN_WORD_LENGTH, MAX_WORD_LENGTH)))
+                const bbox1 = measureBbox(g1)
+
+                const x = SPACING_X
+                const y = bbox0.height + SPACING_Y
+                g1.setAttribute('transform', `translate(${x},${y})`)
+
+                const parent = { bbox: { x: 0, y: 0, width: bbox0.width, height: bbox0.height } }
+                const child = { bbox: { x, y, width: bbox1.width, height: bbox1.height } }
+
+                const path = renderLink_V0(parent, child)
+
+                randPairSvg.replaceChildren(g0, g1, path)
+                randPairSvg.setAttribute('width', Math.max(parent.bbox.width, SPACING_X + child.bbox.width))
+                randPairSvg.setAttribute('height', parent.bbox.height + SPACING_Y + child.bbox.height)
+            }
+            const LEAF = Symbol('leaf')
+            const COLUMN = Symbol('column')
+            const ROW = Symbol('row')
+
+            const defaultBbox = () => ({ x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0 })
+
+            const makeLeaf = (node) => ({
+                type: LEAF,
+                id: node.id,
+                childrenIds: node.children.map((child) => child.id),
+                bbox: defaultBbox(),
+                size: { width: 1, height: 1 },
+            })
+
+            const makeColumn = (...children) => ({
+                type: COLUMN,
+                children,
+                bbox: defaultBbox(),
+                size: {
+                    width: Math.max(...children.map((child) => child.size.width)),
+                    height: children.reduce((acc, child) => acc + child.size.height, 0),
+                },
+            })
+
+            const makeRow = (...children) => ({
+                type: ROW,
+                children,
+                bbox: defaultBbox(),
+                size: {
+                    width: children.reduce((acc, child) => acc + child.size.width, 0),
+                    height: Math.max(...children.map((child) => child.size.height)),
+                },
+            })
+            const createLayout_V0 = (rootNode) =>
+                rootNode.children.length
+                    ? makeColumn(
+                        makeLeaf(rootNode),
+                        makeRow(...rootNode.children.map(createLayout_V0)),
+                    )
+                    : makeLeaf(rootNode)
+            const updateBbox = (layoutElement, newValues) => {
+                Object.assign(layoutElement.bbox, newValues)
+                layoutElement.bbox.right = layoutElement.bbox.x + layoutElement.bbox.width
+                layoutElement.bbox.bottom = layoutElement.bbox.y + layoutElement.bbox.height
+            }
+
+            function* pairwise(arr) {
+                for (let i = 0; i < arr.length; i += 1) {
+                    yield [arr[i - 1], arr[i]]
+                }
+            }
+
+            const lastChild = (layoutElement) => layoutElement.children[layoutElement.children.length - 1]
+            const initLayoutBbox_V0 = (layoutElement) => {
+                switch (layoutElement.type) {
+                    case LEAF: initLeafBbox_V0(layoutElement); break
+                    // Inject the current method so that we can reuse them in later versions
+                    case COLUMN: initColumnBbox_V0(initLayoutBbox_V0, layoutElement); break
+                    case ROW: initRowBbox_V0(initLayoutBbox_V0, layoutElement); break
+                }
+            }
+
+            const initLeafBbox_V0 = (leaf) => {
+                const { width, height } = measureBbox(renderNode(leaf.id))
+                updateBbox(leaf, { width, height })
+            }
+
+            const initColumnBbox_V0 = (initLayoutBbox, column) => {
+                column.children.forEach(initLayoutBbox)
+
+                const maxWidth = Math.max(...column.children.map((child) => child.bbox.width))
+
+                for (const [prev, child] of pairwise(column.children)) {
+                    updateBbox(child, {
+                        x: (maxWidth - child.bbox.width) / 2, // center
+                        y: prev ? prev.bbox.bottom + SPACING_Y : 0, // below previous
+                    })
+                }
+
+                updateBbox(column, {
+                    width: maxWidth,
+                    height: lastChild(column).bbox.bottom,
+                })
+            }
+
+            const initRowBbox_V0 = (initLayoutBbox, row) => {
+                row.children.forEach(initLayoutBbox)
+
+                const maxHeight = Math.max(...row.children.map((child) => child.bbox.height))
+
+                for (const [prev, child] of pairwise(row.children)) {
+                    updateBbox(child, {
+                        x: prev ? prev.bbox.right + SPACING_X : 0, // after previous
+                    })
+                }
+
+                updateBbox(row, {
+                    width: lastChild(row).bbox.right,
+                    height: maxHeight,
+                })
+            }
+            const STAIR = Symbol('stair')
+
+            const fillForType = (type) => {
+                // https://davidmathlogic.com/colorblind
+                switch (type) {
+                    case LEAF: return '#8CE'
+                    case COLUMN: return '#C67'
+                    case ROW: return '#DC7'
+                    case STAIR: return '#173'
+                }
+            }
+
+            const renderLayout = (layoutElement) => {
+                const g = document.createElementNS(measureSvg.namespaceURI, 'g')
+                if (layoutElement.type === LEAF) {
+                    g.replaceChildren(renderNode(layoutElement.id))
+                } else {
+                    g.replaceChildren(...layoutElement.children.map(renderLayout))
+                }
+                g.setAttribute('transform', `translate(${layoutElement.bbox.x},${layoutElement.bbox.y})`)
+                return g
+            }
+
+            const convertBboxToAbsolute = (layoutElement, offset) => {
+                updateBbox(layoutElement, {
+                    x: layoutElement.bbox.x + offset.x,
+                    y: layoutElement.bbox.y + offset.y,
+                })
+                if (layoutElement.type !== LEAF) {
+                    layoutElement.children.forEach((child) => convertBboxToAbsolute(child, layoutElement.bbox))
+                }
+            }
+
+            const layoutToLeafMap = (layoutElement) =>
+                layoutElement.type === LEAF
+                    ? { [layoutElement.id]: layoutElement }
+                    : Object.assign({}, ...layoutElement.children.map(layoutToLeafMap))
+
+            const makeRenderer = ({ createLayout, initLayout, renderLink }) => (root, debug) => {
+                const layout = createLayout(root)
+                initLayout(layout)
+                if (debug) {
+                    alert('NOT IMPLEMENTED BECAUSE THE WHOLE INITLAYOUT MUST BE DEBUG AWARE')
+                    throw new Error()
+                }
+                const leafMap = layoutToLeafMap(layout)
+                const renderedNodes = renderLayout(layout)
+                convertBboxToAbsolute(layout, { x: 0, y: 0 })
+
+                return [renderedNodes, ...Object.values(leafMap).flatMap((leaf) =>
+                    leaf.childrenIds.map((childId) => renderLink(leaf, leafMap[childId], leafMap))
+                )]
+            }
+
+            initTreeVis(document.getElementById('treeVis1'), makeRenderer({
+                createLayout: createLayout_V0,
+                initLayout: initLayoutBbox_V0,
+                renderLink: renderLink_V0,
+            }))
+            const makeStair = (...children) => ({
+                ...makeColumn(...children),
+                type: STAIR,
+            })
+            const createLayout_V1 = (rootNode) =>
+                rootNode.children.length
+                    ? makeColumn(
+                        makeLeaf(rootNode),
+                        makeStair(...rootNode.children.map(createLayout_V1)),
+                        // ^----- for now we'll replace rows with stairs completely
+                    )
+                    : makeLeaf(rootNode)
+            const initLayoutBbox_V1 = (layoutElement) => {
+                switch (layoutElement.type) {
+                    case LEAF: initLeafBbox_V0(layoutElement); break
+                    case COLUMN: initColumnBbox_V0(initLayoutBbox_V1, layoutElement); break
+                    case ROW: initRowBbox_V0(initLayoutBbox_V1, layoutElement); break
+                    case STAIR: initStairBbox_V0(initLayoutBbox_V1, layoutElement); break
+                }
+            }
+
+            const initStairBbox_V0 = (initLayoutBbox, stair) => {
+                stair.children.forEach(initLayoutBbox)
+
+                for (const [prev, child] of pairwise(stair.children)) {
+                    updateBbox(child, {
+                        x: prev ? prev.bbox.right + SPACING_X - child.bbox.width : 0,
+                        y: prev ? prev.bbox.bottom + SPACING_Y / 2 : 0,
+                    })
+                }
+
+                updateBbox(stair, {
+                    width: Math.max(...stair.children.map((child) => child.bbox.right)),
+                    height: lastChild(stair).bbox.bottom,
+                })
+            }
+            initTreeVis(document.getElementById('treeVis2'), makeRenderer({
+                createLayout: createLayout_V1,
+                initLayout: initLayoutBbox_V1,
+                renderLink: renderLink_V0,
+            }))
+            const createLayout_V2 = (rootNode) => {
+                const leaf = makeLeaf(rootNode)
+                if (rootNode.children.length === 0) {
+                    return leaf
+                }
+
+                const children = rootNode.children.map(createLayout_V2)
+                if (children.every((child) => child.type === LEAF)) {
+                    return makeColumn(leaf, makeStair(...children))
+                } else {
+                    return makeColumn(leaf, makeRow(...children))
+                }
+            }
+            initTreeVis(document.getElementById('treeVis3'), makeRenderer({
+                createLayout: createLayout_V2,
+                initLayout: initLayoutBbox_V1,
+                renderLink: renderLink_V0,
+            }))
+            const renderLink_V1 = (parent, child, leafMap) => {
+                const [x0, y0] = [
+                    parent.bbox.x + parent.bbox.width / 2,
+                    parent.bbox.y + parent.bbox.height,
+                ]
+                const y1 = y0 + SPACING_Y / 2
+
+                const centerX1 = child.bbox.x + child.bbox.width / 2
+                const isOccluded = parent.childrenIds.map((id) => leafMap[id]).some((c) =>
+                    c !== child
+                    && c.bbox.y < child.bbox.y
+                    && c.bbox.x - SPACING_X / 2 < centerX1 && centerX1 < c.bbox.right + SPACING_X / 2
+                )
+
+                const x1 = isOccluded ? child.bbox.right - SPACING_X / 2 : centerX1
+                const y2 = child.bbox.y
+
+                const path = document.createElementNS(measureSvg.namespaceURI, 'path')
+                path.setAttribute('d', `M${x0} ${y0} V${y1} H${x1} V${y2}`)
+                path.setAttribute('fill', 'none')
+                path.setAttribute('stroke', '#000')
+                path.setAttribute('stroke-width', STROKE_WIDTH)
+                return path
+            }
+            initTreeVis(document.getElementById('treeVis4'), makeRenderer({
+                createLayout: createLayout_V2,
+                initLayout: initLayoutBbox_V1,
+                renderLink: renderLink_V1,
+            }))
+            const renderLink_V2 = (parent, child, leafMap) => {
+                const [x0, y0] = [
+                    parent.bbox.x + parent.bbox.width / 2,
+                    parent.bbox.y + parent.bbox.height,
+                ]
+                const y1 = y0 + SPACING_Y / 2
+
+                const withinParent = child.bbox.x + SPACING_X / 2 < x0 && x0 < child.bbox.right - SPACING_X / 2
+                const centerX1 = withinParent ? x0 : child.bbox.x + child.bbox.width / 2
+                const isOccluded = parent.childrenIds.map((id) => leafMap[id]).some((c) =>
+                    c !== child
+                    && c.bbox.y < child.bbox.y
+                    && c.bbox.x - SPACING_X / 2 < centerX1 && centerX1 < c.bbox.right + SPACING_X / 2
+                )
+
+                const x1 = isOccluded ? child.bbox.right - SPACING_X / 2 : centerX1
+                const y2 = child.bbox.y
+
+                const path = document.createElementNS(measureSvg.namespaceURI, 'path')
+                path.setAttribute('d', `M${x0} ${y0} V${y1} H${x1} V${y2}`)
+                path.setAttribute('fill', 'none')
+                path.setAttribute('stroke', '#000')
+                path.setAttribute('stroke-width', STROKE_WIDTH)
+                return path
+            }
+            initTreeVis(document.getElementById('treeVis5'), makeRenderer({
+                createLayout: createLayout_V2,
+                initLayout: initLayoutBbox_V1,
+                renderLink: renderLink_V2,
+            }))
+            const initLayoutBbox_V2 = (layoutElement) => {
+                switch (layoutElement.type) {
+                    case LEAF: initLeafBbox_V0(layoutElement); break
+                    case COLUMN: initColumnBbox_V0(initLayoutBbox_V2, layoutElement); break
+                    case ROW: initRowBbox_V0(initLayoutBbox_V2, layoutElement); break
+                    case STAIR: initStairBbox_V1(initLayoutBbox_V2, layoutElement); break
+                }
+            }
+            const initStairBbox_V1 = (initLayoutBbox, stair) => {
+                stair.children.forEach(initLayoutBbox)
+                stair.children.sort((a, b) => a.bbox.width - b.bbox.width) // <- new
+
+                for (const [prev, child] of pairwise(stair.children)) {
+                    updateBbox(child, {
+                        x: prev ? prev.bbox.right + SPACING_X - child.bbox.width : 0,
+                        y: prev ? prev.bbox.bottom + SPACING_Y / 2 : 0,
+                    })
+                }
+
+                updateBbox(stair, {
+                    width: Math.max(...stair.children.map((child) => child.bbox.right)),
+                    height: lastChild(stair).bbox.bottom,
+                })
+            }
+            initTreeVis(document.getElementById('treeVis6'), makeRenderer({
+                createLayout: createLayout_V2,
+                initLayout: initLayoutBbox_V2,
+                renderLink: renderLink_V2,
+            }))
+            const initLayoutBbox_V3 = (layoutElement) => {
+                switch (layoutElement.type) {
+                    case LEAF: initLeafBbox_V0(layoutElement); break
+                    case COLUMN: initColumnBbox_V0(initLayoutBbox_V3, layoutElement); break
+                    case ROW: initRowBbox_V0(initLayoutBbox_V3, layoutElement); break
+                    case STAIR: initStairBbox_V2(initLayoutBbox_V3, layoutElement); break
+                }
+            }
+            const initStairBbox_V2 = (initLayoutBbox, stair) => {
+                stair.children.forEach(initLayoutBbox)
+                stair.children.sort((a, b) => a.bbox.width - b.bbox.width)
+
+                for (const [prev, child] of pairwise(stair.children)) {
+                    updateBbox(child, {
+                        x: prev ? prev.bbox.right + SPACING_X - child.bbox.width : 0,
+                        y: prev ? prev.bbox.bottom + SPACING_Y / 2 : 0,
+                    })
+                }
+
+                const minX = Math.min(...stair.children.map((child) => child.bbox.x)) // <- new
+                stair.children.forEach((child) => updateBbox(child, { x: child.bbox.x - minX }))
+
+                updateBbox(stair, {
+                    width: Math.max(...stair.children.map((child) => child.bbox.right)),
+                    height: lastChild(stair).bbox.bottom,
+                })
+            }
+            initTreeVis(document.getElementById('treeVis7'), makeRenderer({
+                createLayout: createLayout_V2,
+                initLayout: initLayoutBbox_V3,
+                renderLink: renderLink_V2,
+            }))
+            const indexOfSmallest = (
+                arr,
+                sizeFn,
+            ) => {
+                let smallestIndex = 0
+                let smallestSize = sizeFn(arr[smallestIndex])
+
+                for (let i = 1; i < arr.length; i += 1) {
+                    const currentSize = sizeFn(arr[i])
+                    if (currentSize < smallestSize) {
+                        smallestSize = currentSize
+                        smallestIndex = i
+                    }
+                }
+
+                return smallestIndex
+            }
+
+            const createLayout_V3 = (rootNode) => {
+                const leaf = makeLeaf(rootNode)
+                if (rootNode.children.length === 0) {
+                    return leaf
+                }
+
+                const children = rootNode.children.map(createLayout_V2)
+                if (children.length === 1) {
+                    return makeColumn(leaf, children[0])
+                }
+
+                if (children < 3 || children.every((child) => child.type === LEAF)) {
+                    return makeColumn(leaf, makeStair(...children))
+                }
+
+                const buckets = Array(1 + Math.floor(children.length / 3)).fill(undefined).map(() => [])
+
+                for (const child of children) {
+                    const i = indexOfSmallest(buckets, (arr) =>
+                        arr.reduce((acc, c) => acc + c.size.width * c.size.height, 0))
+                    buckets[i].push(child)
+                }
+
+                return makeColumn(
+                    leaf,
+                    makeRow(...buckets.map((bucket) =>
+                        bucket.length === 1 ? bucket[0] : makeStair(...bucket)))
+                )
+            }
+            initTreeVis(document.getElementById('treeVis8'), makeRenderer({
+                createLayout: createLayout_V3,
+                initLayout: initLayoutBbox_V3,
+                renderLink: renderLink_V2,
+            }))
+            const initLayoutBbox_V4 = (layoutElement) => {
+                switch (layoutElement.type) {
+                    case LEAF: initLeafBbox_V0(layoutElement); break
+                    case COLUMN: initColumnBbox_V0(initLayoutBbox_V4, layoutElement); break
+                    case ROW: initRowBbox_V0(initLayoutBbox_V4, layoutElement); break
+                    case STAIR: initStairBbox_V3(initLayoutBbox_V4, layoutElement); break
+                }
+            }
+            const initStairBbox_V3 = (initLayoutBbox, stair) => {
+                stair.children.forEach(initLayoutBbox)
+                stair.children.sort((a, b) => a.bbox.width - b.bbox.width)
+
+                for (const [prev, child] of pairwise(stair.children)) {
+                    if (prev && child.type === COLUMN) {
+                        updateBbox(child.children[0], {
+                            x: child.bbox.width - child.children[0].bbox.width
+                        })
+                    }
+
+                    updateBbox(child, {
+                        x: prev ? prev.bbox.right + SPACING_X - child.bbox.width : 0,
+                        y: prev ? prev.bbox.bottom + SPACING_Y / 2 : 0,
+                    })
+                }
+
+                const minX = Math.min(...stair.children.map((child) => child.bbox.x))
+                stair.children.forEach((child) => updateBbox(child, { x: child.bbox.x - minX }))
+
+
+
+                updateBbox(stair, {
+                    width: Math.max(...stair.children.map((child) => child.bbox.right)),
+                    height: lastChild(stair).bbox.bottom,
+                })
+            }
+            initTreeVis(document.getElementById('treeVis9'), makeRenderer({
+                createLayout: createLayout_V3,
+                initLayout: initLayoutBbox_V4,
+                renderLink: renderLink_V2,
+            }))
+            const initLayoutBbox_V5 = (layoutElement) => {
+                switch (layoutElement.type) {
+                    case LEAF: initLeafBbox_V0(layoutElement); break
+                    case COLUMN: initColumnBbox_V0(initLayoutBbox_V5, layoutElement); break
+                    case ROW: initRowBbox_V1(initLayoutBbox_V5, layoutElement); break
+                    case STAIR: initStairBbox_V3(initLayoutBbox_V5, layoutElement); break
+                }
+            }
+            function* leafPositions(
+                layoutElement,
+                offset,
+            ) {
+                const pos = { x: layoutElement.bbox.x + offset.x, y: layoutElement.bbox.y + offset.y }
+                if (layoutElement.type === LEAF) {
+                    yield pos
+                } else {
+                    for (const child of layoutElement.children) {
+                        yield* leafPositions(child, pos)
+                    }
+                }
+            }
+
+            const findSafeOffsetGap = (prev, child) => {
+                const edgeY = prev.bbox.bottom + SPACING_Y
+                let minXAbove = Infinity
+                let minXBelow = Infinity
+                for (const pos of leafPositions(child, { x: 0, y: 0 })) {
+                    if (pos.y < edgeY) {
+                        minXBelow = Math.min(minXBelow, pos.x)
+                    } else {
+                        minXAbove = Math.min(minXAbove, pos.x)
+                    }
+                }
+
+                const gap = minXBelow - minXAbove
+                return gap !== Infinity && gap > 0 ? gap : 0
+            }
+
+            const initRowBbox_V1 = (initLayoutBbox, row) => {
+                row.children.forEach(initLayoutBbox)
+
+                const maxHeight = Math.max(...row.children.map((child) => child.bbox.height))
+
+                for (const [prev, child] of pairwise(row.children)) {
+                    updateBbox(child, {
+                        x: prev ? prev.bbox.right + SPACING_X - findSafeOffsetGap(prev, child) : 0,
+                    })
+                }
+
+                updateBbox(row, {
+                    width: lastChild(row).bbox.right,
+                    height: maxHeight,
+                })
+            }
+            initTreeVis(document.getElementById('treeVis10'), makeRenderer({
+                createLayout: createLayout_V3,
+                initLayout: initLayoutBbox_V5,
+                renderLink: renderLink_V2,
+            }))
+        </script>
+    </main>
+    <script>
+        const webSocket = new WebSocket('ws://localhost:8080/ws')
+        webSocket.onmessage = (event) => {
+            if (event.data === 'changed') {
+                window.location.reload()
+            }
+        }
+        webSocket.onclose = (e) => {
+            if (!event.wasClean) {
+                alert('hmr ws connection died')
+            }
+        }
+    </script>
+</body>
+
+</html>
