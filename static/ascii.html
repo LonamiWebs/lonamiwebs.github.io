@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="description" content="Get in. Get typing. Get codepoint. Get copying. Get out. GGGGG">
+        <meta name="theme-color" content="#000">
+        <title>ASCII code points</title>
+        <style>
+body {
+    margin: 0;
+    overflow: hidden;
+}
+input {
+    border: none;
+    outline: none;
+    color: transparent;
+    background-color: #000;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+ul {
+    position: absolute;
+    bottom: 30%;
+    left: 39%;
+    list-style-type: none;
+    padding: 0;
+    font-size: 2rem;
+}
+@supports (background-clip: text) {
+    ul {
+        background: linear-gradient(0deg, #fff, #000);
+        background-clip: text;
+        color: transparent;
+    }
+}
+@supports not (background-clip: text) {
+    ul {
+        color: #fff;
+    }
+}
+        </style>
+    </head>
+    <body>
+        <!--
+            i am SICK of typing "ascii table" in ddg and getting this stupid page https://www.asciitable.com/
+            which IS A DAMN IMAGE and doesn't even let me copy stuff from it. so i made this. just type whatever
+            you need and get the codepoint for it. or paste something. all while being somewhat pleasing to look at.
+        -->
+        <input id=input>
+        <ul id=ul></ul>
+    </body>
+    <script>
+const input = document.getElementById('input');
+const ul = document.getElementById('ul')
+let count = 0;
+const max = 7;
+
+input.focus()
+input.oninput = e => {
+    for (c of e.target.value) {
+        const p = c.codePointAt(0);
+        ul.innerHTML += `<li><pre><code>${c} - ${('     ' + p).slice(-5)} - \\u${('0000' + p.toString(16)).slice(-4)}</code></pre></li>`
+        if (count === max) {
+            ul.children[0].remove();
+        } else {
+            ++count;
+        }
+    }
+    e.target.value = ''
+}
+    </script>
+</html>

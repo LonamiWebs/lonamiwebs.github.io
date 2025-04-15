@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Utilities</title>
+    <link href="https://fonts.googleapis.com/css?family=Inconsolata|Raleway" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="css/theme.css">
+    <meta name="description" content="Several utilities for almost every purpose">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <link rel="stylesheet" type="text/css" href="css/mobile.css"
+            media="only screen and (max-width: 740px)" />
+</head>
+<body>
+    <div class="card">
+        <h1>Multipurpose utilities - miscellaneous things</h1>
+        <p>Welcome! On this page you will find several utilities for various
+        distinct purposes. You can use the box below to add hashtags if you
+        want to filter out some cards, or directly search in the content</p>
+        <input id="hashtagInput">
+        <button onclick="addHashtag()">Add hashtag filter</button>
+        <button onclick="clearHashtags()">Clear hashtags</button>
+        <ul id="filters" class="horizontal"></ul>
+    </div>
+<div id="allcards">
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Boot Repair Disk</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>boot</li><li>repair</li><li>gpt</li><li>recovery</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>Small utility to fix broken laptops. It won't boot? Grab a copy of
+        <a href="https://sourceforge.net/projects/boot-repair-cd/" target="_blank">Boot Repair</a>
+        (<a href="https://help.ubuntu.com/community/Boot-Repair" target="_blank">wiki</a>)
+        and fix it!</p>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Installing <code>.rpm</code> files</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>opensuse</li><li>install</li><li>rpm</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>You can install <code>.rpm</code> files under openSUSE with the following command:</p>
+        <pre>sudo zypper install &lt;rpm file name&gt;.rpm</pre>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Viewing your local IP address</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>ipconfig</li><li>ip</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>On Windows the command is called <code>ipconfig</code>. It's very
+        similar under Linux, yet not the same:
+        <pre>ifconfig</pre>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>List PCI devices and system information</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>list</li><li>pci</li><li>graphics</li><li>card</li>
+            <li>system</li><li>version</li><li>ram</li><li>gpu</li><li>resolution</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>Lists all the available PCI devices (USB, audio, SATA controller…).
+        For example, if you wanted to check your graphic card you could do:</p>
+        <pre>lspci | grep VGA</pre>
+        <p>It might also be useful to run <code>screenfetch</code> (or
+        <code>neofetch</code>) to display more information, in a fancy way.</p>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Evaluate expressions</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>inline</li><li>commnad</li><li>evaluate</li><li>expression</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>You can inline commands by surrounding them between <code>`</code>
+        (back quotes), or by putting them inside parenthesis with a
+        <code>$</code> (dollar symbol) as prefix:</p>
+        <pre>echo The date is `date +"%d-%m-%Y"`.
+
+echo Or differently $(date +"%d-%m-%Y").</pre>
+
+        <p>In a similar way, to use a variable, you can use <code>$VARIABLE</code>
+        or even <code>${VARIABLE}</code> if it interfers with more text.</p>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Force a terminal
+        <a href="http://stackoverflow.com/a/26744968" target="_blank">*</a>
+        </h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>xfce</li><li>force</li><li>terminal</li><li>bash</li><li>shell</li><li>script</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>You can force a shell script to launch a terminal if it wasn't opened
+        by one (e.g., if it's an executable script and you opened it via double
+        click) by prepending the following lines to it:</p>
+        <pre>if [ ! -t 0 ]; then
+    x-terminal-emulator -e "$0"
+    exit 0
+fi</pre>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>ISO burning and disk formatting</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>burn</li><li>iso</li><li>usb</li><li>disk</li>
+            <li>format</li><li>list</li><li>partition</li><li>fat32</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>To <b>l</b>i<b>s</b>t all the plugged <b>bl</b>oc<b>k</b> devices:</p>
+        <pre>lsblk</pre>
+        
+        <p>For example, if you identify your USB drive and you want to burn an
+        ISO on it or to wipe it completely with zeroes (respectively), after
+        you've made sure that <b>it is not mounted</b>:</p>
+        <pre>dd status=progress if=my.iso of=/dev/sdX
+
+dd status=progress if=/dev/zero of=/dev/sdX</pre>
+        
+        <p>To create a new partition, you can run <code>fdisk</code> and follow
+        its instructions.<br />
+        To formt a partition, as FAT32 for instance, you can run:
+        <pre>mkfs -t vfat /dev/sdXY</pre>
+        
+        <p>A great tool with GUI however, it's <code>gparted</code>.</p>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Disabling the touchpad</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>disable</li><li>touchpad</li><li>trackpad</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>If you're like me, you probably hate the touchpad. No problem:
+        <pre>sudo add-apt-repository ppa:atareao/atareao
+sudo apt-get update
+sudo apt-get install touchpad-indicator</pre>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Find in files</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>grep</li><li>find</li><li>search</li><li>regex</li><li>files</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p><code>grep</code> is a little great tool which can also search in files
+        <b>r</b>ecursively and show the line <b>n</b>umber for the matches of
+        an arbitrary <a href="http://regexr.com" target="_blank">regex</a>
+        <b>e</b>xpression:</p>
+        <pre>grep -rn '/path/to/somewhere/' -e "pattern"</pre>
+        <p>You don't know regex or need a quick refresher? Check out
+        <a href="https://www.regexone.com" target="_blank">RegexOne</a>.</p>
+        <p>You can also show the surrounding lines to those you matched by using
+        the <b>b</b>efore and <b>a</b>fter options, as follows:
+        <pre>grep -rn '/path/to/somewhere/' -B1 -A2 -e "pattern"</pre>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Environment variables</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>environment</li><li>variable</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>You can define environment variables under
+        <code>/etc/environment</code>. You probably need to have superuser
+        access before you can modify that file.</p>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Octave fix</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>octave</li><li>matlab</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>If Octave closes itself after plotting a function, you might want
+        to check what it's using to render them with the
+        <code>graphics_toolkit</code> command. If the output is not
+        <code>gnuplot</code>, install it via <code>apt</code>, restart Octave
+        and run <code>graphics_toolkit('gnuplot')</code>.<br />
+
+        <p>To run this command on startup, simply add it to the
+        <code>~/.octaverc</code> file.</p>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Open menu with the super key</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>xfce</li><li>key</li><li>shortcut</li><li>hotkey</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>You can bind the <code>xfce4-popup-whiskermenu</code> command to
+        the super key to open the Whiskers menu.</p>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>IO scheduler</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>io</li><li>kernel</li><li>scheduler</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>You can check the currently selected IO scheduler by issuing:</p>
+        <pre>cat /sys/block/sda/queue/scheduler
+    noop [deadline] cfq</pre>
+    
+        <p>This means that the selected scheduler is <code>deadline</code>.
+        On my experience, <code>cfq</code> performs better (e.g., when running
+        a server). You can change it without the need for a reboot by
+        <code>echo</code>ing the desired scheduler to it (<code>su</code> first):</p>
+        <pre>su
+echo cfq > /sys/block/sda/queue/scheduler
+exit</pre>
+        
+        <p>For this change to persist, you need to tell grub
+        <a href="http://askubuntu.com/a/82452" target="_blank">*</a>:</p>
+        <pre>sudo nano /etc/default/grub
+
+# Find and replace:
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
+# With:
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash elevator=&lt;OPTION&gt;"
+# Where option is one of the shown above (noop, deadline or cfq)
+# Press Ctrl+X and to save and exit
+
+sudo update-grub
+</pre>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Libraries</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>library</li><li>libraries</li><li>dependency</li><li>dependencies</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>If sometimes you get the error <code>cannot find -lLibrary</code>,
+        look for <code>libLibrary</code> (note the <code>lib</code> prefix) on
+        the Synaptics package manager, or directly search the missing library
+        with <code>apt-cache</code>:</p>
+        <pre>apt-cache search libLibrary*</pre>
+        
+        <p>You might want to install the <code>-dev</code> version too if you're
+        having trouble when building an application. You can list the libraries
+        a program uses by running <code>ldd &lt;program&gt;</code>.</p>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Terminal shortcuts</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>terminal</li><li>shortcut</li><li>hotkey</li>
+        </ul></td>
+        </tr>
+        </table>
+        <ul>
+            <li><code>Ctrl+C</code> cancels the current program.</li>
+            <li><code>Ctrl+D</code> sends <code>EOF</code> (useful for
+            <code>cat</code> or to exit the terminal quickly rather than typing
+            <code>exit</code>.</li>
+            <li><code>Ctrl+W</code> deletes the previous word.</li>
+            <li><code>Ctrl+U</code> deletes the whole entered command.</li>
+            <li><code>Ctrl+Y</code> pastes back the cleared text.</li>
+            <li><code>Ctrl+Shift+C</code> copies the selected text.</li>
+            <li><code>Ctrl+Shift+V</code> pastes the clipboard text.</li>
+        </ul>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Desktop files</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>desktop</li><li>launcher</li><li>menu</li><li>startmenu</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p><code>~/.local/share/applications</code> contains the
+        <code>.desktop</code> files used to launch your applications.
+        Their format, although not standarized, is usually as follows:</p>
+        <pre>[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Name=My Fancy App
+Comment=This is my fancy application
+Exec=/home/imthebest/My-Apps/launch
+Icon=/home/imthebest/My-Apps/app.png
+Terminal=false
+Type=Application
+Categories=Network;</pre>
+
+        <p><code>/usr/share/applications</code> for all the users.</p>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Stream YouTube music</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>stream</li><li>play</li><li>youtube</li><li>music</li><li>audio</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>You can play songs from YouTube (or even <code>--shuffle</code> a
+        playlist) by using <code>mpv</code>:</p>
+        <pre>mpv --no-video https://www.youtube.com/playlist?list=blahblah</pre>
+        
+        <p>For this to work, you need to have a few things installed:</p>
+        <pre>sudo apt-get install python3-pip mpv
+sudo -H pip3 install youtube-dl</pre>
+        
+        <p>Remember to <code>reset</code> the terminal afterwards.</p>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Screen capture
+        <a href="https://trac.ffmpeg.org/wiki/Capture/Desktop" target="_blank">*</a>
+        </h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>screen</li><li>grab</li><li>capture</li><li>record</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>You can use <code>ffmpeg</code> not only to convert files, but also
+        to capture your screen and send it to your friends as a <code>.gif</code>:
+        <pre>ffmpeg -video_size {WIDTH}x{HEIGHT} -framerate 25 -f x11grab -i :0.0+{X},{Y} -t {DURATION} {OUTPUT}.mp4</pre>
+        <p>This can prove very useful when combined with
+        <a href="https://github.com/naelstrof/slop" target="_blank">slop</a>:
+        <pre>DURATION=10
+OUTPUT=screenrecord
+read -r X Y W H < <(slop -f "%x %y %w %h")
+ffmpeg -video_size ${W}x$H -framerate 25 -f x11grab -i :0.0+$X,$Y -t $DURATION $OUTPUT.mp4</pre>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Running commands in parallel</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>execute</li><li>run</li><li>command</li>
+            <li>parallel</li><li>multithread</li><li>batch</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>The <code>parallel</code> command effectively allows you to run a
+        command in parallel, so you can get the most out of your CPU. For example,
+        let's assume you have a file called <code>urllist.txt</code> and you want
+        to <code>wget</code> them all as fast as possible:
+        <pre>cat urllist.txt | parallel --gnu "wget {}"
+
+# Or
+parallel --gnu -a urllist.txt wget
+
+# Or
+parallel --gnu wget &lt; urllist.txt
+</pre>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Move folders to RAM (RAM disk)</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>ubuntu</li><li>move</li><li>folder</li><li>ram</li><li>ramdisk</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>The <code>/dev/shm</code> folder, available on some Linux distrubitions,
+        serves as a faster alternative than <code>/tmp</code>. <b>Note that
+        this is not reliable</b> and should be only used as a faster alternative
+        for temporary storage. You can "move a folder to RAM" as follows:</p>
+        <pre>$FOLDER_NAME="your_folder"
+$IN_RAM="/dev/shm/$folder_name"
+$FOLDER="$(pwd)/$FOLDER_NAME"
+
+mv "$FOLDER" "$FOLDER.packed"
+cp -r "$FOLDER.packed" "$IN_RAM"
+ln -s "$IN_RAM" "$FOLDER"</pre>
+        <p>This will rename the original folder by adding the suffix
+        <code>.packed</code> to it, copy its contents to the RAM, and
+        create a <code>symlink</code> where the previous folder was before
+        to the folder on the RAM.<br />
+        To undo this operation, simply run:
+        <pre>FOLDER_NAME="your_folder"
+IN_RAM="/dev/shm/$folder_name"
+FOLDER="$(pwd)/$folder_name"
+
+rm $FOLDER
+cp -r $IN_RAM $FOLDER
+rm -rf $IN_RAM</pre>
+        <p>This will preserve the <code>.packed</code> version since the RAM
+        may be unstable.</p>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1><code>MakeFile</code> refresher
+        <a href="http://mrbook.org/blog/tutorials/make/" target="_blank">*</a>
+        </h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>make</li><li>makefile</li><li>build</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p><code>MakeFile</code>s are an easy and powerful tool to build your
+        projects. However, if you're like me, you probably tend to forget how
+        they work too. Here's a quick refresher. Note that you <b>must use
+        the TAB character</b>. Their basic syntax is:
+        <pre>target_name:( target_dependencies)
+&#9;system command
+</pre>
+        <p>A full example would be:</p>
+        <pre>all: hello
+
+hello: main.o hello.o
+&#9;g++ main.o hello.o -o hello
+
+main.o: main.cpp
+&#9;g++ -c main.cpp
+
+hello.o: hello.cpp
+&#9;g++ -c hello.cpp
+
+clean:
+&#9;rm *.o hello</pre>
+        
+        <p>A more powerful example, introducing the use of variables:</p>
+        <pre># Compiler used
+CC=g++
+
+# Compiler flags
+CFLAGS=-c -Wall
+
+all: hello
+
+hello: main.o hello.o
+&#9;$(CC) main.o hello.o -o hello
+
+main.o: main.cpp
+&#9;$(CC) $(CFLAGS) main.cpp
+
+hello.o: hello.cpp
+&#9;$(CC) $(CFLAGS) hello.cpp
+
+clean:
+&#9;rm *.o hello</pre>
+        
+        <p>You can execute the default one by running <code>make</code>,
+        or a specific one with <code>make -f MyMakefile</code>.
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1><code>.gif</code> tricks with FFmpeg</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>ffmpeg</li><li>convert</li><li>video</li><li>avi</li><li>mp4</li><li>gif</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p><a href="http://ffmpeg.org/" target="_blank">FFmpeg</a> is not only
+        to convert between video and audio formats. It can also convert images
+        (like <code>.webp</code> to <code>.png</code>), and even <code>.gif</code>s:</p>
+        <pre>ffmpeg -i in.mp4 -framerate 10 out.gif</pre>
+        <p>Perhaps the generated file is too large. You can scale to a given size,
+        by either constraining the width, height (the other option will be
+        <code>-1</code>), or both:</p>
+        <pre>ffmpeg -i in.mp4 -framerate 10 -vf "scale=150:-1" out.gif</pre>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Multiple images to video with FFmpeg
+        <a href="http://ffmpeg.org/ffmpeg.html#Video-and-Audio-file-format-conversion" target="_blank">*</a>
+        </h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>ffmpeg</li><li>convert</li><li>multiple</li><li>many</li>
+            <li>images</li><li>video</li><li>avi</li><li>mp4</li><li>gif</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>Extracting images from a video:</p>
+        <pre>ffmpeg -i in.mp4 -r 1 -s WxH -f image2 out-%03d.jpg</pre>
+        <p>This will extract one video frame per second from <code>in.mp4</code>
+        with the <b>s</b>ize <code>WxH</code> and to <code>out-nnn.jpg</code>.
+        The format <code>%03d</code> on the name specifies 3 digits, 0 padded.
+        <br />
+        If on the other hand you wanted to extract all the images, you can
+        drop the <code>-r 1</code> option, and even the <code>-s</code> option,
+        exactly leaving alone:</p>
+        <pre>ffmpeg -i in.mp4 out%d.jpg</pre>
+        <p>The reverse process, converting many images to a video:</p>
+        <pre>ffmpeg -f image2 -framerate 12 -i in-%03d.jpg -s WxH out.mp4</pre>
+    </div>
+    <div class="card">
+        <table>
+        <tr>
+        <td><h1>Background processes</h1></td>
+        <td><ul class="filterlist horizontal">
+            <li>linux</li><li>background</li><li>process</li><li>processes</li>
+            <li>terminal</li><li>bash</li><li>shell</li>
+        </ul></td>
+        </tr>
+        </table>
+        <p>You can press <kbd>Ctrl+Z</kbd> to send a running process to the
+        background, use <code>jobs</code> to see which have you sent, and
+        <code>fg n</code> to bring them back to foreground.</p>
+    </div>
+</div> <!-- div id="allcards" -->
+
+<script src="js/utils.js"></script>
+<script src="js/hashtags.js"></script>
+</body>
+</html>

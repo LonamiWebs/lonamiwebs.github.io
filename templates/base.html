@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="Official Lonami's website">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+    <title>
+        {% block title %}
+        Lonami's
+        {% if current_path == '/'%}
+            Site
+        {% elif current_path is starting_with('/blog') %}
+            Blog
+        {% elif current_path is starting_with('/golb') %}
+            Golb
+        {% else %}
+            Confused
+        {% endif %}
+        {% endblock %}
+    </title>
+    {% block css %}
+    <link rel="stylesheet" type="text/css" href="/style.css">
+    {% endblock %}
+</head>
+<body>
+    <article>
+        <nav class="sections">
+                <ul class="left">
+                    <li><a href="/" class="{% if current_path == '/' %}selected{% endif %}">lonami's&nbsp;site</a></li>
+                    <li><a href="/blog" class="{% if current_path is starting_with('/blog') %}selected{% endif %}">blog</a></li>
+                    <li><a href="/golb" class="{% if current_path is starting_with('/golb') %}selected{% endif %}">golb</a></li>
+                </ul>
+                <div class="right">
+                    <a href="https://github.com/LonamiWebs"><img src="/img/github.svg" alt="github" /></a>
+                    <a href="/blog/atom.xml"><img src="/img/rss.svg" alt="rss"></a>
+                </div>
+        </nav>
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+        <footer>
+            <div>
+                <p>
+                    Share your thoughts! —
+                    <a href="mailto:totufals@hotmail.com"><img src="/img/mail.svg" alt="Mail" /></a>
+                </p>
+            </div>
+        </footer>
+    </article>
+    <p class="abyss" onclick="egg()">Gaze into the abyss… Oh hi there!</p>
+    <script>
+const egg = () => {
+    const audio = document.createElement('audio')
+    audio.src = 'https://oriath.net/Audio/Dialogue/NPC/ShaperCombat/SH25b.dialogue.ogg'
+    audio.play()
+}
+    </script>
+</body>
+</html>

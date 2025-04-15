@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Scratchpad</title>
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        canvas:not([tabindex='0']) {
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <noscript>This page requires JavaScript to function.</noscript>
+
+    <canvas id=perman>This page requires canvas support to function.</canvas>
+    <canvas id=action tabindex=0></canvas>
+
+    <script>
+        "use strict";
+        // region SETUP //
+
+        const /**@type HTMLCanvasElement*/ permancanvas = document.getElementById("perman")
+        const /**@type HTMLCanvasElement*/ actioncanvas = document.getElementById("action")
+
+        const permanarea = permancanvas.getContext("2d")
+        const actionarea = actioncanvas.getContext("2d")
+
+        // AUXILIARY CLASSES //
+
+        class Point {
+            /**@type number*/ x
+            /**@type number*/ y
+
+            constructor(/**@type number*/ x, /**@type number*/ y) {
+                this.x = x
+                this.y = y
+            }
+
+            add(/**@type this*/ other) {
+                return new Point(this.x + other.x, this.y + other.y)
+            }
+
+            sub(/**@type this*/ other) {
+                return new Point(this.x - other.x, this.y - other.y)
+            }
+
+            scale(/**@type number*/ factor) {
+                return new Point(this.x * factor, this.y * factor)
+            }
+
+            rotate(/**@type number*/ angle) {
+                const cos = Math.cos(angle)
+                const sin = Math.sin(angle)
+                return new Point(this.x * cos - this.y * sin, this.x * sin + this.y * cos)
+            }
+
+            angle(/**@type this*/ other) {
+                const diff = this.sub(other)
+                return Math.atan2(diff.y, diff.x)
+            }
+
+            clone() {
+                return new Point(this.x, this.y)
+            }
+
+            len() {
+                return (this.x ** 2 + this.y ** 2) ** 0.5
+            }
+        }
+
+        // TOOLS //
+
+        class Tool {
+            constructor(/**@type Point*/ point) {
+                this.origin = point
+                this.area = actionarea
+                this.setup()
+            }
+            setup() { }
+            draw() { }
+            ondown(/**@type Point*/ point, /**@type number*/ buttons) { }
+            onmove(/**@type Point*/ point) { }
+            onup() { }
+            onkey(/**@type KeyboardEvent*/ e) {
+                if (e.key === 'Escape') {
+                    reset()
+                }
+            }
+        }
+
+        class Pen extends Tool {
+            constructor(/**@type Point*/ point) {
+                super(point)
+                this.points = [point]
+            }
+
+            setup() {
+                this.area.lineWidth = 3
+                this.area.strokeStyle = this.area.fillStyle = G.foreground
+            }
+
+            draw() {
+                drawSpline(this.area, this.points)
+            }
+
+            onmove(/**@type Point*/ point) {
+                this.points.push(point)
+            }
+
+            onup() {
+                commit()
+            }
+        }
+
+        class Eraser extends Tool {
+            constructor(/**@type Point*/ point) {
+                super(point)
+                this.points = [point]
+            }
+
+            setup() {
+                this.area.lineWidth = 45
+                this.area.strokeStyle = G.background
+            }
+
+            draw() {
+                if (this.points.length > 1) {
+                    drawSpline(this.area, this.points)
+                }
+            }
+
+            onmove(/**@type Point*/ point) {
+                this.points.push(point)
+            }
+
+            onup() {
+                if (this.points.length > 1) {
+                    commit()
+                } else {
+                    reset()
+                }
+            }
+        }
+
+        class CycleableTool extends Tool {
+            constructor(/**@type Point*/ point) {
+                super(point)
+                this.point = point
+            }
+
+            setup() {
+                this.area.lineWidth = 3
+                this.area.strokeStyle = this.area.fillStyle = G.foreground
+            }
+
+            toolKey() { return '' }
+            cycle() { }
+
+            onmove(/**@type Point*/ point) {
+                this.point = point
+            }
+
+            ondown(/**@type Point*/ point, /**@type number*/ buttons) {
+                if (buttons & 2) {
+                    reset()
+                } else {
+                    commit()
+                }
+            }
+
+            onkey(/**@type KeyboardEvent*/ e) {
+                if (e.key === 'Escape') {
+                    reset()
+                } else if (!e.ctrlKey && e.key === this.toolKey()) {
+                    this.cycle()
+                }
+            }
+        }
+
+        class Arrow extends CycleableTool {
+            constructor(/**@type Point*/ point) {
+                super(point)
+                this.stepwise = 0
+            }
+
+            draw() {
+                /**@type number*/ let angle
+                if (this.stepwise) {
+                    const diff = this.point.sub(this.origin)
+                    const mid = this.origin.add(diff.scale(0.5))
+                    /**@type Point*/ let p1
+                    /**@type Point*/ let p2
+                    if (Math.abs(diff.x) > Math.abs(diff.y)) {
+                        p1 = new Point(mid.x, this.origin.y)
+                        p2 = new Point(mid.x, this.point.y)
+                    } else {
+                        p1 = new Point(this.origin.x, mid.y)
+                        p2 = new Point(this.point.x, mid.y)
+                    }
+                    if (this.stepwise > 1) {
+                        drawSpline(this.area, [this.origin, p1, p2, this.point])
+                    } else {
+                        this.area.beginPath()
+                        this.area.moveTo(this.origin.x, this.origin.y)
+                        this.area.lineTo(p1.x, p1.y)
+                        this.area.lineTo(p2.x, p2.y)
+                        this.area.lineTo(this.point.x, this.point.y)
+                        this.area.stroke()
+                    }
+                    angle = this.point.angle(p2)
+                } else {
+                    this.area.beginPath()
+                    this.area.moveTo(this.origin.x, this.origin.y)
+                    this.area.lineTo(this.point.x, this.point.y)
+                    this.area.stroke()
+                    angle = this.point.angle(this.origin)
+                }
+
+                const p0 = new Point(this.area.lineWidth * 5, 0)
+                const p1 = this.point.add(p0.rotate(angle - 0.80 * Math.PI))
+                const p2 = this.point.add(p0.rotate(angle + 0.80 * Math.PI))
+
+                this.area.beginPath()
+                this.area.moveTo(this.point.x, this.point.y)
+                this.area.lineTo(p1.x, p1.y)
+                this.area.lineTo(p2.x, p2.y)
+                this.area.closePath()
+                this.area.fill()
+            }
+
+            toolKey() {
+                return 'a'
+            }
+
+            cycle() {
+                this.stepwise = (this.stepwise + 1) % 3
+            }
+        }
+
+        class Box extends CycleableTool {
+            constructor(/**@type Point*/ point) {
+                super(point)
+                this.fill = false
+            }
+
+            draw() {
+                const diff = this.point.sub(this.origin)
+                if (this.fill) {
+                    this.area.fillRect(this.origin.x, this.origin.y, diff.x, diff.y)
+                } else {
+                    this.area.strokeRect(this.origin.x, this.origin.y, diff.x, diff.y)
+                }
+            }
+
+            toolKey() {
+                return 'b'
+            }
+
+            cycle() {
+                this.fill = !this.fill
+            }
+        }
+
+        class Circle extends CycleableTool {
+            constructor(/**@type Point*/ point) {
+                super(point)
+                this.fill = false
+            }
+
+            draw() {
+                const diff = this.point.sub(this.origin)
+                this.area.beginPath()
+                this.area.arc(this.origin.x, this.origin.y, diff.len(), 0, 2 * Math.PI)
+                if (this.fill) {
+                    this.area.fill()
+                } else {
+                    this.area.stroke()
+                }
+            }
+
+            toolKey() {
+                return 'c'
+            }
+
+            cycle() {
+                this.fill = !this.fill
+            }
+        }
+
+        class Delete extends CycleableTool {
+            constructor(/**@type Point*/ point) {
+                super(point)
+                this.preview = true
+                this.circular = false
+            }
+
+            setup() {
+                this.area.lineWidth = 3
+                this.area.strokeStyle = '#F00'
+                this.area.fillStyle = G.background
+            }
+
+            draw() {
+                const diff = this.point.sub(this.origin)
+                if (this.preview) {
+                    if (this.circular) {
+                        this.area.beginPath()
+                        this.area.arc(this.origin.x, this.origin.y, diff.len(), 0, 2 * Math.PI)
+                        this.area.stroke()
+                    } else {
+                        this.area.strokeRect(this.origin.x, this.origin.y, diff.x, diff.y)
+                    }
+                } else if (this.circular) {
+                    this.area.beginPath()
+                    this.area.arc(this.origin.x, this.origin.y, diff.len(), 0, 2 * Math.PI)
+                    this.area.fill()
+                } else {
+                    this.area.fillRect(this.origin.x, this.origin.y, diff.x, diff.y)
+                }
+            }
+
+            toolKey() {
+                return 'd'
+            }
+
+            cycle() {
+                this.circular = !this.circular
+            }
+
+            ondown(/**@type Point*/ point, /**@type number*/ buttons) {
+                this.preview = false
+                if (buttons & 2) {
+                    reset()
+                } else {
+                    commit()
+                }
+            }
+        }
+
+        class Typewriter extends Tool {
+            constructor(/**@type Point*/ point) {
+                super(point)
+                this.typed = ''
+            }
+
+            setup() {
+                this.area.fillStyle = G.foreground
+                this.area.font = G.font
+            }
+
+            draw() {
+                const p = this.origin.clone()
+                const m = this.area.measureText('')
+                const h = m.emHeightAscent + m.emHeightDescent
+
+                for (const line of this.typed.split('\n')) {
+                    this.area.fillText(line, p.x, p.y)
+                    p.y += h
+                }
+            }
+
+            onkey(/**@type KeyboardEvent*/ e) {
+                if (e.key === 'Escape') {
+                    reset()
+                } else if (e.key === 'Backspace') {
+                    if (this.typed.length) {
+                        if (e.ctrlKey) {
+                            this.typed = this.typed.replace(/\S+\s*$/, '')
+                        } else {
+                            this.typed = this.typed.substring(0, this.typed.length - 1)
+                        }
+                    }
+                } else if (e.key === 'Enter') {
+                    this.typed += '\n'
+                } else if (!e.ctrlKey && e.key.length === 1) {
+                    this.typed += e.key
+                }
+            }
+
+            onmove(/**@type Point*/ point) {
+                if (this.typed) {
+                    commit()
+                } else {
+                    reset()
+                }
+            }
+        }
+
+        class Turtle extends Tool {
+            constructor(/**@type Point*/ point) {
+                super(point)
+                this.typed = ''
+                this.preview = true
+            }
+
+            setup() {
+                this.area.lineWidth = 3
+                this.area.strokeStyle = G.foreground
+                this.area.fillStyle = '#090'
+            }
+
+            draw() {
+                const re = /(\d+)|(r)|(l)/g
+                let p = this.origin
+                let m
+                let dir = 3
+
+                this.area.beginPath()
+                this.area.moveTo(p.x, p.y)
+                while (m = re.exec(this.typed)) {
+                    if (m[1]) {
+                        p = p.add(new Point(Number.parseInt(m[1]), 0).rotate(dir * 0.5 * Math.PI))
+                        this.area.lineTo(p.x, p.y)
+                    } else if (m[2]) {
+                        dir = (dir + 1) & 3
+                    } else if (m[3]) {
+                        dir = (dir - 1) & 3
+                    }
+                }
+                this.area.stroke()
+                if (this.preview) {
+                    this.area.lineWidth *= 2
+                    this.area.strokeStyle = this.area.fillStyle
+                    this.area.beginPath()
+                    this.area.moveTo(p.x, p.y)
+                    p = p.add(new Point(this.area.lineWidth * 3, 0).rotate(dir * 0.5 * Math.PI))
+                    this.area.lineTo(p.x, p.y)
+                    this.area.stroke()
+                    drawSpline(this.area, [p])
+                    this.setup()
+                }
+            }
+
+            onkey(/**@type KeyboardEvent*/ e) {
+                if (e.key === 'Backspace') {
+                    if (this.typed.length) {
+                        if (e.ctrlKey) {
+                            this.typed = this.typed.replace(/(\d+|r|l)$/, '')
+                        } else {
+                            this.typed = this.typed.substring(0, this.typed.length - 1)
+                        }
+                    }
+                } else if (!e.ctrlKey && /^(\d|r|l)$/.test(e.key)) {
+                    this.typed += e.key
+                }
+            }
+
+            onmove(/**@type Point*/ point) {
+                this.preview = false
+                if (this.typed) {
+                    commit()
+                } else {
+                    reset()
+                }
+            }
+        }
+
+        // GLOBALS //
+
+        const G = {
+            background: '#FFF',
+            foreground: '#000',
+            font: '32px cursive',
+            /**@type Tool | null*/ tool: null,
+            lastPoint: new Point(0, 0),
+            shouldShowContextMenu: false,
+            /**@type Tool[]*/ commits: [],
+            head: -1,
+        }
+
+        // AUXILIARY FUNCTIONS //
+
+        const pointFromEvent = (/**@type MouseEvent*/ e) => {
+            const r = actioncanvas.getBoundingClientRect()
+            return new Point(e.clientX - r.left, e.clientY - r.top)
+        }
+
+        const clearArea = (/**@type CanvasRenderingContext2D*/ area) => {
+            area.clearRect(0, 0, area.canvas.width, area.canvas.height)
+        }
+
+        const drawSpline = (/**@type CanvasRenderingContext2D*/ area, /**@type Point[]*/ points) => {
+            let p1 = points[0]
+            if (points.length === 1) {
+                area.beginPath()
+                area.arc(p1.x, p1.y, area.lineWidth, 0, 2 * Math.PI)
+                area.fill()
+                return
+            }
+
+            /**@type Point*/ let p2
+            area.beginPath()
+            area.moveTo(p1.x, p1.y)
+            for (let i = 1; i < points.length; i += 1) {
+                p2 = points[i]
+                const midPoint = p1.add(p2.sub(p1).scale(0.5))
+                area.quadraticCurveTo(p1.x, p1.y, midPoint.x, midPoint.y)
+                p1 = p2
+            }
+            area.lineTo(p2.x, p2.y)
+            area.stroke()
+        }
+
+        const commit = () => {
+            if (G.tool) {
+                G.tool.area = permanarea
+                G.tool.setup()
+                G.tool.draw()
+                G.head += 1
+                G.commits.length = G.head
+                G.commits.push(G.tool)
+                reset()
+            }
+        }
+
+        const reset = () => {
+            G.tool = null
+            clearArea(actionarea)
+        }
+
+        // EVENTS AND TOOL INITIALIZATION //
+
+        actioncanvas.onmousedown = (e) => {
+            G.shouldShowContextMenu = !G.tool && !!(e.buttons & 2)
+            G.lastPoint = pointFromEvent(e)
+
+            if (G.tool) {
+                G.tool.ondown(G.lastPoint, e.buttons)
+            } else if (e.buttons & 1) {
+                G.tool = new Pen(G.lastPoint)
+            } else {
+                G.tool = new Eraser(G.lastPoint)
+            }
+            clearArea(actionarea)
+            G.tool?.draw()
+        }
+
+        actioncanvas.onmousemove = actioncanvas.onmouseleave = actioncanvas.onmouseenter = (e) => {
+            G.shouldShowContextMenu = false
+            G.lastPoint = pointFromEvent(e)
+            G.tool?.onmove(G.lastPoint)
+            clearArea(actionarea)
+            G.tool?.draw()
+        }
+
+        document.onmouseup = (e) => {
+            G.tool?.onup()
+            clearArea(actionarea)
+            G.tool?.draw()
+        }
+
+        actioncanvas.oncontextmenu = (e) => {
+            if (!G.shouldShowContextMenu) {
+                e.preventDefault()
+            }
+        }
+
+        document.onkeydown = (e) => {
+            if (G.tool) {
+                if (e.ctrlKey && e.key === 'v') {
+                    const tool = G.tool
+                    G.tool = new Tool()
+                    navigator.clipboard.readText().then(
+                        (pasted) => {
+                            G.tool = tool
+                            for (let key of pasted) {
+                                G.tool.onkey({ ...e, ctrlKey: false, key })
+                            }
+                            clearArea(actionarea)
+                            G.tool?.draw()
+                        },
+                        () => {
+                            G.tool = tool
+                        })
+                } else {
+                    G.tool.onkey(e)
+                }
+            } else {
+                if (e.key === 'Enter') {
+                    G.tool = new Typewriter(G.lastPoint)
+                } else if (!e.ctrlKey && /^[A-Z]$/.test(e.key)) {
+                    G.tool = new Typewriter(G.lastPoint)
+                    G.tool.onkey(e)
+                } else if (e.key === 'a') {
+                    G.tool = new Arrow(G.lastPoint)
+                } else if (e.key === 'b') {
+                    G.tool = new Box(G.lastPoint)
+                } else if (e.key === 'c') {
+                    G.tool = new Circle(G.lastPoint)
+                } else if (e.key === 'd') {
+                    G.tool = new Delete(G.lastPoint)
+                } else if (e.key === 't') {
+                    G.tool = new Turtle(G.lastPoint)
+                } else if (e.ctrlKey && e.key === 'z') {
+                    if (G.head >= 0) {
+                        G.head -= 1
+
+                        let start = 0
+                        permanarea.fillStyle = '#FFF'
+                        permanarea.fillRect(0, 0, permancanvas.width, permancanvas.height)
+
+                        for (let i = start; i <= G.head; i += 1) {
+                            G.commits[i].setup()
+                            G.commits[i].draw()
+                        }
+                    }
+
+                } else if (e.ctrlKey && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) {
+                    if (G.head + 1 !== G.commits.length) {
+                        G.head += 1
+                        G.commits[G.head].setup()
+                        G.commits[G.head].draw()
+                    }
+                }
+            }
+
+            clearArea(actionarea)
+            G.tool?.draw()
+        }
+
+        window.onload = () => {
+            actioncanvas.focus()
+
+            for (const canvas of [permancanvas, actioncanvas]) {
+                canvas.width = window.innerWidth
+                canvas.height = window.innerHeight
+            }
+
+            permanarea.fillStyle = '#FFF'
+            permanarea.fillRect(0, 0, permancanvas.width, permancanvas.height)
+        }
+
+        // HELP TEXT //
+
+        const defineStyles = (...styles) => styles.flatMap((style) => [style, ''])
+        console.info(`
+╭──────────────────────────────────────────────────────────────╮
+%c║ Hello!                              ║%c
+├──────────────────────────────────────────────────────────────┤
+│ This is an extremely minimalistic page that lets you express │
+│ your ideas in a frictionless environment. Two canvas element │
+│ are alone in the page, so even this help text can be hidden! │
+├──────────────────────────────────────────────────────────────┤
+│ %cLMB%c   — Pen tool. Single click to leave a single dot         │
+│ %cRMB%c   — Eraser tool. Single click opens the context menu     │
+├──────────────────────────────────────────────────────────────┤
+│ These keys enable tools. You can cycle the mode of the tools │
+│ by pressing the same key again. LMB to confirm & RMB cancels │
+│                                                              │
+│ %ca%c     — Arrow (straight/stepwise/smooth stepwise)            │
+│ %cb%c     — Box (outline/filled)                                 │
+│ %cc%c     — Circle (outline/filled)                              │
+│ %cd%c     — Delete (box/circle)                                  │
+│                                                              │
+│ While a lot of keys are intercepted to switch between tools, │
+│ care has been taken for browser shortcuts, such as %cCtrl+S%c or │
+│ the context menu to save the canvas as an image, to function │
+├──────────────────────────────────────────────────────────────┤
+│ These keys enter text-input mode & moving the mouse confirms │
+│                                                              │
+│ %ct%c     — Turtle. Numbers to advance. %cl%c or %cr%c: turns left/right │
+│ %cEnter%c — Enter text. Or type directly with an uppercase first │
+│                                                              │
+│ Pasting text is a bit clunky (for good reason), but works in │
+│ modes that support it, these being text and turtle mode. You │
+│ can also cancel any active action by pressing the %cESC%cape key │
+├──────────────────────────────────────────────────────────────┤
+│ In order to support unlimited undo operations via %cCtrl+Z%c, no │
+│ real deletion is done with the erasing tools. Instead, these │
+│ paint with the background color, which means it's not needed │
+│ for the application to take snapshots of the canvas right up │
+│ until the erasing tool was used. Undoing will replay all the │
+│ operations made since the very start, so it can be sluggish! │
+│                                                              │
+│ Feel free to save the page for offline use! Might come handy │
+%c║ Help text is quite large so you might need to scroll up to see it in full  ║%c
+╰──────────────────────────────────────────────────────────────┴%c─ made by %clonami%c.dev
+`.trim(), ...defineStyles(
+            'font-size:large',
+            'border-bottom:1px solid',
+            'border-bottom:1px solid',
+            'border-bottom:1px solid',
+            'border-bottom:1px solid',
+            'border-bottom:1px solid',
+            'border-bottom:1px solid',
+            'border-bottom:1px solid',
+            'font-style:italic',
+            'font-style:italic',
+            'border-bottom:1px solid',
+            'border-bottom:1px solid',
+            'border-bottom:1px solid',
+            'border-bottom:1px solid',
+            'font-size:xx-small',
+        ), 'font-style:italic', 'font-style:italic;color:#2c89a0', 'font-style:italic;color:#5fbcd3')
+
+        /*
+Taking regular snapshots to make amortize Ctrl+Z hasn't been done.
+But I had the help text ready, neatly aligned like everyhing else.
+
+│ until the erasing tool was used. Undoing will replay all the │
+│ operations made since the last checkpoint, so that it can be │
+│ quick to do so. Undoing past the checkpoint may lag a little │
+│ until the application catches up. By keeping just one single │
+│ checkpoint, memory usage should stay as low as possible too! │
+        */
+    </script>
+</body>
+
+</html>
