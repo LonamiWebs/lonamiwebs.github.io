@@ -1,7 +1,5 @@
-{% extends "base.html" %}
+<h1 class="title">My Blog</h1>
 
-{% block content %}
-<h1 class="title">{{ section.title }}</h1>
 <p id="welcome" onclick="pls_stop()">Welcome to my blog!</p>
 
 <p>Here I occasionally post new entries, mostly tech related. Perhaps it's tips for a new game I'm playing, perhaps it has something to do with FFI, or perhaps I'm fighting the borrow checker (just kidding, I'm over that. Mostly).</p>
@@ -9,14 +7,16 @@
 <hr>
 
 <ul>
-    {% for page in section.pages %}
-    <li><a href="{{ page.permalink | safe }}">{{ page.title }}</a><span class="dim">
-        {% if page.taxonomies.category %}
-        [mod {{ page.taxonomies.category[0] }};
-        {% for t in page.taxonomies.tags %}'{{ t }}{% if not loop.last %}, {% endif %}{% endfor %}]
-        {% endif %}
-    </span></li>
-    {% endfor %}
+
+```python,inject
+def inject(content):
+    for page in sorted(content['blog'], key=lambda p: p.date, reverse=True):
+        yield f'<li><a href="{page.permalink}">{page.title}</a>'
+        if page.category:
+            yield f'<span class="dim"> [mod {page.category}; {', '.join(f"'{t}" for t in page.tags)}]</span>'
+        yield '</li>'
+```
+
 </ul>
 
 <script>
@@ -57,4 +57,3 @@
 
     setTimeout(begin_rewrite, REWRITE_DELAY)
 </script>
-{% endblock %}

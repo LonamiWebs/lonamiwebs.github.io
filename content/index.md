@@ -1,8 +1,3 @@
-{% extends "base.html" %}
-
-{% block css %}
-{{ super() }}
-
 <style>
 .golb {
     transform: scaleY(-1);
@@ -13,9 +8,7 @@
     transform: scaleY(1);
 }
 </style>
-{% endblock %}
 
-{% block content %}
 <h1>Lonami's Site</h1>
 <p>Welcome to my personal website! This page has had several redesigns
 over time, but now I've decided to let it be as minimalist as possible
@@ -95,4 +88,3 @@ a different public place where everyone can benefit from it.</p>
     document.getElementById("age").innerHTML = "aged " + (now - 1999);
     document.getElementById("programming").innerHTML = "for " + (now - 2012) + " years";
 </script>
-{% endblock %}
