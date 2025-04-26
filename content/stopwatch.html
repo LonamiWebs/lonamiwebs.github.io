@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <meta charset="utf-8">
     <title>Stopwatch</title>
     <link rel="shortcut icon" type="image/svg+xml" href="stopwatch.svg">
-<style>
-body {
+    <style>
+      body {
     background-color: #000;
     color: #eee;
 }
@@ -46,22 +46,19 @@ button.red {
 button.red:hover {
     background-color: #955;
 }
-</style>
-</head>
-<body>
+    </style>
+  </head>
+  <body>
     <p class="big">
-        <span id="counter">00:00:00</span>
-        <span id="counterms" class="smaller">.000</span>
+      <span id="counter">00:00:00</span>
+      <span id="counterms" class="smaller">.000</span>
     </p>
     <div class="center">
-    <button id="toggle" class="green" type="button"
-        onclick="toggleCounter()">Start</button>
-    <button type="button" class="red"
-        onclick="resetCounter()">Reset</button>
+      <button id="toggle" class="green" type="button" onclick="toggleCounter()">Start</button>
+      <button type="button" class="red" onclick="resetCounter()">Reset</button>
     </div>
-
     <script>
-const counter = document.getElementById("counter");
+      const counter = document.getElementById("counter");
 const counterms = document.getElementById("counterms");
 const toggle = document.getElementById("toggle");
 
@@ -122,5 +119,5 @@ function resetCounter() {
 
 renderCounter();
     </script>
-</body>
+  </body>
 </html>

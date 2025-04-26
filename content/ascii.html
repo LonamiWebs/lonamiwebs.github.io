@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="description" content="Get in. Get typing. Get codepoint. Get copying. Get out. GGGGG">
-        <meta name="theme-color" content="#000">
-        <title>ASCII code points</title>
-        <style>
-body {
+  <head>
+    <meta charset="utf-8">
+    <meta name="description" content="Get in. Get typing. Get codepoint. Get copying. Get out. GGGGG">
+    <meta name="theme-color" content="#000">
+    <title>ASCII code points</title>
+    <style>
+      body {
     margin: 0;
     overflow: hidden;
 }
@@ -41,19 +41,19 @@ ul {
         color: #fff;
     }
 }
-        </style>
-    </head>
-    <body>
-        <!--
+    </style>
+  </head>
+  <body>
+    <!--
             i am SICK of typing "ascii table" in ddg and getting this stupid page https://www.asciitable.com/
             which IS A DAMN IMAGE and doesn't even let me copy stuff from it. so i made this. just type whatever
             you need and get the codepoint for it. or paste something. all while being somewhat pleasing to look at.
         -->
-        <input id=input>
-        <ul id=ul></ul>
-    </body>
-    <script>
-const input = document.getElementById('input');
+    <input id=input>
+    <ul id=ul></ul>
+  </body>
+  <script>
+    const input = document.getElementById('input');
 const ul = document.getElementById('ul')
 let count = 0;
 const max = 7;
@@ -71,5 +71,5 @@ input.oninput = e => {
     }
     e.target.value = ''
 }
-    </script>
+  </script>
 </html>

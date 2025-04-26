@@ -1,13 +1,13 @@
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-	<meta charset="utf-8">
-	<title>Documentation for the dmssproject Ecore meta-model</title>
-	<meta name="description" content="dmssproject Documentation">
-	<link rel="stylesheet" href="css/styles.css?v=1.0">
-	<style>
-	.details {
+  <head>
+    <meta charset="utf-8">
+    <title>Documentation for the dmssproject Ecore meta-model</title>
+    <meta name="description" content="dmssproject Documentation">
+    <link rel="stylesheet" href="css/styles.css?v=1.0">
+    <style>
+      .details {
 		font-family: calibri;
 		color: black;
 	}
@@ -24,183 +24,286 @@
 	.abstract {
 		background-color: LightGrey;
 	}
-	</style>
-</head>
-<body>
-	<span class="details">
-	<p>Authors : <i>(censored for privacy reasons)</i></p>
-	<p>Last updated : 06/05/2019</p>
-	<p>Name: dmssproject</p>
-	<p>NS Prefix: dmssproject</p>
-	<p>NS URI: http://www.example.org/dmssproject</p>
-	</span>
-
-<span class="cls">EClass: Workflow</span>
-<p>Description: In this EClassifier we set the authors of the project and where the meta-model was last updated.</p>
-<ul>
-	<br>
-	<li>(0...*) <b>actors</b> : Actor (Composition) </li>
-	<br>
-	<li>invariant <b>SingleBeginTag</b> : <span class="invariant"> 
-				self.actors.tasks->selectByType(StartTask)->size() = 1</span></li>
-	<li>invariant <b>SingleEngTag</b> : <span class="invariant"> 
-				self.actors.tasks->selectByType(EndTask)->size() = 1</span></li>
-	
-</ul>
-<span class="cls">EClass: Actor</span>
-<p>Description: In this EClassifier we have the Actor class and its attributes</p>
-<ul>
-	<li>(0...1) <b>name</b> : EString </li>
-	<br>
-	<li>(1...*) <b>tasks</b> : Task (Composition) </li>
-	<li>(0...*) <b>information</b> : Information (Composition) </li>
-	<br>
-	
-</ul>
-<span class="abstract">EClass: Task</span> (abstract) <br>
-<p>Description: In this EClassifier we have the Task class and its attributes</p>
-<ul>
-	<br>
-	<li>(0...1) <b>succesor#<i>predecessor</i></b> : Task  </li>
-	<li>(0...1) <b>predecessor#<i>succesor</i></b> : Task  </li>
-	<br>
-	<li>invariant <b>NoDestinationStart</b> : <span class="invariant"> 
-				self.succesor->selectByType(StartTask)->isEmpty()</span></li>
-	<li>invariant <b>NoSourceEnd</b> : <span class="invariant"> 
-				self.predecessor->selectByType(EndTask)->isEmpty()</span></li>
-	<li>invariant <b>NoSelfLink</b> : <span class="invariant"> 
-				not self.predecessor->includes(self) and not self.succesor->includes(self)</span></li>
-	
-</ul>
-<span class="abstract">EClass: IntermediateTask</span> (abstract) <br>
-<p>Description: In this EClassifier we have the IntermediateTask class and its attributes</p>
-<ul>
-	<li>(0...1) <b>name</b> : EString </li>
-	<br>
-	<li>(0...1) <b>succesor#<i>predecessor</i></b> : Task  </li>
-	<li>(0...1) <b>predecessor#<i>succesor</i></b> : Task  </li>
-	<br>
-	
-</ul>
-<span class="cls">EClass: StartTask</span>
-<p>Description: In this EClassifier we have the Start Task class and its attributes</p>
-<ul>
-	<br>
-	<li>(0...1) <b>succesor#<i>predecessor</i></b> : Task  </li>
-	<li>(0...1) <b>predecessor#<i>succesor</i></b> : Task  </li>
-	<br>
-	
-</ul>
-<span class="cls">EClass: EndTask</span>
-<p>Description: In this EClassifier we have the End Task class and its attributes</p>
-<ul>
-	<br>
-	<li>(0...1) <b>succesor#<i>predecessor</i></b> : Task  </li>
-	<li>(0...1) <b>predecessor#<i>succesor</i></b> : Task  </li>
-	<br>
-	
-</ul>
-<span class="cls">EClass: UserTask</span>
-<p>Description: In this EClassifier we have the User Task class and its attributes</p>
-<ul>
-	<li>(0...1) <b>name</b> : EString </li>
-	<br>
-	<li>(0...1) <b>succesor#<i>predecessor</i></b> : Task  </li>
-	<li>(0...1) <b>predecessor#<i>succesor</i></b> : Task  </li>
-	<li>(0...*) <b>attachedData</b> : Information  </li>
-	<br>
-	
-</ul>
-<span class="cls">EClass: ServiceTask</span>
-<p>Description: In this EClassifier we have the Service Task class and its attributes</p>
-<ul>
-	<li>(0...1) <b>name</b> : EString </li>
-	<br>
-	<li>(0...1) <b>succesor#<i>predecessor</i></b> : Task  </li>
-	<li>(0...1) <b>predecessor#<i>succesor</i></b> : Task  </li>
-	<li>(0...*) <b>producedData</b> : Information  </li>
-	<br>
-	
-</ul>
-<span class="cls">EClass: SendMessageTask</span>
-<p>Description: In this EClassifier we have the Send Message Task class and its attributes</p>
-<ul>
-	<li>(0...1) <b>name</b> : EString </li>
-	<br>
-	<li>(0...1) <b>succesor#<i>predecessor</i></b> : Task  </li>
-	<li>(0...1) <b>predecessor#<i>succesor</i></b> : Task  </li>
-	<li>(0...*) <b>requiredData</b> : Information  </li>
-	<br>
-	<li>invariant <b>SendSuccededByRecv</b> : <span class="invariant"> 
-				self.succesor.oclIsKindOf(RecvMessageTask)</span></li>
-	<li>invariant <b>SendRecvInDifferentActors</b> : <span class="invariant"> 
-				self.oclContainer() &lt;&gt; self.succesor.oclContainer()</span></li>
-	
-</ul>
-<span class="cls">EClass: RecvMessageTask</span>
-<p>Description: In this EClassifier we have the Receive Message Task class and its attributes</p>
-<ul>
-	<li>(0...1) <b>name</b> : EString </li>
-	<br>
-	<li>(0...1) <b>succesor#<i>predecessor</i></b> : Task  </li>
-	<li>(0...1) <b>predecessor#<i>succesor</i></b> : Task  </li>
-	<br>
-	
-</ul>
-<span class="abstract">EClass: Information</span> (abstract) <br>
-<p>Description: In this EClassifier we have the Information class and its attributes</p>
-<ul>
-	<li>(0...1) <b>name</b> : EString </li>
-	<li>(0...1) <b>optional</b> : EBoolean </li>
-	<br>
-	<br>
-	
-</ul>
-<span class="cls">EClass: Form</span>
-<p>Description: In this EClassifier we have the Form class and its attributes</p>
-<ul>
-	<li>(0...1) <b>name</b> : EString </li>
-	<li>(0...1) <b>optional</b> : EBoolean </li>
-	<br>
-	<li>(0...*) <b>subfields</b> : Information  </li>
-	<br>
-	
-</ul>
-<span class="cls">EClass: Text</span>
-<p>Description: In this EClassifier we have the Text class and its attributes</p>
-<ul>
-	<li>(0...1) <b>name</b> : EString </li>
-	<li>(0...1) <b>optional</b> : EBoolean </li>
-	<li>(0...1) <b>value</b> : EString </li>
-	<br>
-	<br>
-	
-</ul>
-<span class="cls">EClass: Number</span>
-<p>Description: In this EClassifier we have the Number class and its attributes</p>
-<ul>
-	<li>(0...1) <b>name</b> : EString </li>
-	<li>(0...1) <b>optional</b> : EBoolean </li>
-	<li>(0...1) <b>value</b> : EInt </li>
-	<br>
-	<br>
-	
-</ul>
-<span class="cls">EClass: Resource</span>
-<p>Description: In this EClassifier we have the Resource class and its attributes</p>
-<ul>
-	<li>(0...1) <b>name</b> : EString </li>
-	<li>(0...1) <b>optional</b> : EBoolean </li>
-	<li>(0...1) <b>uri</b> : EString </li>
-	<li>(0...1) <b>type</b> : ResourceType </li>
-	<br>
-	<br>
-	
-</ul>
-<span class="cls">EENum: ResourceType</span> = {  0 : DOCUMENT, 1 : TEXT, 2 : PHOTO, 3 : VIDEO }
-<p>Description: EENum
-</p>
-
-
-</body>
+    </style>
+  </head>
+  <body>
+    <span class="details">
+      <p>Authors :
+        <i>(censored for privacy reasons)</i></p>
+      <p>Last updated : 06/05/2019</p>
+      <p>Name: dmssproject</p>
+      <p>NS Prefix: dmssproject</p>
+      <p>NS URI: http://www.example.org/dmssproject</p>
+    </span>
+    <span class="cls">EClass: Workflow</span>
+    <p>Description: In this EClassifier we set the authors of the project and where the meta-model was last updated.</p>
+    <ul>
+      <br>
+      <li>(0...*)
+        <b>actors</b>
+        : Actor (Composition)</li>
+      <br>
+      <li>invariant
+        <b>SingleBeginTag</b>
+        :
+        <span class="invariant">
+          self.actors.tasks->selectByType(StartTask)->size() = 1
+        </span></li>
+      <li>invariant
+        <b>SingleEngTag</b>
+        :
+        <span class="invariant">
+          self.actors.tasks->selectByType(EndTask)->size() = 1
+        </span></li>
+    </ul>
+    <span class="cls">EClass: Actor</span>
+    <p>Description: In this EClassifier we have the Actor class and its attributes</p>
+    <ul>
+      <li>(0...1)
+        <b>name</b>
+        : EString</li>
+      <br>
+      <li>(1...*)
+        <b>tasks</b>
+        : Task (Composition)</li>
+      <li>(0...*)
+        <b>information</b>
+        : Information (Composition)</li>
+      <br>
+    </ul>
+    <span class="abstract">EClass: Task</span>
+    (abstract)
+    <br>
+    <p>Description: In this EClassifier we have the Task class and its attributes</p>
+    <ul>
+      <br>
+      <li>(0...1)
+        <b>succesor#<i>predecessor</i></b>
+        : Task</li>
+      <li>(0...1)
+        <b>predecessor#<i>succesor</i></b>
+        : Task</li>
+      <br>
+      <li>invariant
+        <b>NoDestinationStart</b>
+        :
+        <span class="invariant">
+          self.succesor->selectByType(StartTask)->isEmpty()
+        </span></li>
+      <li>invariant
+        <b>NoSourceEnd</b>
+        :
+        <span class="invariant">
+          self.predecessor->selectByType(EndTask)->isEmpty()
+        </span></li>
+      <li>invariant
+        <b>NoSelfLink</b>
+        :
+        <span class="invariant">
+          not self.predecessor->includes(self) and not self.succesor->includes(self)
+        </span></li>
+    </ul>
+    <span class="abstract">EClass: IntermediateTask</span>
+    (abstract)
+    <br>
+    <p>Description: In this EClassifier we have the IntermediateTask class and its attributes</p>
+    <ul>
+      <li>(0...1)
+        <b>name</b>
+        : EString</li>
+      <br>
+      <li>(0...1)
+        <b>succesor#<i>predecessor</i></b>
+        : Task</li>
+      <li>(0...1)
+        <b>predecessor#<i>succesor</i></b>
+        : Task</li>
+      <br>
+    </ul>
+    <span class="cls">EClass: StartTask</span>
+    <p>Description: In this EClassifier we have the Start Task class and its attributes</p>
+    <ul>
+      <br>
+      <li>(0...1)
+        <b>succesor#<i>predecessor</i></b>
+        : Task</li>
+      <li>(0...1)
+        <b>predecessor#<i>succesor</i></b>
+        : Task</li>
+      <br>
+    </ul>
+    <span class="cls">EClass: EndTask</span>
+    <p>Description: In this EClassifier we have the End Task class and its attributes</p>
+    <ul>
+      <br>
+      <li>(0...1)
+        <b>succesor#<i>predecessor</i></b>
+        : Task</li>
+      <li>(0...1)
+        <b>predecessor#<i>succesor</i></b>
+        : Task</li>
+      <br>
+    </ul>
+    <span class="cls">EClass: UserTask</span>
+    <p>Description: In this EClassifier we have the User Task class and its attributes</p>
+    <ul>
+      <li>(0...1)
+        <b>name</b>
+        : EString</li>
+      <br>
+      <li>(0...1)
+        <b>succesor#<i>predecessor</i></b>
+        : Task</li>
+      <li>(0...1)
+        <b>predecessor#<i>succesor</i></b>
+        : Task</li>
+      <li>(0...*)
+        <b>attachedData</b>
+        : Information</li>
+      <br>
+    </ul>
+    <span class="cls">EClass: ServiceTask</span>
+    <p>Description: In this EClassifier we have the Service Task class and its attributes</p>
+    <ul>
+      <li>(0...1)
+        <b>name</b>
+        : EString</li>
+      <br>
+      <li>(0...1)
+        <b>succesor#<i>predecessor</i></b>
+        : Task</li>
+      <li>(0...1)
+        <b>predecessor#<i>succesor</i></b>
+        : Task</li>
+      <li>(0...*)
+        <b>producedData</b>
+        : Information</li>
+      <br>
+    </ul>
+    <span class="cls">EClass: SendMessageTask</span>
+    <p>Description: In this EClassifier we have the Send Message Task class and its attributes</p>
+    <ul>
+      <li>(0...1)
+        <b>name</b>
+        : EString</li>
+      <br>
+      <li>(0...1)
+        <b>succesor#<i>predecessor</i></b>
+        : Task</li>
+      <li>(0...1)
+        <b>predecessor#<i>succesor</i></b>
+        : Task</li>
+      <li>(0...*)
+        <b>requiredData</b>
+        : Information</li>
+      <br>
+      <li>invariant
+        <b>SendSuccededByRecv</b>
+        :
+        <span class="invariant">
+          self.succesor.oclIsKindOf(RecvMessageTask)
+        </span></li>
+      <li>invariant
+        <b>SendRecvInDifferentActors</b>
+        :
+        <span class="invariant">
+          self.oclContainer() &lt;&gt; self.succesor.oclContainer()
+        </span></li>
+    </ul>
+    <span class="cls">EClass: RecvMessageTask</span>
+    <p>Description: In this EClassifier we have the Receive Message Task class and its attributes</p>
+    <ul>
+      <li>(0...1)
+        <b>name</b>
+        : EString</li>
+      <br>
+      <li>(0...1)
+        <b>succesor#<i>predecessor</i></b>
+        : Task</li>
+      <li>(0...1)
+        <b>predecessor#<i>succesor</i></b>
+        : Task</li>
+      <br>
+    </ul>
+    <span class="abstract">EClass: Information</span>
+    (abstract)
+    <br>
+    <p>Description: In this EClassifier we have the Information class and its attributes</p>
+    <ul>
+      <li>(0...1)
+        <b>name</b>
+        : EString</li>
+      <li>(0...1)
+        <b>optional</b>
+        : EBoolean</li>
+      <br>
+      <br>
+    </ul>
+    <span class="cls">EClass: Form</span>
+    <p>Description: In this EClassifier we have the Form class and its attributes</p>
+    <ul>
+      <li>(0...1)
+        <b>name</b>
+        : EString</li>
+      <li>(0...1)
+        <b>optional</b>
+        : EBoolean</li>
+      <br>
+      <li>(0...*)
+        <b>subfields</b>
+        : Information</li>
+      <br>
+    </ul>
+    <span class="cls">EClass: Text</span>
+    <p>Description: In this EClassifier we have the Text class and its attributes</p>
+    <ul>
+      <li>(0...1)
+        <b>name</b>
+        : EString</li>
+      <li>(0...1)
+        <b>optional</b>
+        : EBoolean</li>
+      <li>(0...1)
+        <b>value</b>
+        : EString</li>
+      <br>
+      <br>
+    </ul>
+    <span class="cls">EClass: Number</span>
+    <p>Description: In this EClassifier we have the Number class and its attributes</p>
+    <ul>
+      <li>(0...1)
+        <b>name</b>
+        : EString</li>
+      <li>(0...1)
+        <b>optional</b>
+        : EBoolean</li>
+      <li>(0...1)
+        <b>value</b>
+        : EInt</li>
+      <br>
+      <br>
+    </ul>
+    <span class="cls">EClass: Resource</span>
+    <p>Description: In this EClassifier we have the Resource class and its attributes</p>
+    <ul>
+      <li>(0...1)
+        <b>name</b>
+        : EString</li>
+      <li>(0...1)
+        <b>optional</b>
+        : EBoolean</li>
+      <li>(0...1)
+        <b>uri</b>
+        : EString</li>
+      <li>(0...1)
+        <b>type</b>
+        : ResourceType</li>
+      <br>
+      <br>
+    </ul>
+    <span class="cls">EENum: ResourceType</span>
+    = {  0 : DOCUMENT, 1 : TEXT, 2 : PHOTO, 3 : VIDEO }
+    <p>Description: EENum</p>
+  </body>
 </html>
