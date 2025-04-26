@@ -50,7 +50,7 @@ def inject(content):
             let text = english ? WELCOME_EN : WELCOME_ES
             welcome.innerHTML = text.slice(0, welcome.innerHTML.length + 1)
             deleting = welcome.innerHTML.length == text.length
-            english = deleting - english
+            english ^= deleting
             setTimeout(begin_rewrite, deleting ? REWRITE_DELAY : CHAR_DELAY)
         }
     }
