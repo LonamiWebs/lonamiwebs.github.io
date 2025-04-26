@@ -118,16 +118,16 @@ Para eliminar las conexiones que salen de un nodo en concreto, haz clic con el b
 <table><tr><td style="width:100%;">
   <button onclick="resetConnections()">Reiniciar conexiones</button>
   <button onclick="clearNodes()">Limpiar todos los nodos</button>
-  <br />
-  <br />
+  <br>
+  <br>
   <label for="matrixOrder">Mostrar matriz de orden:</label>
   <input id="matrixOrder" type="number" min="1" max="5"
                           value="1" oninput="updateOrder()">
-  <br />
+  <br>
   <label for="matrixAccum">Mostrar matriz acumulada</label>
   <input id="matrixAccum" type="checkbox" onchange="updateOrder()">
-  <br />
-  <br />
+  <br>
+  <br>
   <div>
     <table id="matrixTable"></table>
   </div>
@@ -135,7 +135,7 @@ Para eliminar las conexiones que salen de un nodo en concreto, haz clic con el b
   <canvas id="canvas" width="400" height="400" oncontextmenu="return false;">
   Parece que tu navegador no vas a poder probar el ejemplo en tu navegador :(
   </canvas>
-  <br />
+  <br>
 </td></tr></table>
 
 <script src="/blog/graphs/tinyparser.js"></script>

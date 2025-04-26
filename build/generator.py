@@ -123,7 +123,7 @@ def generate(text: bytes, formats: list[tuple[int, Format]]) -> bytes:
 
         elif isinstance(f, Break):
             pass
-            # segments.append((i, b"<br />"))
+            # segments.append((i, b"<br>"))
 
         elif isinstance(f, Raw):
             segments.append((i, f.content))

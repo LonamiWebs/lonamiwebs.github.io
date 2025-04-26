@@ -117,16 +117,16 @@ To delete the connections coming from a specific node, middle click it.
 <table><tr><td style="width:100%;">
   <button onclick="resetConnections()">Reset connections</button>
   <button onclick="clearNodes()">Clear all the nodes</button>
-  <br />
-  <br />
+  <br>
+  <br>
   <label for="matrixOrder">Show matrix of order:</label>
   <input id="matrixOrder" type="number" min="1" max="5"
                           value="1" oninput="updateOrder()">
-  <br />
+  <br>
   <label for="matrixAccum">Show accumulated matrix</label>
   <input id="matrixAccum" type="checkbox" onchange="updateOrder()">
-  <br />
-  <br />
+  <br>
+  <br>
   <div>
     <table id="matrixTable"></table>
   </div>
@@ -134,7 +134,7 @@ To delete the connections coming from a specific node, middle click it.
   <canvas id="canvas" width="400" height="400" oncontextmenu="return false;">
   Looks like your browser won't let you see this fancy example :(
   </canvas>
-  <br />
+  <br>
 </td></tr></table>
 
 <script src="tinyparser.js"></script>

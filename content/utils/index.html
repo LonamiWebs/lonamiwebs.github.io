@@ -8,7 +8,7 @@
     <meta name="description" content="Several utilities for almost every purpose">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <link rel="stylesheet" type="text/css" href="css/mobile.css"
-            media="only screen and (max-width: 740px)" />
+            media="only screen and (max-width: 740px)">
 </head>
 <body>
     <div class="card">
@@ -58,7 +58,7 @@
         </tr>
         </table>
         <p>On Windows the command is called <code>ipconfig</code>. It's very
-        similar under Linux, yet not the same:
+        similar under Linux, yet not the same:</p>
         <pre>ifconfig</pre>
     </div>
     <div class="card">
@@ -127,7 +127,7 @@ fi</pre>
         </table>
         <p>To <b>l</b>i<b>s</b>t all the plugged <b>bl</b>oc<b>k</b> devices:</p>
         <pre>lsblk</pre>
-        
+
         <p>For example, if you identify your USB drive and you want to burn an
         ISO on it or to wipe it completely with zeroes (respectively), after
         you've made sure that <b>it is not mounted</b>:</p>
@@ -136,10 +136,10 @@ fi</pre>
 dd status=progress if=/dev/zero of=/dev/sdX</pre>
         
         <p>To create a new partition, you can run <code>fdisk</code> and follow
-        its instructions.<br />
-        To formt a partition, as FAT32 for instance, you can run:
+        its instructions.<br>
+        To formt a partition, as FAT32 for instance, you can run:</p>
         <pre>mkfs -t vfat /dev/sdXY</pre>
-        
+
         <p>A great tool with GUI however, it's <code>gparted</code>.</p>
     </div>
     <div class="card">
@@ -151,7 +151,7 @@ dd status=progress if=/dev/zero of=/dev/sdX</pre>
         </ul></td>
         </tr>
         </table>
-        <p>If you're like me, you probably hate the touchpad. No problem:
+        <p>If you're like me, you probably hate the touchpad. No problem:</p>
         <pre>sudo add-apt-repository ppa:atareao/atareao
 sudo apt-get update
 sudo apt-get install touchpad-indicator</pre>
@@ -173,7 +173,7 @@ sudo apt-get install touchpad-indicator</pre>
         <p>You don't know regex or need a quick refresher? Check out
         <a href="https://www.regexone.com" target="_blank">RegexOne</a>.</p>
         <p>You can also show the surrounding lines to those you matched by using
-        the <b>b</b>efore and <b>a</b>fter options, as follows:
+        the <b>b</b>efore and <b>a</b>fter options, as follows:</p>
         <pre>grep -rn '/path/to/somewhere/' -B1 -A2 -e "pattern"</pre>
     </div>
     <div class="card">
@@ -202,7 +202,7 @@ sudo apt-get install touchpad-indicator</pre>
         to check what it's using to render them with the
         <code>graphics_toolkit</code> command. If the output is not
         <code>gnuplot</code>, install it via <code>apt</code>, restart Octave
-        and run <code>graphics_toolkit('gnuplot')</code>.<br />
+        and run <code>graphics_toolkit('gnuplot')</code>.</p>
 
         <p>To run this command on startup, simply add it to the
         <code>~/.octaverc</code> file.</p>
@@ -239,7 +239,7 @@ sudo apt-get install touchpad-indicator</pre>
         <pre>su
 echo cfq > /sys/block/sda/queue/scheduler
 exit</pre>
-        
+    
         <p>For this change to persist, you need to tell grub
         <a href="http://askubuntu.com/a/82452" target="_blank">*</a>:</p>
         <pre>sudo nano /etc/default/grub
@@ -268,7 +268,7 @@ sudo update-grub
         the Synaptics package manager, or directly search the missing library
         with <code>apt-cache</code>:</p>
         <pre>apt-cache search libLibrary*</pre>
-        
+
         <p>You might want to install the <code>-dev</code> version too if you're
         having trouble when building an application. You can list the libraries
         a program uses by running <code>ldd &lt;program&gt;</code>.</p>
@@ -331,11 +331,11 @@ Categories=Network;</pre>
         <p>You can play songs from YouTube (or even <code>--shuffle</code> a
         playlist) by using <code>mpv</code>:</p>
         <pre>mpv --no-video https://www.youtube.com/playlist?list=blahblah</pre>
-        
+
         <p>For this to work, you need to have a few things installed:</p>
         <pre>sudo apt-get install python3-pip mpv
 sudo -H pip3 install youtube-dl</pre>
-        
+
         <p>Remember to <code>reset</code> the terminal afterwards.</p>
     </div>
     <div class="card">
@@ -350,13 +350,13 @@ sudo -H pip3 install youtube-dl</pre>
         </tr>
         </table>
         <p>You can use <code>ffmpeg</code> not only to convert files, but also
-        to capture your screen and send it to your friends as a <code>.gif</code>:
+        to capture your screen and send it to your friends as a <code>.gif</code>:</p>
         <pre>ffmpeg -video_size {WIDTH}x{HEIGHT} -framerate 25 -f x11grab -i :0.0+{X},{Y} -t {DURATION} {OUTPUT}.mp4</pre>
         <p>This can prove very useful when combined with
-        <a href="https://github.com/naelstrof/slop" target="_blank">slop</a>:
+        <a href="https://github.com/naelstrof/slop" target="_blank">slop</a>:</p>
         <pre>DURATION=10
 OUTPUT=screenrecord
-read -r X Y W H < <(slop -f "%x %y %w %h")
+read -r X Y W H &lt; &lt;(slop -f "%x %y %w %h")
 ffmpeg -video_size ${W}x$H -framerate 25 -f x11grab -i :0.0+$X,$Y -t $DURATION $OUTPUT.mp4</pre>
     </div>
     <div class="card">
@@ -372,7 +372,7 @@ ffmpeg -video_size ${W}x$H -framerate 25 -f x11grab -i :0.0+$X,$Y -t $DURATION $
         <p>The <code>parallel</code> command effectively allows you to run a
         command in parallel, so you can get the most out of your CPU. For example,
         let's assume you have a file called <code>urllist.txt</code> and you want
-        to <code>wget</code> them all as fast as possible:
+        to <code>wget</code> them all as fast as possible:</p>
         <pre>cat urllist.txt | parallel --gnu "wget {}"
 
 # Or
@@ -405,8 +405,8 @@ ln -s "$IN_RAM" "$FOLDER"</pre>
         <p>This will rename the original folder by adding the suffix
         <code>.packed</code> to it, copy its contents to the RAM, and
         create a <code>symlink</code> where the previous folder was before
-        to the folder on the RAM.<br />
-        To undo this operation, simply run:
+        to the folder on the RAM.<br>
+        To undo this operation, simply run:</p>
         <pre>FOLDER_NAME="your_folder"
 IN_RAM="/dev/shm/$folder_name"
 FOLDER="$(pwd)/$folder_name"
@@ -431,7 +431,7 @@ rm -rf $IN_RAM</pre>
         <p><code>MakeFile</code>s are an easy and powerful tool to build your
         projects. However, if you're like me, you probably tend to forget how
         they work too. Here's a quick refresher. Note that you <b>must use
-        the TAB character</b>. Their basic syntax is:
+        the TAB character</b>. Their basic syntax is:</p>
         <pre>target_name:( target_dependencies)
 &#9;system command
 </pre>
@@ -449,7 +449,7 @@ hello.o: hello.cpp
 
 clean:
 &#9;rm *.o hello</pre>
-        
+    
         <p>A more powerful example, introducing the use of variables:</p>
         <pre># Compiler used
 CC=g++
@@ -472,7 +472,7 @@ clean:
 &#9;rm *.o hello</pre>
         
         <p>You can execute the default one by running <code>make</code>,
-        or a specific one with <code>make -f MyMakefile</code>.
+        or a specific one with <code>make -f MyMakefile</code>.</p>
     </div>
     <div class="card">
         <table>
@@ -509,7 +509,7 @@ clean:
         <p>This will extract one video frame per second from <code>in.mp4</code>
         with the <b>s</b>ize <code>WxH</code> and to <code>out-nnn.jpg</code>.
         The format <code>%03d</code> on the name specifies 3 digits, 0 padded.
-        <br />
+        <br>
         If on the other hand you wanted to extract all the images, you can
         drop the <code>-r 1</code> option, and even the <code>-s</code> option,
         exactly leaving alone:</p>
