@@ -49,8 +49,8 @@ class Lexer:
 
         return self.pos < self.len
 
-    def try_match(self, regexp: bytes) -> re.Match[bytes] | None:
-        return re.compile(regexp).match(self.data, self.pos)
+    def try_match(self, regexp: re.Pattern[bytes]) -> re.Match[bytes] | None:
+        return regexp.match(self.data, self.pos)
 
     def line_col_at(self, pos: int) -> tuple[int, int]:
         l = 1
@@ -105,36 +105,55 @@ class Lexer:
 
 
 def lex(data: bytes) -> tuple[bytes, list[tuple[int, Format]]]:
+    RE_LETTER = re.compile(rb"[A-Za-z ]")  # must not match any of the below
+    RE_ESCAPE = re.compile(rb"\\([\\\[<`*+=_-])")
+    RE_HTML_PRE = re.compile(rb"<(pre|script|style)")
+    RE_HTML_ANY = re.compile(rb"</?\w+")
+    RE_META = re.compile(rb"([+-]{3,})\n")
+    RE_SEP = re.compile(rb"([*=_-])+(\n|$)")
+    RE_ITEM = re.compile(rb"(\*|-|\d+(\.))\s+")
+    RE_EMPHASIS = re.compile(rb"\*{1,3}")
+    RE_REF = re.compile(rb"(\!)?\[")
+    RE_HEADING = re.compile(rb"(#+)\s*")
+    RE_FENCE = re.compile(rb"(```+)([^\n]*)\n")
+    RE_CODE = re.compile(rb"`")
+    RE_QUOTE = re.compile(rb">\s*")
+    RE_ROW = re.compile(rb"\|")
+    RE_BREAK = re.compile(rb"\n\n+")
+
     p = Lexer(data)
     while p.next():
-        if m := p.try_match(rb"\\([\\\[<`*+=_-])"):
+        if RE_LETTER.match(p.data, p.pos):
+            p.keep()
+
+        elif m := RE_ESCAPE.match(p.data, p.pos):
             p.skip(m.span())
             p.kept += m[1]
 
-        elif m := p.try_match(rb"<(pre|script|style)"):
+        elif m := RE_HTML_PRE.match(p.data, p.pos):
             m2 = p.find_at(m.end(), rb"</" + m[1] + rb">")
             p.skip((m.start(), m2.end()))
             p.kept += p.data[m.start() : m2.end()]
 
-        elif m := p.try_match(rb"</?\w+"):
+        elif m := RE_HTML_ANY.match(p.data, p.pos):
             m2 = p.try_find_at(m.end(), rb"\n\n")
             end = m2.start() if m2 else len(p.data)
             p.skip((m.start(), end))
             p.kept += p.data[m.start() : end]
 
-        elif (m := p.try_match(rb"([+-]{3,})\n")) and p.pos == 0:
+        elif (m := RE_META.match(p.data, p.pos)) and p.pos == 0:
             m2 = p.find_at(m.end(), rb"\n" + re.escape(m[1]) + rb"(\n|$)")
 
             f = Metadata(content=p.data[m.end() : m2.start()])
             p.format(f)
             p.skip((m.start(), m2.end()))
 
-        elif (m := p.try_match(rb"([*=_-])+(\n|$)")) and p.prev in (b"", b"\n"):
+        elif (m := RE_SEP.match(p.data, p.pos)) and p.prev in (b"", b"\n"):
             f = Separator(style=m[1])
             p.format(f)
             p.skip((m.start(), m.end() - len(m[2])))
 
-        elif (m := p.try_match(rb"(\*|-|\d+(\.))\s+")) and p.prev in (b"", b"\n"):
+        elif (m := RE_ITEM.match(p.data, p.pos)) and p.prev in (b"", b"\n"):
             p.skip(m.span())
 
             m2 = p.find_at(m.end(), rb"\n|$")
@@ -143,13 +162,15 @@ def lex(data: bytes) -> tuple[bytes, list[tuple[int, Format]]]:
             p.format(f)
             p.skip((m2.start(), m2.start()), f)
 
-        elif (m := p.try_match(rb"\*{1,3}")) and (not p.prev or p.prev not in rb"*"):
+        elif (m := RE_EMPHASIS.match(p.data, p.pos)) and (
+            not p.prev or p.prev not in rb"*"
+        ):
             p.skip(m.span())
 
             f = Emphasis(strength=len(m[0]))
             p.format(f)
 
-        elif m := p.try_match(rb"(\!)?\["):
+        elif m := RE_REF.match(p.data, p.pos):
             p.skip(m.span())
 
             me = p.find_at(m.end(), rb"\n|$")
@@ -167,7 +188,7 @@ def lex(data: bytes) -> tuple[bytes, list[tuple[int, Format]]]:
             p.format(f)
             p.skip((m2.start(), m3.end()), f)
 
-        elif (m := p.try_match(rb"(#+)\s*")) and p.prev in (b"", b"\n"):
+        elif (m := RE_HEADING.match(p.data, p.pos)) and p.prev in (b"", b"\n"):
             p.skip(m.span())
 
             m2 = p.find_at(m.end(), rb"\n|$")
@@ -176,14 +197,14 @@ def lex(data: bytes) -> tuple[bytes, list[tuple[int, Format]]]:
             p.format(f)
             p.skip((m2.start(), m2.start()), f)
 
-        elif m := p.try_match(rb"(```+)([^\n]*)\n"):
+        elif m := RE_FENCE.match(p.data, p.pos):
             m2 = p.find_at(m.end(), m[1])
 
             f = Fence(content=p.data[m.end() : m2.start()], type=m[2])
             p.format(f)
             p.skip((m.start(), m2.end()))
 
-        elif m := p.try_match(rb"`"):
+        elif m := RE_CODE.match(p.data, p.pos):
             me = p.find_at(m.end(), rb"\n|$")
             m2 = p.find_at(m.end(), rb"`", endpos=me.start())
 
@@ -191,7 +212,7 @@ def lex(data: bytes) -> tuple[bytes, list[tuple[int, Format]]]:
             p.format(f)
             p.skip((m.start(), m2.end()))
 
-        elif (m := p.try_match(rb">\s*")) and p.prev in (b"", b"\n"):
+        elif (m := RE_QUOTE.match(p.data, p.pos)) and p.prev in (b"", b"\n"):
             p.skip(m.span())
 
             m2 = p.find_at(m.end(), rb"\n|$")
@@ -200,14 +221,14 @@ def lex(data: bytes) -> tuple[bytes, list[tuple[int, Format]]]:
             p.format(f)
             p.skip((m2.start(), m2.start()), f)
 
-        elif (m := p.try_match(rb"\|")) and p.prev in (b"", b"\n"):
+        elif (m := RE_ROW.match(p.data, p.pos)) and p.prev in (b"", b"\n"):
             m2 = p.find_at(m.end(), rb"\n|$")
 
             f = Row(content=p.data[m.start() : m2.start()])
             p.format(f)
             p.skip((m.start(), m2.start()))
 
-        elif m := p.try_match(rb"\n\n+"):
+        elif m := RE_BREAK.match(p.data, p.pos):
             p.skip(m.span())
 
             f = Break()

@@ -30,6 +30,11 @@ def parse_args(*, main: Fn, test: Fn):
         help="ignore errors during input processing",
         action="store_true",
     )
+    parser.add_argument(
+        "--profile",
+        help="profile execution",
+        action="store_true",
+    )
 
     subparsers = parser.add_subparsers()
 

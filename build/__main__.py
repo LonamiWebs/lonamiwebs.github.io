@@ -1,3 +1,4 @@
+import cProfile
 import re
 import shutil
 import subprocess
@@ -84,4 +85,7 @@ def test(_: Namespace):
 
 if __name__ == "__main__":
     args = parse_args(main=main, test=test)
-    args.fn(args)
+    if args.profile:
+        cProfile.run("args.fn(args)", sort="cumtime")
+    else:
+        args.fn(args)
