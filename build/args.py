@@ -9,7 +9,7 @@ from typing import Callable, TypeAlias
 Fn: TypeAlias = Callable[[argparse.Namespace], None]
 
 
-def parse_args(*, main: Fn, test: Fn):
+def parse_args(*, main: Fn, test: Fn, serve: Fn):
     parser = argparse.ArgumentParser()
     parser.prog = "python -m build"
     parser.set_defaults(fn=main)
@@ -40,5 +40,14 @@ def parse_args(*, main: Fn, test: Fn):
 
     parser_test = subparsers.add_parser("test", help="alias to run unittest")
     parser_test.set_defaults(fn=test)
+
+    parser_serve = subparsers.add_parser("serve", help="alias to run http.server")
+    parser_serve.set_defaults(fn=serve)
+    parser_serve.add_argument(
+        "-w",
+        "--watch",
+        help="watch for changes and automatically regenerate files",
+        action="store_true",
+    )
 
     return parser.parse_args()
