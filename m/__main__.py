@@ -58,7 +58,12 @@ def commit_file(f: Path, content: bytes):
         fd.write(content)
 
 
-def main(args: Namespace):
+def build(args: Namespace):
+    if args.profile:
+        args.profile = False
+        cProfile.run("args.fn(args)", sort="cumtime")
+        return
+
     generated = {Path(OUTPUT_PATH / "CNAME"): CNAME.encode()}
 
     for root, dirs, files in INPUT_PATH.walk():
@@ -94,7 +99,7 @@ def test(_: Namespace):
             "--top-level-directory",
             ".",
             "--start-directory",
-            "build/tests",
+            str(Path(__file__).parent / "tests"),
         )
     )
     exit(ret.returncode)
@@ -140,8 +145,5 @@ def serve(args: Namespace):
 
 
 if __name__ == "__main__":
-    args = parse_args(main=main, test=test, serve=serve)
-    if args.profile:
-        cProfile.run("args.fn(args)", sort="cumtime")
-    else:
-        args.fn(args)
+    args = parse_args(build=build, test=test, serve=serve)
+    args.fn(args)
