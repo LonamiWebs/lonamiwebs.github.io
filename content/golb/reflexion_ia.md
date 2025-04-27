@@ -6,8 +6,7 @@ updated = 2016-06-13
 
 > Nota: esta reflexión ha sido sacada de una conversación en Telegram, aunque ha sido lo más adaptada posible a formato de blog.
 
-Conversación del 12.03.16
--------------------------
+## Conversación del 12.03.16
 
 Pienso que para conseguir una verdadera inteligencia artificial debemos abstraernos mucho. Es decir, siempre hay una pequeña parte de *Pero es que el ser humano, los sentimientos, tal, cual*... Igual simplemente, absolutamente todo esté programado. Cuando actúas de manera que no sabes por qué por ejemplo, seguramente sea una serie de estímulos adecuados que producen esa respuesta porque se ha formado ese camino de neuronas en tu mente. Por ejemplo, el arco reflejo, que es un arco innato.
 

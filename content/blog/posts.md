@@ -9,8 +9,7 @@ tags = ["algorithms", "culture", "debate", "foodforthought", "graphics", "optimi
 
 These are some interesting posts and links I've found around the web. I believe they are quite interesting and nice reads, so if you have the time, I encourage you to check some out.
 
-Algorithms
-----------
+## Algorithms
 
 * [Image Dithering: Eleven Algorithms and Source Code](http://www.tannerhelland.com/4660/dithering-eleven-algorithms-source-code/). What does it mean and how to achieve it?
 * [Idempotence layer on bloom filters](https://cristian.io/post/bloom-filters/). What are they and how can they help?
@@ -19,8 +18,7 @@ Algorithms
 * [Regular Expression Search with Suffix Arrays](https://blog.nelhage.com/2015/02/regular-expression-search-with-suffix-arrays/). A way to efficiently search large amounts of text.
 
 
-Culture
--------
+## Culture
 
 * [Why Westerners Fear Robots and the Japanese Do Not](https://www.wired.com/story/ideas-joi-ito-robot-overlords/). Explains some possible reasons for this case.
 * [How To Ask Questions The Smart Way](http://catb.org/~esr/faqs/smart-questions.html). Some bits of hacker culture and amazing tips on how to ask a question.
@@ -37,8 +35,7 @@ Culture
 * [The Asshole Filter](https://siderea.dreamwidth.org/1209794.html). You might have one!
 
 
-Debate
-------
+## Debate
 
 * [Open Source is awful](https://steemit.com/opensource/@crell/open-source-is-awful). Has some points about why is it bad and how it could improve.
 * [Pink Lexical Goop: The Dark Side of Autocorrect](http://www.mondo2000.com/2018/01/17/pink-lexical-goop-dark-side-autocorrect/). It can shape how you think.
@@ -48,8 +45,7 @@ Debate
 * [C Is Not a Low-level Language](https://queue.acm.org/detail.cfm?id=3212479). Could there be alternative programming models designed for more specialized CPUs?
 
 
-Food for Thought
-----------------
+## Food for Thought
 
 * [1/0 = 0](https://www.hillelwayne.com/post/divide-by-zero/). Explores why it makes sense to redefine mathemathics under some circumstances, and why it is possible to do so.
 * [For mathematicians, = does not mean equality](https://jeremykun.com/2018/04/13/for-mathematicians-does-not-mean-equality/). What other definitions does the equal sign have?
@@ -62,8 +58,7 @@ Food for Thought
 * [Reality has a surprising amount of detail](http://johnsalvatier.org/blog/2017/reality-has-a-surprising-amount-of-detail).
 
 
-Funny
------
+## Funny
 
 * [We Use BobX](http://thedailywtf.com/articles/We-Use-BobX). BobX.
 * [The Inner JSON Effect](http://thedailywtf.com/articles/the-inner-json-effect). For some reason, custom languages are in.
@@ -73,15 +68,13 @@ Funny
 * [A Brief Totally Accurate History Of Programming Languages](https://medium.com/commitlog/a-brief-totally-accurate-history-of-programming-languages-cd93ec806124). Don't take offense for it!
 
 
-Graphics
---------
+## Graphics
 
 * [Visualizing Projections](http://shaunlebron.github.io/visualizing-projections/). Small post about different projection methods.
 * [Inigo Quilez :: fractals, computer graphics, mathematics, shaders, demoscene and more](http://www.iquilezles.org/www/index.htm) A *lot* of useful and quality articles regarding computer graphics.
 
 
-History
--------
+## History
 
 * [What Did Ada Lovelace's Program Actually Do?](https://twobithistory.org/2018/08/18/ada-lovelace-note-g.html). And other characters that took part in the beginning's of programming.
 * [In defence of swap: common misconceptions](https://chrisdown.name/2018/01/02/in-defence-of-swap.html). Swap is still an useful concept.
@@ -89,8 +82,7 @@ History
 * [How Lisp Became God's Own Programming Language](https://twobithistory.org/2018/10/14/lisp.html). Lisp as a foundational programming language.
 
 
-Motivational
-------------
+## Motivational
 
 * [Fire And Motion](https://www.joelonsoftware.com/2002/01/06/fire-and-motion/). What does actually take to get things done?
 * [The Parable of the Two Programmers](https://realmensch.org/2017/08/25/the-parable-of-the-two-programmers/). This tale is about two different types of programmer and their respective endings in a company, illustrating how the one you wouldn't expect to actually ends in a better situation.
@@ -100,8 +92,7 @@ Motivational
 * [Things You Should Never Do, Part I](https://www.joelonsoftware.com/2000/04/06/things-you-should-never-do-part-i/). There is no need to rewrite your code.
 
 
-Optimization
-------------
+## Optimization
 
 * [What Every C Programmer Should Know About Undefined Behavior #1/3](http://blog.llvm.org/2011/05/what-every-c-programmer-should-know.html). Explains what undefined behaviour is and why it makes sense.
 * [Labor of Division (Episode I)](http://ridiculousfish.com/blog/posts/labor-of-division-episode-i.html). Some tricks to divide without division.

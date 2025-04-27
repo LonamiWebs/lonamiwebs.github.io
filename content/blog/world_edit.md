@@ -11,8 +11,7 @@ tags = ["minecraft", "worldedit", "tips"]
 
 This command guide was written for Minecraft 1.12.1, version [6.1.7.3](https://dev.bukkit.org/projects/worldedit/files/2460562), but should work for newer versions too. All WorldEdit commands can be used with a double slash (`//`) so they don't conlict with built-in commands. This means you can get a list of all commands with `//help`. Let's explore different categories!
 
-Movement
---------
+## Movement
 
 In order to edit a world properly you need to learn how to move in said world properly. There are several straightforward commands that let you move:
 
@@ -21,8 +20,7 @@ In order to edit a world properly you need to learn how to move in said world pr
 * `//thru` let's you pass through walls.
 * `//jumpto` to go wherever you are looking.
 
-Information
------------
+## Information
 
 Knowing your world properly is as important as knowing how to move within it, and will also let you change the information in said world if you need to.
 
@@ -30,8 +28,7 @@ Knowing your world properly is as important as knowing how to move within it, an
 * `//biomeinfo` shows the current biome.
 * `//setbiome` lets you change the biome.
 
-Blocks
-------
+## Blocks
 
 You can act over all blocks in a radius around you with quite a few commands. Some won't actually act over the entire range you specify, so 100 is often a good number.
 
@@ -63,8 +60,7 @@ Pyramids can be done with `//pyramic stone 5`.
 
 All these commands can be prefixed with "h" to make them hollow. For instance, `//hsphere stone 10`.
 
-Regions
--------
+## Regions
 
 ### Basics
 
@@ -112,15 +108,13 @@ You can not only select cuboids. You can also select different shapes, or even j
 * `//sel cyl` for cylinders, first click being the center.
 * `//sel convex` for convex shapes. This one is extremely useful for `//curve`.
 
-Brushes
--------
+## Brushes
 
 Brushes are a way to paint in 3D without first bothering about making a selection, and there are spherical and cylinder brushes with e.g. `//brush sphere stone 2`, or the shorter form `//br s stone`. For cylinder, one must use `cyl` instead `sphere`.
 
 There also exists a brush to smooth the terrain which can be enabled on the current item with `//br smooth`, which can be used with right-click like any other brush.
 
-Clipboard
----------
+## Clipboard
 
 Finally, you can copy and cut things around like you would do with normal text with `//copy` and `//cut`. The copy is issued from wherever you issue the command, so when you use `//paste`, remember that if you were 4 blocks apart when copying, it will be 4 blocks apart when pasting.
 

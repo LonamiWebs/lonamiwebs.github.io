@@ -9,8 +9,7 @@ tags = ["tips"]
 [Risk of Rain](https://riskofraingame.com/) is a fun little game you can spend a lot of hours on. It's incredibly challenging for new players, and fun once you have learnt the basics. This blog will go through what I've learnt and how to play the game correctly.
 
 
-Getting Started
----------------
+## Getting Started
 
 If you're new to the game, you may find it frustrating. You must learn very well to dodge.
 
@@ -23,8 +22,7 @@ The first thing you must do is always **rush for the teleporter**. Completing th
 Completing the game on [Drizzle](http://riskofrain.wikia.com/wiki/Difficulty) is really easy if you follow these tips.
 
 
-Requisites
-----------
+## Requisites
 
 Before breaking the game, you must obtain several [artifacts](http://riskofrain.wikia.com/wiki/Item#Artifacts). We are interested in particular in the following:
 
@@ -36,8 +34,7 @@ Before breaking the game, you must obtain several [artifacts](http://riskofrain.
 With those, the game becomes trivial. Playing as [Huntress](http://riskofrain.wikia.com/wiki/Huntress) is excellent since she can move at high speed while killing everything on screen.
 
 
-Breaking the Game
------------------
+## Breaking the Game
 
 The rest is easy! With the command artifact you want the following items.
 
@@ -79,7 +76,6 @@ For more fun:
 * [Brilliant Behemoth](http://riskofrain.wikia.com/wiki/Brilliant_Behemoth). Boom boom.
 
 
-Closing Words
--------------
+## Closing Words
 
 You can now beat the game in Monsoon solo with any character. Have fun! And be careful with the sadly common crashes.

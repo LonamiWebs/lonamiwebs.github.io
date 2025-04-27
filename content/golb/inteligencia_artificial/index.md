@@ -4,8 +4,7 @@ date = 2016-02-24
 updated = 2016-03-05
 +++
 
-Índice
-------
+## Índice
 
 * [Qué es](#que-es)
 * [En qué consiste](#en-que-consiste)
@@ -17,8 +16,7 @@ updated = 2016-03-05
 * [Conceptos](#conceptos)
 * [Fuentes](#fuentes)
 
-Qué es
-------
+## Qué es
 
 La inteligencia artificial es una rama apasionante que tiene su origen en la **informática** y se basa en el concepto de conseguir *emular*[^1] al cerebro humano, mediante el desarrollo un programa que sea capaz de **aprender y mejorar por sí sólo** (normalmente bajo algún tipo de supervisión)
 
@@ -29,16 +27,14 @@ Fue un concepto acuñado por *John McCarthy* en un congreso de informática de 1
 *Progreso humano en la inteligencia artificial. [Fuente](http://waitbutwhy.com/2015/01/artificial-intelligence-revolution-1)*
 
 
-En qué consiste
----------------
+## En qué consiste
 
 La inteligencia artificial no consiste en escribir unas pautas fijas y finitas al igual que hacen la gran mayoría de programas, en los cuales introduces unos datos y producen siempre la misma salida, una salida predecible, programada e invariable, que además, tiene sus límites, ya que si introduces datos para los que la aplicación no está programada, esta aplicación no será capaz de manejarlos. No los entenderá y no producirá ningún resultado.
 
 La inteligencia artificial consiste en dar un paso **más allá**. Una inteligencia artificial *entrenada* es capaz de manejar datos para los cuales no ha sido programada de manera explícita[^2]
 
 
-Límites
--------
+## Límites
 
 Actualmente, la inteligencia artificial se ve limitada por la velocidad y capacidad de los dispositivos (ordenadores, teléfonos inteligentes).
 
@@ -55,8 +51,7 @@ Además de todo esto, la capacidad de los dispositivos puede ser **ampliada**, a
 <!-- Boston dynamics artificial intelligence put some more examples, like Google or predicting models or big data, ocr -->
 
 
-Tipos de inteligencia artificial
---------------------------------
+## Tipos de inteligencia artificial
 
 ### Según el tipo de aprendizaje
 
@@ -87,22 +82,19 @@ Tipos de inteligencia artificial
 * **Algoritmos genéticos**. Imita el proceso evolutivo de la selección natural, y usa métodos como la mutación para generar nuevos "genotipos" que, con algo de suerte, serán mejores en encontrar la solución correcta.
 
 
-Aplicaciones prácticas
-----------------------
+## Aplicaciones prácticas
 
 La inteligencia artificial ya se encuentra desde hace algún tiempo entre nosotros, como por ejemplo el archiconocido **buscador Google**, que filtra los resultados más relevantes mediante una inteligencia artificial. Otros ejemplos son el reconocimiento de caracteres a partir de una foto, o incluso reconocimiento del habla con **asistentes virtuales como Cortana o Siri**, en los videojuegos, en bolsa, en los **hospitales**, industria pesada, transportes, juguetes, música, aviación, robótica, filtros anti-spam... y un largo etcétera.
 
 
-Implicaciones éticas
---------------------
+## Implicaciones éticas
 
 Una vez tengamos la tecnología necesaria para recrear un cerebro humano, si enseñáramos a esta inteligencia artificial al igual que un humano, ¿llegaría a tener **sentimientos**? ¿Sería consciente de su existencia? ¿Podría sentir felicidad, alegría, tristeza, enfado? ¿Tendría **creatividad**? ¿Derecho a propiedad? Si la respuesta es que sí, y es la respuesta más lógica, significa que, en realidad, los sentimientos no son nada más que una manera de entender las cosas. No tienen valor por sí mismos. Seríamos capaces de recrearlos, y tendrían el mismo valor que un sentimiento humano, aunque esa inteligencia viviera dentro de un ordenador. Y acabar con esta inteligencia sería acabar con esta vida, **una vida** casi, por no decir enteramente, **humana**. Además, todo esto implicaría que todo comportamiento humano es predecible. Por último, si esta inteligencia es realmente como un humano, al utilizarla, ¿la estaríamos esclavizando al obligarla a trabajar para nosotros? ¿En qué momento dejaremos de llamarlos "ordenadores" y comenzaremos a tratarles como "humanos"? ¿Será la humanidad capaz de adaptarse al cambio?
 
 <!-- ¿y si sólo somos cerebro y logramos recrearlo? ¿tendría sentimientos? -->
 
 
-Ejemplos
---------
+## Ejemplos
 
 En el siguiente algorítmo genético podemos ver como una figura aprende a saltar, obedeciendo a las leyes físicas (ver en [YouTube](https://youtu.be/Gl3EjiVlz_4)):
 
@@ -120,8 +112,7 @@ Estos cuatro increíbles ejemplos siguientes muestran un proceso evolutivo simil
 <iframe width="560" height="315" src="https://www.youtube.com/embed/KrTbJUJsDSw" frameborder="0" allowfullscreen></iframe>
 
 
-Conceptos
----------
+## Conceptos
 
 [^1]: **Emular**. Tratar de imitar un modelo, aproximarse a este. Copiar su comportamiento o incluso mejorarlo.
 
@@ -134,8 +125,7 @@ Conceptos
 [^5]: **Regresión**. Las pruebas de regresión consisten en someter a un programa a una serie de pruebas para descubrir fallos en este cometidos accidentalmente con anterioridad en versiones anteriores.
 
 
-Fuentes
--------
+## Fuentes
 
 * [Evolución de la inteligencia artificial - Wait but why](http://waitbutwhy.com/2015/01/artificial-intelligence-revolution-1)
 * [*Machine learning* - Wikipedia](https://en.wikipedia.org/wiki/Machine_learning)

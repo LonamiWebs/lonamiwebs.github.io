@@ -8,8 +8,7 @@ tags = ["tips"]
 
 [Shattered Pixel Dungeon](https://shatteredpixel.com/shatteredpd/) is the classic roguelike RPG game with randomly-generated dungeons. As a new player, it was a bit frustrating to be constantly killed on the first levels of the dungeon, but with some practice it's easy to reach high levels if you can kill the first boss.
 
-Basic Tips
-----------
+## Basic Tips
 
 The game comes with its own tips, but here's a short and straight-forward summary:
 
@@ -23,8 +22,7 @@ The game comes with its own tips, but here's a short and straight-forward summar
 * **Prefer armor over weapons**. And make sure to identify or clean it from curses before wearing anything!
 * **Find a dew vial early**. It's often a better idea to store dew (health) for later than to use it as soon as possible.
 
-Bosses
-------
+## Bosses
 
 There is a boss every 5 levels.
 
@@ -34,12 +32,10 @@ There is a boss every 5 levels.
 * **Level 20 boss**. I didn't get this far just yet. You are advised to use scrolls of magic mapping in the last levels to skip straight to the boss, since there's nothing else of value.
 * **Level 25 boss**. The final boss. Good job if you made it this far!
 
-Mage
-----
+## Mage
 
 If you followed the basic tips, you will sooner or later make use of two scrolls of upgrade in a single run. This will unlock the mage class, which is ridiculously powerful. He starts with a ranged-weapon, a magic missile wand, which is really helpful to keep enemies at a distance. Normally, you want to use this at first to surprise attack them soon, and if you are low on charges, you may go melee on normal enemies if you are confident.
 
-Luck
-----
+## Luck
 
 This game is all about luck and patience! Some runs will be better than others, and you should thank and pray the RNG gods for them. If you don't, they will only give you cursed items and not a single scroll to clean them. So, good luck and enjoy playing!

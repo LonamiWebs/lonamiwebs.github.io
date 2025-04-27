@@ -7,8 +7,7 @@ category = ["sw"]
 tags = ["os", "nixos"]
 +++
 
-Update
-------
+## Update
 
 *Please see [my followup post with NixOS](/blog/installing-nixos-2) for a far better experience with it*
 
@@ -46,8 +45,7 @@ I enjoyed the process of installing it, and it's really cool that it has version
 
 I'm now back to Xubuntu, with a fresh install.
 
-Update
-------
+## Update
 
 It is not true that "they don't allow running arbitrary binaries by default", as pointed out in their [manual, buildFHSUserEnv](https://nixos.org/nixpkgs/manual/#sec-fhs-environments):
 
@@ -55,8 +53,7 @@ It is not true that "they don't allow running arbitrary binaries by default", as
 
 Thanks to [@bb010g](https://github.com/bb010g) for pointing this out.
 
-Notes
------
+## Notes
 
 [^1]: The keyboard mapping is a bit strange. On my Spanish keyboard, the keys were as follows:
 

@@ -7,8 +7,7 @@ category = ["sw"]
 tags = ["python", "asyncio"]
 +++
 
-Index
------
+## Index
 
 * [Background](#background)
 * [Input / Output](#input-output)
@@ -18,8 +17,7 @@ Index
 * [Extra Material](#extra-material)
 
 
-Background
-----------
+## Background
 
 After seeing some friends struggle with `asyncio` I decided that it could be a good idea to write a blog post using my own words to explain how I understand the world of asynchronous IO. I will focus on Python's `asyncio` module but this post should apply to any other language easily.
 
@@ -44,8 +42,7 @@ Second, in Python, threads *won't* make your code faster most of the time. It wi
 
 If you have a lot of CPU work to do though, threads aren't a real advantage. Indeed, your code will probably run slower under the most common Python implementation, CPython, which makes use of a Global Interpreter Lock (GIL) that only lets a thread run at once. The operations won't run in parallel!
 
-Input / Output
---------------
+## Input / Output
 
 Before we go any further, let's first stop to talk about input and output, commonly known as "IO". There are two main ways to perform IO operations, such as reading or writing from a file or a network socket.
 
@@ -99,8 +96,7 @@ In reality, you can tell the OS to notify you when the data is ready, as opposed
 But either way, that's the difference between blocking and non-blocking IO, and what matters is that your application gets to run more without ever needing to wait for data to arrive, because the data will be there immediately when you ask, and if it's not yet, your app can do more things meanwhile.
 
 
-Diving In
----------
+## Diving In
 
 Now we've seen what blocking and non-blocking IO is, and how threads make your code harder to reason about, but they give concurrency (yet not more speed). Is there any other way to achieve this concurrency that doesn't involve threads? Yes! The answer is `asyncio`.
 
@@ -191,8 +187,7 @@ What is a `Future`? This object represents the value of something that will be t
 The `async def` functions are also called "coroutines", and Python does some magic behind the scenes to turn them into such. The coroutines can be `await`'ed, and this is what you normally do.
 
 
-A Toy Example
--------------
+## A Toy Example
 
 That's all about `asyncio`! Let's wrap up with some example code. We will create a server that replies with the text a client sends, but reversed. First, we will show what you could write with normal synchronous code, and then we will port it.
 
@@ -367,8 +362,7 @@ if __name__ == '__main__':
 This is pretty much how most of your `async` scripts will start, running the main method until its completion.
 
 
-A Real Example
---------------
+## A Real Example
 
 Let's have some fun with a real library. We'll be using [Telethon](https://github.com/LonamiWebs/Telethon) to broadcast a message to our three best friends, all at the same time, thanks to the magic of `asyncio`. We'll dive right into the code, and then I'll explain our new friend `asyncio.wait(...)`:
 
@@ -435,7 +429,6 @@ This method, by default, waits for the list of coroutines to run until they've a
 Now whenever you have some important news for your friends, you can simply `python3 broadcast.py 'I bought a car!'` to tell all your friends about your new car! All you need to remember is that you need to `await` on coroutines, and you will be good. `asyncio` will warn you when you forget to do so.
 
 
-Extra Material
---------------
+## Extra Material
 
 If you want to understand how `asyncio` works under the hood, I recommend you to watch this hour-long talk [Get to grips with asyncio in Python 3](https://youtu.be/M-UcUs7IMIM) by Robert Smallshire. In the video, they will explain the differences between concurrency and parallelism, along with others concepts, and how to implement your own `asyncio` "scheduler" from scratch.

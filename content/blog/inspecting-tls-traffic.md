@@ -20,8 +20,7 @@ I don't like either option, so I'm making up a third and a fourth.
 
 > This post is about me figuring the whole thing out, so it's a bit all over the place. You've been warned!
 
-Automating the browser
-----------------------
+## Automating the browser
 
 My first instinct was to automate the browser. Using something like [Selenium from Python](https://selenium-python.readthedocs.io) didn't sound too bad, since I'm familiar with Python already.
 
@@ -33,8 +32,7 @@ Except, the download starts automatically, so you probably want a [custom downlo
 
 Overall, automating web interaction sounds extremely annoying. It could be done, but it's not really fun to me. And the idea of running *an entire web browser* to download a few files does not sit right with me.
 
-Inspecting the app's traffic
-----------------------------
+## Inspecting the app's traffic
 
 Now, to do this, of course we will need to install one of those two launchers. It sucks, but it's only temporary. So go ahead and install one (or wait until we have the rest of the tools in place). You could use a virtual machine for this, but I cannot be bothered.
 
@@ -66,8 +64,7 @@ We can then Change proxy settings in our System settings by enabling Use a proxy
 
 Now! With all that done, if we run the CurseForge application, we should be generating some PCAP files or, alternatively, getting the decrypted traffic in Wireshark! Go ahead and download the modpack you want from it, and once it's done, our PCAP should be complete. You can then stop the capture to reduce the amount of information we need to go through.
 
-Understanding the app's traffic
--------------------------------
+## Understanding the app's traffic
 
 Great, now we have a packet capture with a lot of data in it. How do we go about finding the right things in there?
 

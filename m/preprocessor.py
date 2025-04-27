@@ -224,17 +224,6 @@ def preprocess(
                 new_formats.append((p, Group(type=b"table")))
                 new_formats.append((p, f))
 
-        elif isinstance(f, Separator):
-            if (
-                m := re.compile(rb"(^|\n)[^\n]+\n$").search(text, 0, endpos=p)
-            ) and p == m.end():
-                uf = Heading(level=1 if f.style == b"=" else 2)
-                new_formats.append((m.start(), uf))
-                new_formats.append((m.end() - 1, uf))
-            else:
-                # this feels awfully similar to a second lex step, specially if we keep text..
-                new_formats.append((p, f))
-
         elif isinstance(f, Fence) and b",inject" in f.type:
             g = {}
             exec(f.content, g)

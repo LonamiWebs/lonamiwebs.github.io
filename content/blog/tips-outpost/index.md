@@ -11,8 +11,7 @@ tags = ["tips"]
 
 It's a fun tower-defense game with progression, different graphics and random world generation which makes it quite fun for a few hours. In this post I want to talk about some tips I found useful to get past night 50.
 
-Build Pattern
--------------
+## Build Pattern
 
 At first, you may be inclined to design a checkerboard pattern like the following, where "C" is the Crystal shrine, "S" is a stone launcher and "B" is a booster:
 
@@ -38,8 +37,7 @@ The addition of traps in 1.6 is amazing. You want to build these outside your st
 
 If you gather enough materials, you can build more trap and cannon layers outside, roughly at enough distance to slow them for enough duration until they reach the next layer of traps, and so on. Probably a single gap of "cannon, booster, cannon" is enough between trap layers, just not in the center where you need a lot of fire power.
 
-Talents
--------
+## Talents
 
 Talents are the way progression works in the game. Generally, after a run, you will have enough experience to upgrade nearly all talents of roughly the same tier. However, some are worth upgrading more than others (which provide basically no value).
 
@@ -72,13 +70,11 @@ Some crap ones:
 * Bow. The bow is very useless at the moment, it's not worth your experience.
 * More energy per bush. Not really worth hunting for bushes since you will have enough energy to do well.
 
-Turrets
--------
+## Turrets
 
 Always build the highest tier, there's no point in anything lower than that. You will need to deal a lot of damage in a small area, which means space is a premium.
 
-Boosters
---------
+## Boosters
 
 If you're very early in the game, I recommend alternating both the flag and torch in a checkerboard pattern where the boosters should go in the pattern above. This way your towers will get extra speed and extra range, which works great.
 
@@ -86,8 +82,7 @@ When you're in mid-game (stone launchers, gears and campfires), I do not recomme
 
 In end-game, of course alternate both of the highest tier upgrades. They are really good, and provide the best benefit / cost ratio.
 
-Gathering Materials
--------------------
+## Gathering Materials
 
 It is **very** important to use all your energy every day! Otherwise it will go to waste, and you will need a lot of materials.
 
@@ -103,15 +98,13 @@ If you're in the end-game, try to rush for chests. They provide a huge amount of
 
 In the end-game, after all stone has been collected, you don't really need to use all of your energy anymore. Just enough to have enough wood to build with the remaining stone. This will also be nice with the bow upgrades, which admitedly can get quite powerful, but it's best to have a strong fort first.
 
-Season
-------
+## Season
 
 In my opinion, winter is just the best of the seasons. You don't *really* need that much energy (it gets tiresome), or extra tree drops, or luck. Slower movement means your turrets will be able to shoot enemies for longer, dealing more damage over time, giving them more chance to take enemies out before they reach the shrine.
 
 Feel free to re-roll the map a few times (play and exit, or even restart the game) until you get winter if you want to go for The Play.
 
-Gear
-----
+## Gear
 
 In my opinion, you really should rush for the best pickaxe you can afford. Stone is a limited resource that doesn't regrow like trees, so once you run out, it's over. Better to make the best use out of it with a good pickaxe!
 
@@ -142,7 +135,6 @@ The problem with free wood or stone per day is that you have, often, five times 
 
 In end-game, more quality of life are revealing chests so that you can rush them early, if you like to hunt for them try to make better use of the slot.
 
-Closing words
--------------
+## Closing words
 
 I hope you enjoy the game as much as I do! Movement is sometimes janky and there's the occassional lag spikes, but despite this it should provide at least a few good hours of gameplay. Beware however a good run can take up to an hour!

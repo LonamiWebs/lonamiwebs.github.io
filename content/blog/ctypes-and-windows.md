@@ -14,8 +14,7 @@ We will assume some knowledge of C/++ and Python, since we will need to read and
 
 While the post focuses on Windows' API, the code here probably applies to unix-based systems with little modifications.
 
-Basics
-------
+## Basics
 
 First of all, let's learn how to load a library. Let's say we want to load `User32.dll`:
 
@@ -43,8 +42,7 @@ ctypes.windll.user32.SetCursorPos(100, 100)
 
 Try it! Your cursor will move!
 
-Funky Stuff
------------
+## Funky Stuff
 
 We can go a bit more crazy and make it form a spiral:
 
@@ -61,8 +59,7 @@ for i in range(200):
 
 Ah, it's always so pleasant to do random stuff when programming. Sure makes it more fun.
 
-Complex Structures
-------------------
+## Complex Structures
 
 `SetCursorPos` was really simple. It took two parameters and they both were integers. Let's go with something harder. Let's go with [`SendInput`](https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-sendinput)! Emulating input will be a fun exercise:
 
@@ -185,8 +182,7 @@ Run it! It will press and release the keys `hello` to type the word `"hello"`!
 
 `vk` stands for "virtual key". Letters correspond with their upper-case ASCII value, which is what we did above. You can find all the available keys in the page with all the [Virtual Key Codes](https://docs.microsoft.com/en-us/windows/desktop/inputdev/virtual-key-codes).
 
-Dynamic Inputs and Pointers
----------------------------
+## Dynamic Inputs and Pointers
 
 What happens if a method wants something by reference? That is, a pointer to your thing? For example, [`GetCursorPos`](https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-getcursorpos):
 
@@ -254,8 +250,7 @@ And you can de-reference pointers with `.contents`:
 first_result = result_ptr.contents
 ```
 
-Arrays
-------
+## Arrays
 
 Arrays are defined as `type * size`. Your linter may not like that, and if you don't know the size beforehand, consider creating a 0-sized array. For example:
 
@@ -277,8 +272,7 @@ known_longs = ctypes.cast(
 
 If there's a better way to initialize arrays, please let me know.
 
-wintypes
---------
+## wintypes
 
 Under Windows, the `ctypes` module has a `wintypes` submodule. This one contains definitions like `HWND` which may be useful and can be imported as:
 
@@ -286,8 +280,7 @@ Under Windows, the `ctypes` module has a `wintypes` submodule. This one contains
 from ctypes.wintypes import HWND, LPCWSTR, UINT
 ```
 
-Callbacks
----------
+## Callbacks
 
 Some functions (I'm looking at you, <a href="https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumwindows"><code>EnumWindows</code></a>) ask us to pass a callback. In this case, it wants a <a href="https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms633498(v=vs.85)"><code>EnumWindowsProc</code></a>:
 
@@ -348,8 +341,7 @@ ctypes.windll.user32.EnumWindows(callback, 0)
 
 …will also work. And it is a *lot* fancier.
 
-Closing Words
--------------
+## Closing Words
 
 With the knowledge above and some experimentation, you should be able to call and do (almost) anything you want. That was pretty much all I needed on my project anyway :)
 
