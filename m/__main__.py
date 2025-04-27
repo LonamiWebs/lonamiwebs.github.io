@@ -34,6 +34,7 @@ def load_template() -> bytes:
 def process_file(f: Path) -> tuple[Path, bytes]:
     with f.open("rb") as fd:
         content = fd.read()
+    f = f.relative_to(INPUT_PATH)
 
     if f.suffix == ".md":
         content = re.sub(
@@ -41,7 +42,10 @@ def process_file(f: Path) -> tuple[Path, bytes]:
             template_replacer(f, minify_html(generate(*preprocess(*lex(content))))),
             load_template(),
         )
-        f = f.with_suffix(".html")
+        if f.stem == "index":
+            f = f.with_suffix(".html")
+        else:
+            f = f.with_suffix("") / "index.html"
     elif f.suffix == ".css":
         content = minify_css(content)
     elif f.suffix == ".html":
@@ -49,7 +53,7 @@ def process_file(f: Path) -> tuple[Path, bytes]:
     else:
         content = content
 
-    return OUTPUT_PATH / f.relative_to(INPUT_PATH), content
+    return OUTPUT_PATH / f, content
 
 
 def commit_file(f: Path, content: bytes):

@@ -3,11 +3,12 @@ Formatting pre-processor.
 """
 
 import inspect
+import itertools
 import re
 from typing import Self, Iterator
 from pathlib import Path
 
-from .conf import BASE_URL
+from .conf import INPUT_PATH
 from .lexer import lex
 from .parser import parse_toml_ish
 from .types import (
@@ -32,14 +33,18 @@ class Entry:
         self.first_title: bytes | None = None
 
     def __iter__(self) -> Iterator[Self]:
-        return map(self.__class__, self.path.glob("*.*"))
+        return itertools.chain(
+            map(self.__class__, self.path.glob("*.md")),
+            map(self.__class__, self.path.glob("*/index.md")),
+        )
 
     def __getitem__(self, name: str) -> Self:
         return self.__class__(self.path / name)
 
     @property
     def permalink(self) -> str:
-        return f"{BASE_URL}/{self.path.as_posix()}"
+        f = self.path.relative_to(INPUT_PATH).with_suffix("").as_posix()
+        return f"/{f}"
 
     @property
     def title(self) -> str:
@@ -254,7 +259,20 @@ def preprocess(
 
 def template_replacer(path: Path, content: bytes):
     def replacer(match: re.Match[bytes]) -> bytes:
-        if match[1] == b"CONTENT":
+        if match[1] == b"TITLE":
+            if path.parts[0] == "index.md":
+                return b"Lonami's Site"
+            elif path.parts[0] == "blog.md":
+                return b"Lonami's Blog"
+            elif path.parts[0] == "golb.md":
+                return b"Lonami's Golb"
+            elif path.parts[0] in ("blog", "golb"):
+                return f"{Entry(INPUT_PATH / path).title} | Lonami's Blog".encode()
+            else:
+                raise RuntimeError(
+                    f"unknown path to use for replacing template title: {path}"
+                )
+        elif match[1] == b"CONTENT":
             return content
         elif match[1] == b"ROOT":
             return b"class=selected" if path.parts[0] == "index.md" else b""
