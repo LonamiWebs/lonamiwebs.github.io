@@ -54,25 +54,25 @@ free to check out my
 
 <h2 id="more-links">More links</h2>
 <dl>
-    <dt><a href="/blog"><img src="/img/blog.svg" alt="" /> My blog</a></dt>
+    <dt><a href="/blog"><img src="/img/blog.svg" alt=""> My blog</a></dt>
     <dd>Sometimes I blog about things, whether it's games, techy stuff, or random life stuff.</dd>
 
-    <dt><a href="/golb"><img src="/img/blog.svg" class="golb" alt="" /> My golb</a></dt>
+    <dt><a href="/golb"><img src="/img/blog.svg" class="golb" alt=""> My golb</a></dt>
     <dd>What? You don't know what a golb is? It's like a blog, but less conventional.</dd>
 
-    <dt><a href="https://github.com/LonamiWebs"><img src="/img/github.svg" alt="" /> My GitHub</a></dt>
+    <dt><a href="https://github.com/LonamiWebs"><img src="/img/github.svg" alt=""> My GitHub</a></dt>
     <dd>By far what I'm most proud of. I love releasing my projects as open source. There is no reason not to!</dd>
 
-    <dt><a href="/utils"><img src="/img/utils.svg" alt="" /> Several Utilities</a></dt>
+    <dt><a href="/utils"><img src="/img/utils.svg" alt=""> Several Utilities</a></dt>
     <dd>Random things I've put online because I keep forgetting about them.</dd>
 
-    <dt><a href="/stopwatch.html"><img src="/stopwatch.svg" width="24" height="24" alt="" /> stopwatch</a> &amp; <a href="/canvas.html">canvas</a></dt>
+    <dt><a href="/stopwatch.html"><img src="/stopwatch.svg" width="24" height="24" alt=""> stopwatch</a> &amp; <a href="/canvas.html">canvas</a></dt>
     <dd>An extremely simple JavaScript-based stopwatch &amp; canvas for sketching.</dd>
 
-    <dt><a href="donate"><img src="/img/donate.svg" alt="" /> Donate</a></dt>
+    <dt><a href="donate"><img src="/img/donate.svg" alt=""> Donate</a></dt>
     <dd>Some people like what I do and want to compensate me for it, but I'm fine with compliments if you can't afford a donation!</dd>
 
-    <dt><a href="humans.txt"><img src="/img/humans.svg" alt="" /> humans.txt</a></dt>
+    <dt><a href="humans.txt"><img src="/img/humans.svg" alt=""> humans.txt</a></dt>
     <dd><a href="http://humanstxt.org/">We are humans, not robots.</a></dd>
 </dl>
 
@@ -83,7 +83,7 @@ and I will try to reply as soon as I can. Please don't use the email
 if you need help with a specific project, this is better discussed in
 a different public place where everyone can benefit from it.</p>
 
-<script type="text/javascript">
+<script>
     now = (new Date()).getFullYear();
     document.getElementById("age").innerHTML = "aged " + (now - 1999);
     document.getElementById("programming").innerHTML = "for " + (now - 2012) + " years";
