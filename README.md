@@ -5,18 +5,32 @@ Source for lonami.dev's website.
 Typo fixes to the `content` are welcome.
 
 Changes elsewhere will *not* be considered. This is my personal website.
-The `m` module *is* open source though, so you can make use of it as the license allows.
+The `src` folder *is* open source though, so you can make use of it as the license allows.
 
-**Only the `m` module has a license.**
+**Only the `src` folder has a license.**
 You are allowed to cite the published `content` and copy excerpts of it to other spaces,
 but please do not copy it wholesale or pretend it is your own.
 
 # Building Site
 
-Requires Python 3. See available commands by running:
+Requires [Rust](https://www.rust-lang.org/).
+
+Build:
 
 ```sh
-python -mm -h
+pushd site; cargo build {,--release}; popd
+```
+
+Optionally symlink:
+
+```sh
+ln -s target/{debug,release}/site{,.exe}
+```
+
+See available commands by running:
+
+```sh
+./site -h
 ```
 
 # File Structure
@@ -25,9 +39,9 @@ python -mm -h
 
 The website's content.
 
-## m
+## src
 
-Python **m**odule to build the lonami.dev site.
+The website's `site`-executable source code.
 
 ## www
 

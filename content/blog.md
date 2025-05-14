@@ -6,19 +6,6 @@
 
 <hr>
 
-<ul>
-
-```python,inject
-def inject(content):
-    for page in sorted(content['blog'], key=lambda p: p.date, reverse=True):
-        yield f'<li><a href="{page.permalink}">{page.title}</a>'
-        if page.category:
-            yield f'<span class="dim"> [mod {page.category}; {', '.join(f"'{t}" for t in page.tags)}]</span>'
-        yield '</li>'
-```
-
-</ul>
-
 <script>
     const WELCOME_EN = 'Welcome to my blog!'
     const WELCOME_ES = '¡Bienvenido a mi blog!'
