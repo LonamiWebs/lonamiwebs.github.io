@@ -12,7 +12,7 @@ Other posts in this series:
 * [MongoDB: Basic Operations and Architecture](/blog/ribw/mongodb-basic-operations-and-architecture/) (this post)
 * [Developing a Python application for MongoDB](/blog/ribw/developing-a-python-application-for-mongodb/)
 
-This post is co-authored wih Classmate, and in it we will take an explorative approach using the `mongo` command line shell to execute commands against the database. It even has TAB auto-completion, which is awesome!
+This post is co-authored with Classmate, and in it we will take an explorative approach using the `mongo` command line shell to execute commands against the database. It even has TAB auto-completion, which is awesome!
 
 ----------
 

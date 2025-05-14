@@ -10,7 +10,7 @@ Other posts in this series:
 
 * [Cassandra: an Introduction](/blog/ribw/cassandra-an-introduction/) (this post)
 
-This post is co-authored wih Classmate.
+This post is co-authored with Classmate.
 
 ----------
 

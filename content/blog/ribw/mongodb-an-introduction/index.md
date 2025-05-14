@@ -12,7 +12,7 @@ Other posts in this series:
 * [MongoDB: Basic Operations and Architecture](/blog/ribw/mongodb-basic-operations-and-architecture/)
 * [Developing a Python application for MongoDB](/blog/ribw/developing-a-python-application-for-mongodb/)
 
-This post is co-authored wih Classmate.
+This post is co-authored with Classmate.
 
 ----------
 
