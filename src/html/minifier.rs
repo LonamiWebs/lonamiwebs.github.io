@@ -96,4 +96,12 @@ too</script>"#;
 
         assert_eq!(String::from_utf8_lossy(&result), expected);
     }
+
+    #[test]
+    fn test_preserves_some_spaces() {
+        let result = minify(b"<li><p><code>some code</code> text</p></li>");
+        let expected = "<li><p><code>some code</code> text</p></li>";
+
+        assert_eq!(String::from_utf8_lossy(&result), expected);
+    }
 }

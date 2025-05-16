@@ -32,7 +32,7 @@ fn process_file(template: &[u8], path: &Path) -> Result<(PathBuf, Vec<u8>), Box<
     let (path, contents) = match path.extension().and_then(|e| e.to_str()) {
         Some("md") => {
             let mut entry = entry::from_markdown(path.to_owned(), contents);
-            entry.contents = html::minify(&html::generate(&markdown::preprocess(markdown::parse(
+            entry.contents = html::minify(&html::generate(markdown::parse(markdown::lex(
                 &entry.contents,
             ))));
             let contents = template::apply(template, entry);

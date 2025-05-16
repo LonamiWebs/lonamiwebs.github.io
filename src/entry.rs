@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::{fs, io};
 
 use crate::conf::INPUT_FOLDER;
-use crate::{conf, date, markdown};
+use crate::{conf, date, markdown, toml};
 
 pub struct Entry {
     pub path: PathBuf,
@@ -26,9 +26,12 @@ pub fn from_markdown(path: PathBuf, contents: Vec<u8>) -> Entry {
     let mut category = Option::<String>::None;
     let mut tags = Vec::<String>::new();
 
-    for token in markdown::parse(&contents).tokens {
+    let mut next_is_title = false;
+
+    for token in markdown::lex(&contents) {
         match token {
             markdown::Token::Meta(meta) => {
+                let meta = toml::parse(meta);
                 title = meta.get(&b"title"[..]).map(|v| meta_string(v[0]));
                 date = meta.get(&b"date"[..]).map(|v| meta_string(v[0]));
                 updated = meta.get(&b"updated"[..]).map(|v| meta_string(v[0]));
@@ -45,10 +48,11 @@ pub fn from_markdown(path: PathBuf, contents: Vec<u8>) -> Entry {
                     break;
                 }
             }
-            markdown::Token::Heading { level, text } => {
-                if level == 1 {
-                    title = Some(meta_string(text));
-                }
+            markdown::Token::Heading(1) => {
+                next_is_title = true;
+            }
+            markdown::Token::Text(text) if next_is_title => {
+                title = Some(meta_string(text));
                 break;
             }
             _ => continue,
