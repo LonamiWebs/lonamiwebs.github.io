@@ -330,6 +330,16 @@ tr:nth-child(even) {
     background-color: #f7f7e8;
 }
 
+@media (prefers-color-scheme: dark) {
+    th {
+        background-color: #272424;
+    }
+
+    tr:nth-child(even) {
+        background-color: #171414;
+    }
+}
+
 /* graphs post */
 div.matrix table {
     border-width: 0 2pt 0 2pt;
