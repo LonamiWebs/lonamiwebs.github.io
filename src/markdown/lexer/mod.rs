@@ -70,6 +70,7 @@ impl<'t> Iterator for Tokens<'t> {
                     flush_text!();
                     let separator = b"\n\n";
                     let j = self.substring_end(separator, i + 3); // 3 = <X>
+                    self.last_token_was_break = true;
 
                     emit!(Token::Raw(&self.text[i..j]) => j);
                 }
@@ -86,6 +87,7 @@ impl<'t> Iterator for Tokens<'t> {
                     if self.char_at(k - separator.len() - 1) == b'\n'
                         && matches!(self.char_at(k), 0 | b'\n')
                     {
+                        self.last_token_was_break = true;
                         emit!(Token::Meta(&self.text[j..k - separator.len() - 1]) => k + 1);
                     }
                 }

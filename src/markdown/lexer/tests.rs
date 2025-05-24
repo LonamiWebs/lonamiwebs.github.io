@@ -77,6 +77,16 @@ fn test_html() {
             Token::Text(b"text"),
         ],
     );
+
+    let text = b"<noscript>js</noscript>\n\n> quote";
+    assert_eq!(
+        lex(text).collect::<Vec<_>>(),
+        vec![
+            Token::Raw(b"<noscript>js</noscript>\n\n"),
+            Token::Quote,
+            Token::Text(b"quote"),
+        ],
+    );
 }
 
 #[test]
