@@ -31,7 +31,9 @@ fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
             }
             buffer.extend_from_slice(b"<p id=\"fn:");
             buffer.extend_from_slice(&identifier[1..]);
-            buffer.extend_from_slice(b"\">");
+            buffer.extend_from_slice(b"\" class=\"footnote-definition\"><span>");
+            buffer.extend_from_slice(&identifier[1..]);
+            buffer.extend_from_slice(b"</span> ");
         }
         Node::Emphasis(strength) => {
             buffer.extend_from_slice(match strength {
