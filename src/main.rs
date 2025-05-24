@@ -5,6 +5,7 @@ use std::process;
 use std::{fs, thread};
 
 pub mod cli;
+pub mod collections;
 pub mod conf;
 pub mod css;
 pub mod date;

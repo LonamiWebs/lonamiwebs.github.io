@@ -1,29 +1,28 @@
 use super::escape;
-use crate::markdown::{NodeArena, NodeContent, NodeRef};
+use crate::collections::{Graph, GraphNodeRef as Ref};
+use crate::markdown::Node;
 
-pub fn generate(arena: NodeArena) -> Vec<u8> {
+pub fn generate(arena: Graph<Node>) -> Vec<u8> {
     let mut result = Vec::new();
     visit(arena.root(), &mut result);
     result
 }
 
-fn visit(cursor: NodeRef, buffer: &mut Vec<u8>) {
-    match cursor.content() {
-        NodeContent::Empty => {}
-        NodeContent::Raw(text) => buffer.extend_from_slice(text),
-        NodeContent::Text(text) => buffer.extend_from_slice(&escape(text)),
-        NodeContent::Paragraph => buffer.extend_from_slice(b"<p>"),
-        NodeContent::Joiner { inline } => {
-            buffer.extend_from_slice(if inline { b" " } else { b"<br>" })
-        }
-        NodeContent::Separator => buffer.extend_from_slice(b"<hr>"),
-        NodeContent::List { ordered, indent: _ } => {
+fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
+    match cursor.value() {
+        Node::Empty => {}
+        Node::Raw(text) => buffer.extend_from_slice(text),
+        Node::Text(text) => buffer.extend_from_slice(&escape(text)),
+        Node::Paragraph => buffer.extend_from_slice(b"<p>"),
+        Node::Joiner { inline } => buffer.extend_from_slice(if inline { b" " } else { b"<br>" }),
+        Node::Separator => buffer.extend_from_slice(b"<hr>"),
+        Node::List { ordered, indent: _ } => {
             buffer.extend_from_slice(if ordered { b"<ol>" } else { b"<ul>" })
         }
-        NodeContent::ListItem => {
+        Node::ListItem => {
             buffer.extend_from_slice(b"<li>");
         }
-        NodeContent::Emphasis(strength) => {
+        Node::Emphasis(strength) => {
             buffer.extend_from_slice(match strength {
                 1 => b"<em>",
                 2 => b"<strong>",
@@ -31,8 +30,8 @@ fn visit(cursor: NodeRef, buffer: &mut Vec<u8>) {
                 _ => panic!("bad emphasis strength"),
             });
         }
-        NodeContent::Reference => {}
-        NodeContent::Heading(level) => {
+        Node::Reference => {}
+        Node::Heading(level) => {
             buffer.extend_from_slice(match level {
                 1 => b"<h1>",
                 2 => b"<h2>",
@@ -43,7 +42,7 @@ fn visit(cursor: NodeRef, buffer: &mut Vec<u8>) {
                 _ => panic!("bad heading level"),
             });
         }
-        NodeContent::Pre(lang) => {
+        Node::Pre(lang) => {
             if lang.is_empty() {
                 buffer.extend_from_slice(b"<pre>");
             } else {
@@ -52,28 +51,28 @@ fn visit(cursor: NodeRef, buffer: &mut Vec<u8>) {
                 buffer.extend_from_slice(b"\">");
             }
         }
-        NodeContent::Code => {
+        Node::Code => {
             buffer.extend_from_slice(b"<code>");
         }
-        NodeContent::Quote => {}
+        Node::Quote => {}
     }
     for child in cursor.children() {
         visit(child, buffer);
     }
-    match cursor.content() {
-        NodeContent::Empty => {}
-        NodeContent::Raw(_) => {}
-        NodeContent::Text(_) => {}
-        NodeContent::Paragraph => buffer.extend_from_slice(b"</p>"),
-        NodeContent::Joiner { .. } => {}
-        NodeContent::Separator => {}
-        NodeContent::List { ordered, indent: _ } => {
+    match cursor.value() {
+        Node::Empty => {}
+        Node::Raw(_) => {}
+        Node::Text(_) => {}
+        Node::Paragraph => buffer.extend_from_slice(b"</p>"),
+        Node::Joiner { .. } => {}
+        Node::Separator => {}
+        Node::List { ordered, indent: _ } => {
             buffer.extend_from_slice(if ordered { b"</ol>" } else { b"</ul>" })
         }
-        NodeContent::ListItem => {
+        Node::ListItem => {
             buffer.extend_from_slice(b"</li>");
         }
-        NodeContent::Emphasis(strength) => {
+        Node::Emphasis(strength) => {
             buffer.extend_from_slice(match strength {
                 1 => b"</em>",
                 2 => b"</strong>",
@@ -81,10 +80,10 @@ fn visit(cursor: NodeRef, buffer: &mut Vec<u8>) {
                 _ => unreachable!(),
             });
         }
-        NodeContent::Reference => {
+        Node::Reference => {
             // todo!()
         }
-        NodeContent::Heading(level) => {
+        Node::Heading(level) => {
             buffer.extend_from_slice(match level {
                 1 => b"</h1>",
                 2 => b"</h2>",
@@ -95,17 +94,17 @@ fn visit(cursor: NodeRef, buffer: &mut Vec<u8>) {
                 _ => unreachable!(),
             });
         }
-        NodeContent::Pre(lang) => {
+        Node::Pre(lang) => {
             buffer.extend_from_slice(if lang.is_empty() {
                 b"</pre>"
             } else {
                 b"</code></pre>"
             });
         }
-        NodeContent::Code => {
+        Node::Code => {
             buffer.extend_from_slice(b"</code>");
         }
-        NodeContent::Quote => {}
+        Node::Quote => {}
     }
 }
 
@@ -113,15 +112,13 @@ fn visit(cursor: NodeRef, buffer: &mut Vec<u8>) {
 mod tests {
     use super::*;
 
-    use crate::markdown::NodeArena;
-
     #[test]
     fn test_begin_paragraph() {
-        let arena = NodeArena::new();
+        let arena = Graph::new(Node::Empty);
         let mut cursor = arena.root();
-        cursor = cursor.append_child(NodeContent::Paragraph);
-        cursor = cursor.append_child(NodeContent::Emphasis(1));
-        cursor.append_child(NodeContent::Text(b"text"));
+        cursor = cursor.append_child(Node::Paragraph);
+        cursor = cursor.append_child(Node::Emphasis(1));
+        cursor.append_child(Node::Text(b"text"));
 
         assert_eq!(
             String::from_utf8_lossy(&generate(arena)),
@@ -131,20 +128,20 @@ mod tests {
 
     #[test]
     fn test_lists() {
-        let arena = NodeArena::new();
+        let arena = Graph::new(Node::Empty);
         let mut cursor = arena.root();
-        cursor = cursor.append_child(NodeContent::List {
+        cursor = cursor.append_child(Node::List {
             ordered: false,
             indent: 0,
         });
-        let li = cursor.append_child(NodeContent::ListItem);
-        li.append_child(NodeContent::Text(b"first"));
-        cursor = li.append_child(NodeContent::List {
+        let li = cursor.append_child(Node::ListItem);
+        li.append_child(Node::Text(b"first"));
+        cursor = li.append_child(Node::List {
             ordered: false,
             indent: 0,
         });
-        let li = cursor.append_child(NodeContent::ListItem);
-        li.append_child(NodeContent::Text(b"second"));
+        let li = cursor.append_child(Node::ListItem);
+        li.append_child(Node::Text(b"second"));
 
         assert_eq!(
             String::from_utf8_lossy(&generate(arena)),
@@ -154,11 +151,11 @@ mod tests {
 
     #[test]
     fn test_escaping() {
-        let arena = NodeArena::new();
+        let arena = Graph::new(Node::Empty);
         let mut cursor = arena.root();
-        cursor = cursor.append_child(NodeContent::Paragraph);
-        cursor = cursor.append_child(NodeContent::Code);
-        cursor.append_child(NodeContent::Text(b"<tag>"));
+        cursor = cursor.append_child(Node::Paragraph);
+        cursor = cursor.append_child(Node::Code);
+        cursor.append_child(Node::Text(b"<tag>"));
         assert_eq!(
             String::from_utf8_lossy(&generate(arena)),
             "<p><code>&lt;tag&gt;</code></p>"
