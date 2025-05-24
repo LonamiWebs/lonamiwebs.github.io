@@ -1,5 +1,4 @@
 use std::cell::RefCell;
-use std::rc::Rc;
 use std::{fmt, mem};
 
 pub struct NodeArena<'t> {
@@ -30,37 +29,41 @@ pub struct Node<'t> {
     content: NodeContent<'t>,
 }
 
-pub struct NodeRef<'t> {
-    arena: Rc<NodeArena<'t>>,
+#[derive(Clone, Copy)]
+pub struct NodeRef<'a, 't> {
+    arena: &'a NodeArena<'t>,
     index: usize,
 }
 
-pub struct NodeChildren<'t> {
-    parent: NodeRef<'t>,
+pub struct NodeChildren<'a, 't> {
+    parent: NodeRef<'a, 't>,
     current: usize,
 }
 
-pub struct NodeAncestors<'t> {
-    current: NodeRef<'t>,
+pub struct NodeAncestors<'a, 't> {
+    current: NodeRef<'a, 't>,
 }
 
 impl<'t> NodeArena<'t> {
-    pub fn new_root() -> NodeRef<'t> {
-        let this = Self {
+    pub fn new() -> Self {
+        Self {
             nodes: RefCell::new(vec![Node {
                 parent: 0,
                 children: Vec::new(),
                 content: NodeContent::Empty,
             }]),
-        };
+        }
+    }
+
+    pub fn root<'a>(&'a self) -> NodeRef<'a, 't> {
         NodeRef {
-            arena: Rc::new(this),
+            arena: self,
             index: 0,
         }
     }
 }
 
-impl<'t> NodeRef<'t> {
+impl<'a, 't> NodeRef<'a, 't> {
     pub fn append_child(&self, content: NodeContent<'t>) -> Self {
         let mut nodes = self.arena.nodes.borrow_mut();
         let index = nodes.len();
@@ -71,12 +74,12 @@ impl<'t> NodeRef<'t> {
             content,
         });
         Self {
-            arena: Rc::clone(&self.arena),
+            arena: self.arena,
             index,
         }
     }
 
-    pub fn children(&self) -> NodeChildren<'t> {
+    pub fn children(&self) -> NodeChildren<'a, 't> {
         NodeChildren {
             parent: Self::clone(self),
             current: 0,
@@ -87,7 +90,7 @@ impl<'t> NodeRef<'t> {
         self.arena.nodes.borrow()[self.index].children.len()
     }
 
-    pub fn ancestors(&self) -> NodeAncestors<'t> {
+    pub fn ancestors(&self) -> NodeAncestors<'a, 't> {
         NodeAncestors {
             current: Self::clone(self),
         }
@@ -99,7 +102,7 @@ impl<'t> NodeRef<'t> {
             None
         } else {
             Some(Self {
-                arena: Rc::clone(&self.arena),
+                arena: self.arena,
                 index: parent,
             })
         }
@@ -108,7 +111,7 @@ impl<'t> NodeRef<'t> {
     pub fn up(&self) -> Self {
         let parent = self.arena.nodes.borrow()[self.index].parent;
         Self {
-            arena: Rc::clone(&self.arena),
+            arena: self.arena,
             index: parent,
         }
     }
@@ -116,7 +119,7 @@ impl<'t> NodeRef<'t> {
     pub fn child(&self, i: usize) -> Option<Self> {
         if let Some(&j) = self.arena.nodes.borrow()[self.index].children.get(i) {
             Some(Self {
-                arena: Rc::clone(&self.arena),
+                arena: self.arena,
                 index: j,
             })
         } else {
@@ -127,7 +130,7 @@ impl<'t> NodeRef<'t> {
     pub fn last_child(&self) -> Option<Self> {
         if let Some(&j) = self.arena.nodes.borrow()[self.index].children.last() {
             Some(Self {
-                arena: Rc::clone(&self.arena),
+                arena: self.arena,
                 index: j,
             })
         } else {
@@ -137,12 +140,16 @@ impl<'t> NodeRef<'t> {
 
     pub fn root(&self) -> Self {
         Self {
-            arena: Rc::clone(&self.arena),
+            arena: self.arena,
             index: 0,
         }
     }
 
-    pub fn reparent_to(&self, new_parent: &NodeRef) {
+    pub fn content(&self) -> NodeContent<'t> {
+        self.arena.nodes.borrow()[self.index].content
+    }
+
+    pub fn reparent_to(&self, new_parent: NodeRef) {
         let mut arena = self.arena.nodes.borrow_mut();
         let old_parent = arena[self.index].parent;
         if let Some(i) = arena[old_parent]
@@ -170,17 +177,6 @@ impl<'t> NodeRef<'t> {
         arena[self.index].content = NodeContent::Empty;
     }
 
-    pub fn clone(this: &Self) -> Self {
-        Self {
-            arena: Rc::clone(&this.arena),
-            index: this.index,
-        }
-    }
-
-    pub fn content(&self) -> NodeContent<'t> {
-        self.arena.nodes.borrow()[self.index].content
-    }
-
     fn debug_at_nesting(&self, indent: usize, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let blank = "";
         let has_children = self.child(0).is_some();
@@ -196,15 +192,15 @@ impl<'t> NodeRef<'t> {
     }
 }
 
-impl PartialEq for NodeRef<'_> {
+impl PartialEq for NodeRef<'_, '_> {
     fn eq(&self, other: &Self) -> bool {
         self.content() == other.content()
             && self.children().zip(other.children()).all(|(a, b)| a == b)
     }
 }
 
-impl<'t> Iterator for NodeChildren<'t> {
-    type Item = NodeRef<'t>;
+impl<'a, 't> Iterator for NodeChildren<'a, 't> {
+    type Item = NodeRef<'a, 't>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(child) = self.parent.child(self.current) {
@@ -216,8 +212,8 @@ impl<'t> Iterator for NodeChildren<'t> {
     }
 }
 
-impl<'t> Iterator for NodeAncestors<'t> {
-    type Item = NodeRef<'t>;
+impl<'a, 't> Iterator for NodeAncestors<'a, 't> {
+    type Item = NodeRef<'a, 't>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(parent) = self.current.parent() {
@@ -229,7 +225,7 @@ impl<'t> Iterator for NodeAncestors<'t> {
     }
 }
 
-impl fmt::Debug for NodeRef<'_> {
+impl fmt::Debug for NodeRef<'_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.debug_at_nesting(0, f)
     }
@@ -262,36 +258,36 @@ mod tests {
 
     #[test]
     fn test_remove() {
-        let actual = NodeArena::new_root();
-        let a = actual.append_child(NodeContent::Text(b"a"));
+        let actual = NodeArena::new();
+        let a = actual.root().append_child(NodeContent::Text(b"a"));
         let b = a.append_child(NodeContent::Text(b"b"));
         let _ = b.append_child(NodeContent::Text(b"c"));
 
         b.remove_reparent(false);
 
-        let expected = NodeArena::new_root();
-        let _ = expected.append_child(NodeContent::Text(b"a"));
+        let expected = NodeArena::new();
+        let _ = expected.root().append_child(NodeContent::Text(b"a"));
 
-        assert_eq!(actual, expected);
+        assert_eq!(actual.root(), expected.root());
 
-        let actual = NodeArena::new_root();
-        let a = actual.append_child(NodeContent::Text(b"a"));
+        let actual = NodeArena::new();
+        let a = actual.root().append_child(NodeContent::Text(b"a"));
         let b = a.append_child(NodeContent::Text(b"b"));
         let _ = b.append_child(NodeContent::Text(b"c"));
 
         b.remove_reparent(true);
 
-        let expected = NodeArena::new_root();
-        let a = expected.append_child(NodeContent::Text(b"a"));
+        let expected = NodeArena::new();
+        let a = expected.root().append_child(NodeContent::Text(b"a"));
         let _ = a.append_child(NodeContent::Text(b"c"));
 
-        assert_eq!(actual, expected);
+        assert_eq!(actual.root(), expected.root());
     }
 
     #[test]
     fn test_reparent() {
-        let actual = NodeArena::new_root();
-        let a = actual.append_child(NodeContent::Text(b"a"));
+        let actual = NodeArena::new();
+        let a = actual.root().append_child(NodeContent::Text(b"a"));
         let ab1 = a.append_child(NodeContent::Text(b"ab1"));
         let _ = ab1.append_child(NodeContent::Text(b"ab1c1"));
         let _ = ab1.append_child(NodeContent::Text(b"ab1c2"));
@@ -300,18 +296,18 @@ mod tests {
         let _ = ab2.append_child(NodeContent::Text(b"ab2c2"));
 
         for child in ab2.children() {
-            child.reparent_to(&ab1);
+            child.reparent_to(ab1);
         }
         ab2.remove_reparent(false);
 
-        let expected = NodeArena::new_root();
-        let a = expected.append_child(NodeContent::Text(b"a"));
+        let expected = NodeArena::new();
+        let a = expected.root().append_child(NodeContent::Text(b"a"));
         let ab1 = a.append_child(NodeContent::Text(b"ab1"));
         let _ = ab1.append_child(NodeContent::Text(b"ab1c1"));
         let _ = ab1.append_child(NodeContent::Text(b"ab1c2"));
         let _ = ab1.append_child(NodeContent::Text(b"ab2c1"));
         let _ = ab1.append_child(NodeContent::Text(b"ab2c2"));
 
-        assert_eq!(actual, expected);
+        assert_eq!(actual.root(), expected.root());
     }
 }

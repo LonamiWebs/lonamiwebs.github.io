@@ -23,7 +23,8 @@ closing paragraph
 "
     .trim_ascii());
 
-    let expected = NodeArena::new_root();
+    let expected = NodeArena::new();
+    let expected = expected.root();
     expected
         .append_child(NodeContent::Heading(1))
         .append_child(NodeContent::Text(b"heading"));
@@ -63,5 +64,5 @@ closing paragraph
         .append_child(NodeContent::Paragraph)
         .append_child(NodeContent::Text(b"closing paragraph"));
 
-    assert_eq!(parse(tokens), expected);
+    assert_eq!(parse(tokens).root(), expected);
 }

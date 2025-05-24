@@ -1,9 +1,9 @@
 use super::escape;
-use crate::markdown::{NodeContent, NodeRef};
+use crate::markdown::{NodeArena, NodeContent, NodeRef};
 
-pub fn generate(root: NodeRef) -> Vec<u8> {
+pub fn generate(arena: NodeArena) -> Vec<u8> {
     let mut result = Vec::new();
-    visit(root, &mut result);
+    visit(arena.root(), &mut result);
     result
 }
 
@@ -117,20 +117,22 @@ mod tests {
 
     #[test]
     fn test_begin_paragraph() {
-        let mut cursor = NodeArena::new_root();
+        let arena = NodeArena::new();
+        let mut cursor = arena.root();
         cursor = cursor.append_child(NodeContent::Paragraph);
         cursor = cursor.append_child(NodeContent::Emphasis(1));
         cursor.append_child(NodeContent::Text(b"text"));
 
         assert_eq!(
-            String::from_utf8_lossy(&generate(cursor.root())),
+            String::from_utf8_lossy(&generate(arena)),
             "<p><em>text</em></p>"
         );
     }
 
     #[test]
     fn test_lists() {
-        let mut cursor = NodeArena::new_root();
+        let arena = NodeArena::new();
+        let mut cursor = arena.root();
         cursor = cursor.append_child(NodeContent::List {
             ordered: false,
             indent: 0,
@@ -145,19 +147,20 @@ mod tests {
         li.append_child(NodeContent::Text(b"second"));
 
         assert_eq!(
-            String::from_utf8_lossy(&generate(cursor.root())),
+            String::from_utf8_lossy(&generate(arena)),
             "<ul><li>first<ul><li>second</li></ul></li></ul>"
         );
     }
 
     #[test]
     fn test_escaping() {
-        let mut cursor = NodeArena::new_root();
+        let arena = NodeArena::new();
+        let mut cursor = arena.root();
         cursor = cursor.append_child(NodeContent::Paragraph);
         cursor = cursor.append_child(NodeContent::Code);
         cursor.append_child(NodeContent::Text(b"<tag>"));
         assert_eq!(
-            String::from_utf8_lossy(&generate(cursor.root())),
+            String::from_utf8_lossy(&generate(arena)),
             "<p><code>&lt;tag&gt;</code></p>"
         );
     }
