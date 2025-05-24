@@ -66,3 +66,57 @@ closing paragraph
 
     assert_eq!(parse(tokens).root(), expected);
 }
+
+#[test]
+fn test_references() {
+    let tokens = lex(br#"
+[text] [reusable][r] footnote[^1] [inline](https://example.com/inline "title") ![image](https://example.com/image "alt")
+
+[^1]: footnote text
+
+[r]: https://example.com/reusable
+"#.trim_ascii());
+
+    dbg!(lex(br#"
+[text] [reusable][r] footnote[^1] [inline](https://example.com/inline "title") ![image](https://example.com/image "alt")
+
+[^1]: footnote text
+
+[r]: https://example.com/reusable
+"#.trim_ascii()).collect::<Vec<_>>());
+
+    let expected = Graph::new(Node::Empty);
+    let expected = expected.root();
+    let p = expected.append_child(Node::Paragraph);
+
+    p.append_child(Node::Text(b"[text] "));
+
+    let reusable = p.append_child(Node::Reference(b"https://example.com/reusable"));
+    reusable.append_child(Node::Text(b"reusable"));
+
+    p.append_child(Node::Text(b" footnote"));
+
+    p.append_child(Node::FootnoteReference(b"1"));
+
+    p.append_child(Node::Text(b" "));
+
+    let inline = p.append_child(Node::Reference(b"https://example.com/inline"));
+    inline.append_child(Node::Text(b"inline"));
+    inline.append_child(Node::AltText(b"title"));
+
+    p.append_child(Node::Text(b" "));
+
+    let inline = p.append_child(Node::Image(b"https://example.com/image"));
+    inline.append_child(Node::Text(b"image"));
+    inline.append_child(Node::AltText(b"alt"));
+
+    expected
+        .append_child(Node::DefinitionItem(b"^1"))
+        .append_child(Node::Text(b"footnote text"));
+
+    expected
+        .append_child(Node::DefinitionItem(b"r"))
+        .append_child(Node::Text(b"https://example.com/reusable"));
+
+    assert_eq!(parse(tokens).root(), expected);
+}

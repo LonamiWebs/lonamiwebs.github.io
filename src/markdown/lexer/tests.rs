@@ -246,7 +246,8 @@ fn test_item() {
             Token::Text(b"b"),
             Token::EndReference {
                 uri: b"u",
-                alt: b""
+                alt: b"",
+                lazy: false
             },
             Token::Break {
                 hard: false,
@@ -323,53 +324,50 @@ fn test_emphasis() {
 
 #[test]
 fn test_reference() {
-    fn open<'t>(bang: bool) -> Token<'t> {
-        Token::BeginReference { bang }
-    }
-    fn close<'t>(uri: &'t [u8], alt: &'t [u8]) -> Token<'t> {
-        Token::EndReference { uri, alt }
+    for bang in [false, true] {
+        for lazy in [false, true] {
+            for alt in [false, true] {
+                let a = if bang { "!" } else { "" };
+                let (b, c) = if lazy { ("[", "]") } else { ("(", ")") };
+                let d = if alt { " \"alt\"" } else { "" };
+
+                let text = format!("{a}[text]{b}url{d}{c}");
+                let text = text.as_bytes();
+                assert_eq!(
+                    lex(text).collect::<Vec<_>>(),
+                    vec![
+                        Token::BeginReference { bang },
+                        Token::Text(b"text"),
+                        Token::EndReference {
+                            uri: b"url",
+                            alt: if alt { b"alt" } else { b"" },
+                            lazy
+                        }
+                    ],
+                );
+            }
+        }
     }
 
-    let text = b"[0]\n\n[0]: u";
+    let text = b"[text]]()";
+    assert_eq!(lex(text).collect::<Vec<_>>(), vec![Token::Text(text)]);
+}
+
+#[test]
+fn test_footnote() {
+    let text = b"text![^1]\n\n[^1]: footnote";
     assert_eq!(
         lex(text).collect::<Vec<_>>(),
         vec![
-            open(false),
-            Token::Text(b"0"),
-            close(b"", b""),
+            Token::Text(b"text!"),
+            Token::FootnoteReference(b"1"),
             Token::Break {
                 hard: true,
                 indent: 0
             },
-            open(false),
-            Token::Text(b"0"),
-            close(b"", b""),
-            Token::Text(b": u"),
-        ]
-    );
-
-    let text = b"[t](1)";
-    assert_eq!(
-        lex(text).collect::<Vec<_>>(),
-        vec![open(false), Token::Text(b"t"), close(b"1", b""),]
-    );
-
-    let text = b"![e](2)";
-    assert_eq!(
-        lex(text).collect::<Vec<_>>(),
-        vec![open(true), Token::Text(b"e"), close(b"2", b""),]
-    );
-
-    let text = b"[x](3 \"a\")";
-    assert_eq!(
-        lex(text).collect::<Vec<_>>(),
-        vec![open(false), Token::Text(b"x"), close(b"3", b"\"a\""),]
-    );
-
-    let text = b"![t](4 \"b\")";
-    assert_eq!(
-        lex(text).collect::<Vec<_>>(),
-        vec![open(true), Token::Text(b"t"), close(b"4", b"\"b\"")]
+            Token::BeginDefinition(b"^1"),
+            Token::Text(b"footnote"),
+        ],
     );
 }
 

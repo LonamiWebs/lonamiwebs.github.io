@@ -129,32 +129,70 @@ impl<'t> Iterator for Tokens<'t> {
                     emit!(Token::Emphasis(strength as u8) => i + strength);
                 }
 
-                // Reference
-                d @ (b'!' | b'[') if d == b'[' || self.char_at(i + 1) == b'[' => {
-                    let offset = if d == b'[' { 1 } else { 2 };
-                    let j = self.char_start(b'\n', i + offset);
-                    let k = self.char_start_till(b']', i + offset, j);
-
-                    if k != j {
-                        flush_text!();
-                        self.waiting_reference_end = true;
-                        emit!(Token::BeginReference { bang: d == b'!' } => i + offset);
+                // Definition
+                b'[' if self
+                    .unescaped_reference_end(i + 1)
+                    .is_some_and(|j| self.char_at(j + 1) == b':') =>
+                {
+                    flush_text!();
+                    let j = self.unescaped_reference_end(i + 1).unwrap();
+                    let mut k = j + 2;
+                    while self.char_at(k) == b' ' {
+                        k += 1
                     }
+                    emit!(Token::BeginDefinition(&self.text[i + 1..j]) => k);
+                }
+
+                // Footnote
+                b'[' if self.char_at(i + 1) == b'^'
+                    && self.unescaped_reference_end(i + 1).is_some() =>
+                {
+                    flush_text!();
+                    let j = self.unescaped_reference_end(i + 1).unwrap(); // won't panic due to match guard
+                    emit!(Token::FootnoteReference(&self.text[i + 2..j]) => j + 1);
+                }
+
+                // Reference
+                b'!' if self.char_at(i + 1) == b'['
+                    && self.char_at(i + 2) != b'^'
+                    && self.has_inline_reference_text_end(i + 2) =>
+                {
+                    flush_text!();
+                    self.waiting_reference_end = true;
+                    emit!(Token::BeginReference { bang: true } => i + 2);
+                }
+
+                b'[' if self.has_inline_reference_text_end(i + 1) => {
+                    flush_text!();
+                    self.waiting_reference_end = true;
+                    emit!(Token::BeginReference { bang: false } => i + 1);
                 }
 
                 b']' if self.waiting_reference_end => {
                     flush_text!();
                     self.waiting_reference_end = false;
-
-                    if self.char_at(i + 1) == b'(' {
-                        let j = self.char_start(b')', i + 2);
+                    let d = self.char_at(i + 1);
+                    if d == b'[' || d == b'(' {
+                        let e = if d == b'[' { b']' } else { b')' };
+                        let j = self.char_start(e, i + 2);
                         let k = self.char_start_till(b' ', i + 2, j);
+
+                        // Unlike Markdown, quoting alt text is optional
+                        let mut alt = &self.text[j.min(k + 1)..j];
+                        if matches!(alt.first(), Some(b'"')) {
+                            alt = &alt[1..];
+                        }
+                        if matches!(alt.last(), Some(b'"')) {
+                            alt = &alt[..alt.len() - 1];
+                        }
+
                         emit!(Token::EndReference {
                             uri: &self.text[i + 2..k],
-                            alt: &self.text[j.min(k + 1)..j],
+                            alt,
+                            lazy: d == b'[',
                         } => j + 1);
                     } else {
-                        emit!(Token::EndReference { uri: b"", alt: b"" } => i + 1);
+                        emit!(Token::EndReference { uri: b"", alt: b"", lazy: true } => i + 1);
                     }
                 }
 
@@ -318,6 +356,18 @@ impl<'t> Tokens<'t> {
             .position(|t| t == needle)
             .map(|j| search_start + j + needle.len())
             .unwrap_or(self.text.len())
+    }
+
+    fn has_inline_reference_text_end(&self, i: usize) -> bool {
+        self.unescaped_reference_end(i)
+            .is_some_and(|j| matches!(self.char_at(j + 1), b'[' | b'('))
+    }
+
+    fn unescaped_reference_end(&self, i: usize) -> Option<usize> {
+        self.line_at(i)
+            .windows(2)
+            .position(|window| window[0] != b'\\' && window[1] == b']')
+            .map(|j| i + j + 1)
     }
 }
 

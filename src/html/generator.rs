@@ -1,4 +1,4 @@
-use super::escape;
+use super::{escape, escape_attribute};
 use crate::collections::{Graph, GraphNodeRef as Ref};
 use crate::markdown::Node;
 
@@ -13,6 +13,9 @@ fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
         Node::Empty => {}
         Node::Raw(text) => buffer.extend_from_slice(text),
         Node::Text(text) => buffer.extend_from_slice(&escape(text)),
+        Node::AltText(_) => {
+            return; // processed earlier
+        }
         Node::Paragraph => buffer.extend_from_slice(b"<p>"),
         Node::Joiner { inline } => buffer.extend_from_slice(if inline { b" " } else { b"<br>" }),
         Node::Separator => buffer.extend_from_slice(b"<hr>"),
@@ -22,6 +25,14 @@ fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
         Node::ListItem => {
             buffer.extend_from_slice(b"<li>");
         }
+        Node::DefinitionItem(identifier) => {
+            if !identifier.starts_with(b"^") {
+                return; // only footnote references should be visible
+            }
+            buffer.extend_from_slice(b"<p id=\"fn:");
+            buffer.extend_from_slice(&identifier[1..]);
+            buffer.extend_from_slice(b"\">");
+        }
         Node::Emphasis(strength) => {
             buffer.extend_from_slice(match strength {
                 1 => b"<em>",
@@ -30,7 +41,36 @@ fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
                 _ => panic!("bad emphasis strength"),
             });
         }
-        Node::Reference => {}
+        Node::FootnoteReference(identifier) => {
+            buffer.extend_from_slice(b"<a href=\"#fn:");
+            buffer.extend_from_slice(identifier);
+            buffer.extend_from_slice(b"\"><sup id=\"fnref:");
+            buffer.extend_from_slice(identifier);
+            buffer.extend_from_slice("\">↪".as_bytes());
+            buffer.extend_from_slice(identifier);
+        }
+        Node::Reference(url) => {
+            buffer.extend_from_slice(b"<a href=\"");
+            buffer.extend_from_slice(url);
+            buffer.extend_from_slice(b"\"");
+            if let Some(Node::AltText(alt)) = cursor.last_child().map(|child| child.value()) {
+                buffer.extend_from_slice(b" title=\"");
+                buffer.extend_from_slice(&escape_attribute(alt));
+                buffer.extend_from_slice(b"\"");
+            }
+            buffer.extend_from_slice(b">");
+        }
+        Node::Image(url) => {
+            buffer.extend_from_slice(b"<img src=\"");
+            buffer.extend_from_slice(url);
+            buffer.extend_from_slice(b"\"");
+            if let Some(Node::AltText(alt)) = cursor.last_child().map(|child| child.value()) {
+                buffer.extend_from_slice(b" alt=\"");
+                buffer.extend_from_slice(&escape_attribute(alt));
+                buffer.extend_from_slice(b"\"");
+            }
+            buffer.extend_from_slice(b">");
+        }
         Node::Heading(level) => {
             buffer.extend_from_slice(match level {
                 1 => b"<h1>",
@@ -63,6 +103,7 @@ fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
         Node::Empty => {}
         Node::Raw(_) => {}
         Node::Text(_) => {}
+        Node::AltText(_) => unreachable!(),
         Node::Paragraph => buffer.extend_from_slice(b"</p>"),
         Node::Joiner { .. } => {}
         Node::Separator => {}
@@ -72,6 +113,11 @@ fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
         Node::ListItem => {
             buffer.extend_from_slice(b"</li>");
         }
+        Node::DefinitionItem(identifier) => {
+            buffer.extend_from_slice(b"&nbsp;<a href=\"#fnref:");
+            buffer.extend_from_slice(&identifier[1..]);
+            buffer.extend_from_slice("\">↩</a></p>".as_bytes());
+        }
         Node::Emphasis(strength) => {
             buffer.extend_from_slice(match strength {
                 1 => b"</em>",
@@ -80,9 +126,13 @@ fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
                 _ => unreachable!(),
             });
         }
-        Node::Reference => {
-            // todo!()
+        Node::FootnoteReference(_) => {
+            buffer.extend_from_slice(b"</sup></a>");
         }
+        Node::Reference(_) => {
+            buffer.extend_from_slice(b"</a>");
+        }
+        Node::Image(_) => {}
         Node::Heading(level) => {
             buffer.extend_from_slice(match level {
                 1 => b"</h1>",

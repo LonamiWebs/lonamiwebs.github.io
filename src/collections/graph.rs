@@ -130,6 +130,11 @@ impl<'a, T> NodeRef<'a, T> {
         }
     }
 
+    pub fn set_value(&self, value: T) {
+        let mut arena = self.arena.nodes.borrow_mut();
+        arena[self.index].value = value;
+    }
+
     pub fn reparent_to(&self, new_parent: NodeRef<'a, T>) {
         let mut arena = self.arena.nodes.borrow_mut();
         let old_parent = arena[self.index].parent;

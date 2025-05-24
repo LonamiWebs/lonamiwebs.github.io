@@ -6,16 +6,32 @@ pub enum Token<'t> {
     Raw(&'t [u8]),
     Meta(&'t [u8]),
     Separator(u8),
-    BeginItem { ordered: bool },
+    BeginDefinition(&'t [u8]),
+    BeginItem {
+        ordered: bool,
+    },
     Emphasis(u8),
-    BeginReference { bang: bool },
-    EndReference { uri: &'t [u8], alt: &'t [u8] },
+    FootnoteReference(&'t [u8]),
+    BeginReference {
+        bang: bool,
+    },
+    EndReference {
+        uri: &'t [u8],
+        alt: &'t [u8],
+        lazy: bool,
+    },
     Heading(u8),
-    Fence { lang: &'t [u8], text: &'t [u8] },
+    Fence {
+        lang: &'t [u8],
+        text: &'t [u8],
+    },
     Code(&'t [u8]),
     Quote(u8),
     TableRow(&'t [u8]),
-    Break { hard: bool, indent: usize },
+    Break {
+        hard: bool,
+        indent: usize,
+    },
 }
 
 impl fmt::Debug for Token<'_> {
@@ -31,19 +47,28 @@ impl fmt::Debug for Token<'_> {
                 .finish(),
             Self::Meta(x) => f.debug_tuple("Meta").field(x).finish(),
             Self::Separator(x) => f.debug_tuple("Separator").field(&(*x as char)).finish(),
+            Self::BeginDefinition(x) => f
+                .debug_tuple("BeginDefinition")
+                .field(&String::from_utf8_lossy(x))
+                .finish(),
             Self::BeginItem { ordered } => f
                 .debug_struct("BeginItem")
                 .field("ordered", ordered)
                 .finish(),
             Self::Emphasis(x) => f.debug_tuple("Emphasis").field(x).finish(),
+            Self::FootnoteReference(x) => f
+                .debug_tuple("FootnoteReference")
+                .field(&String::from_utf8_lossy(x))
+                .finish(),
             Self::BeginReference { bang } => f
                 .debug_struct("BeginReference")
                 .field("bang", bang)
                 .finish(),
-            Self::EndReference { uri, alt } => f
+            Self::EndReference { uri, alt, lazy } => f
                 .debug_struct("EndReference")
                 .field("uri", &String::from_utf8_lossy(uri))
                 .field("alt", &String::from_utf8_lossy(alt))
+                .field("lazy", lazy)
                 .finish(),
             Self::Heading(x) => f.debug_tuple("Heading").field(x).finish(),
             Self::Fence { lang, text } => f

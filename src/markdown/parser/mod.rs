@@ -16,6 +16,8 @@ pub fn parse(tokens: Tokens) -> Graph<Node> {
         indent: 0,
     };
 
+    let mut nodes_with_references_to_resolve = Vec::new();
+
     for token in tokens {
         match token {
             Token::Text(text) => {
@@ -31,6 +33,16 @@ pub fn parse(tokens: Tokens) -> Graph<Node> {
             Token::Separator(_) => {
                 cursor = cursor.root();
                 cursor.append_child(Node::Separator);
+            }
+            Token::BeginDefinition(identifier) => {
+                while matches!(cursor.value(), Node::DefinitionItem(_))
+                    || cursor
+                        .ancestors()
+                        .any(|node| matches!(node.value(), Node::DefinitionItem(_)))
+                {
+                    cursor = cursor.up();
+                }
+                cursor = cursor.append_child(Node::DefinitionItem(identifier));
             }
             Token::BeginItem { ordered } => {
                 let indent = match last_token {
@@ -76,12 +88,35 @@ pub fn parse(tokens: Tokens) -> Graph<Node> {
                     cursor = cursor.append_child(Node::Emphasis(strength));
                 }
             }
-            Token::BeginReference { .. } => {
-                // todo!()
-                cursor = cursor.append_child(Node::Reference);
+            Token::FootnoteReference(identifier) => {
+                cursor.append_child(Node::FootnoteReference(identifier));
             }
-            Token::EndReference { .. } => {
-                // todo!()
+            Token::BeginReference { bang } => {
+                cursor = cursor.append_child(if bang {
+                    Node::Image(b"")
+                } else {
+                    Node::Reference(b"")
+                });
+            }
+            Token::EndReference { uri, alt, lazy } => {
+                if !alt.is_empty() {
+                    cursor.append_child(Node::AltText(alt));
+                }
+                loop {
+                    match cursor.value() {
+                        Node::Empty => {}
+                        Node::Image(_) => cursor.set_value(Node::Image(uri)),
+                        Node::Reference(_) => cursor.set_value(Node::Reference(uri)),
+                        _ => {
+                            cursor = cursor.up();
+                            continue;
+                        }
+                    }
+                    break;
+                }
+                if lazy {
+                    nodes_with_references_to_resolve.push(cursor);
+                }
                 cursor = cursor.up();
             }
             Token::Heading(level) => {
@@ -125,11 +160,44 @@ pub fn parse(tokens: Tokens) -> Graph<Node> {
     }
 
     let root = cursor.root();
+    resolve_references(root, nodes_with_references_to_resolve);
     remove_empty_paragraphs(root);
     trim_joiners(root);
     merge_lists_with_same_indent(root);
     remove_paragraphs_from_simple_lists(root);
     arena
+}
+
+fn resolve_references<'t>(root: Ref<Node<'t>>, pending: Vec<Ref<Node<'t>>>) {
+    fn find_definition<'t>(node: Ref<Node<'t>>, identifier: &[u8]) -> Option<&'t [u8]> {
+        match node.value() {
+            Node::DefinitionItem(id) if id == identifier => {
+                match node.child(0).map(|text| text.value()) {
+                    Some(Node::Text(value)) => Some(value),
+                    _ => None,
+                }
+            }
+            _ => node
+                .children()
+                .find_map(|child| find_definition(child, identifier)),
+        }
+    }
+
+    for node in pending {
+        match node.value() {
+            Node::Image(identifier) => {
+                if let Some(value) = find_definition(root, identifier) {
+                    node.set_value(Node::Image(value));
+                }
+            }
+            Node::Reference(identifier) => {
+                if let Some(value) = find_definition(root, identifier) {
+                    node.set_value(Node::Reference(value));
+                }
+            }
+            _ => {}
+        }
+    }
 }
 
 fn remove_empty_paragraphs(node: Ref<Node>) {
@@ -219,17 +287,21 @@ fn can_contain_text_at(node: Ref<Node>) -> bool {
             Node::Empty
             | Node::Raw(_)
             | Node::Text(_)
+            | Node::AltText(_)
             | Node::Joiner { .. }
             | Node::Separator
             | Node::List { .. }
-            | Node::ListItem => false,
+            | Node::ListItem
+            | Node::FootnoteReference(_) => false,
             Node::Paragraph
             | Node::Emphasis(_)
-            | Node::Reference
+            | Node::Reference(_)
+            | Node::Image(_)
             | Node::Heading(_)
             | Node::Pre(_)
             | Node::Code
-            | Node::Quote => true,
+            | Node::Quote
+            | Node::DefinitionItem(_) => true,
         }
     }
 
