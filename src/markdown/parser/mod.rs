@@ -21,10 +21,15 @@ pub fn parse(tokens: Tokens) -> Graph<Node> {
     for token in tokens {
         match token {
             Token::Text(text) => {
-                if !can_contain_text_at(cursor) {
-                    cursor = cursor.append_child(Node::Paragraph);
+                let needs_p = !can_contain_text_at(cursor);
+                if needs_p && matches!(cursor.value(), Node::Image(_)) {
+                    cursor.append_child(Node::AltText(text));
+                } else {
+                    if needs_p {
+                        cursor = cursor.append_child(Node::Paragraph);
+                    }
+                    cursor.append_child(Node::Text(text));
                 }
-                cursor.append_child(Node::Text(text));
             }
             Token::Raw(text) => {
                 cursor.append_child(Node::Raw(text));
@@ -290,6 +295,7 @@ fn can_contain_text_at(node: Ref<Node>) -> bool {
             | Node::Raw(_)
             | Node::Text(_)
             | Node::AltText(_)
+            | Node::Image(_)
             | Node::Joiner { .. }
             | Node::Separator
             | Node::List { .. }
@@ -298,7 +304,6 @@ fn can_contain_text_at(node: Ref<Node>) -> bool {
             Node::Paragraph
             | Node::Emphasis(_)
             | Node::Reference(_)
-            | Node::Image(_)
             | Node::Heading(_)
             | Node::Pre(_)
             | Node::Code
