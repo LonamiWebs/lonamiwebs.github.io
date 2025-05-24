@@ -438,16 +438,6 @@ fn test_quote() {
 }
 
 #[test]
-fn test_row() {
-    let text = b"|1|2|3|";
-
-    assert_eq!(
-        lex(text).collect::<Vec<_>>(),
-        vec![Token::TableRow(b"|1|2|3|")]
-    );
-}
-
-#[test]
 fn test_break() {
     let text = b"\n\nleading";
     assert_eq!(

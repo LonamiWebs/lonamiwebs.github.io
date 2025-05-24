@@ -136,9 +136,6 @@ pub fn parse(tokens: Tokens) -> Graph<Node> {
                 Some(child) if matches!(child.value(), Node::Quote) => cursor = child,
                 _ => cursor = cursor.append_child(Node::Quote),
             },
-            Token::TableRow(_) => {
-                // todo!()
-            }
             Token::Break { hard, indent } => {
                 if is_in_quote_at(cursor) {
                     while is_in_quote_at(cursor) {

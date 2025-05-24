@@ -27,7 +27,6 @@ pub enum Token<'t> {
     },
     Code(&'t [u8]),
     Quote,
-    TableRow(&'t [u8]),
     Break {
         hard: bool,
         indent: usize,
@@ -81,10 +80,6 @@ impl fmt::Debug for Token<'_> {
                 .field(&String::from_utf8_lossy(x))
                 .finish(),
             Self::Quote => f.write_str("Quote"),
-            Self::TableRow(x) => f
-                .debug_tuple("TableRow")
-                .field(&String::from_utf8_lossy(x))
-                .finish(),
             Self::Break { hard, indent } => f
                 .debug_struct("Break")
                 .field("hard", hard)

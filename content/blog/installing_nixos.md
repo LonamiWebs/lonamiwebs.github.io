@@ -57,12 +57,12 @@ Thanks to [@bb010g](https://github.com/bb010g) for pointing this out.
 
 [^1]: The keyboard mapping is a bit strange. On my Spanish keyboard, the keys were as follows:
 
-|Keyboard|Maps to|Shift
-|---|---|---|
-|'|-|_|
-|´|'|"|
-|`|[| |
-|+|]| |
-|¡|=| |
-|-|/| |
-|ñ|;| |
+<table><thead><tr><th>Keyboard</th><th>Maps to</th><th>Shift</th></tr></thread><tbody>
+<tr><td><kbd>'</kbd></td><td><kbd>-</kbd></td><td><kbd>_</kbd></td></tr>
+<tr><td><kbd>´</kbd></td><td><kbd>'</kbd></td><td><kbd>"</kbd></td></tr>
+<tr><td><kbd>`</kbd></td><td><kbd>[</kbd></td><td></td></tr>
+<tr><td><kbd>+</kbd></td><td><kbd>]</kbd></td><td></td></tr>
+<tr><td><kbd>¡</kbd></td><td><kbd>=</kbd></td><td></td></tr>
+<tr><td><kbd>-</kbd></td><td><kbd>/</kbd></td><td></td></tr>
+<tr><td><kbd>ñ</kbd></td><td><kbd>;</kbd></td><td></td></tr>
+</tbody></table>

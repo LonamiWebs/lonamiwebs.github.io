@@ -273,13 +273,6 @@ impl<'t> Iterator for Tokens<'t> {
                     emit!(Token::Quote => j);
                 }
 
-                // Table rows
-                b'|' if start_of_line => {
-                    flush_text!();
-                    let j = self.char_start(b'\n', i + 1);
-                    emit!(Token::TableRow(&self.text[i..j]) => j + 1);
-                }
-
                 // Paragraph break
                 b'\n' => {
                     flush_text!();
