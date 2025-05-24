@@ -433,7 +433,7 @@ fn test_quote() {
 
     assert_eq!(
         lex(text).collect::<Vec<_>>(),
-        vec![Token::Quote(1), Token::Text(b" quote")]
+        vec![Token::Quote, Token::Text(b"quote")]
     );
 }
 

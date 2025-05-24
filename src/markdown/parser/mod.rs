@@ -132,14 +132,19 @@ pub fn parse(tokens: Tokens) -> Graph<Node> {
                 let code = cursor.append_child(Node::Code);
                 code.append_child(Node::Text(text));
             }
-            Token::Quote(_) => {
-                // todo!()
-            }
+            Token::Quote => match cursor.last_child() {
+                Some(child) if matches!(child.value(), Node::Quote) => cursor = child,
+                _ => cursor = cursor.append_child(Node::Quote),
+            },
             Token::TableRow(_) => {
                 // todo!()
             }
             Token::Break { hard, indent } => {
-                if hard {
+                if is_in_quote_at(cursor) {
+                    while is_in_quote_at(cursor) {
+                        cursor = cursor.up();
+                    }
+                } else if hard {
                     if list_indent_at(cursor).is_some() && indent > 0 {
                         while !matches!(cursor.value(), Node::ListItem) {
                             cursor = cursor.up();
@@ -306,6 +311,13 @@ fn can_contain_text_at(node: Ref<Node>) -> bool {
     }
 
     can_contain_text(node) || node.ancestors().any(|node| can_contain_text(node))
+}
+
+fn is_in_quote_at(node: Ref<Node>) -> bool {
+    matches!(node.value(), Node::Quote)
+        || node
+            .ancestors()
+            .any(|node| matches!(node.value(), Node::Quote))
 }
 
 fn emphasis_level_at(node: Ref<Node>) -> u8 {

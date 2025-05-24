@@ -94,7 +94,9 @@ fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
         Node::Code => {
             buffer.extend_from_slice(b"<code>");
         }
-        Node::Quote => {}
+        Node::Quote => {
+            buffer.extend_from_slice(b"<blockquote><p>");
+        }
     }
     for child in cursor.children() {
         visit(child, buffer);
@@ -154,7 +156,9 @@ fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
         Node::Code => {
             buffer.extend_from_slice(b"</code>");
         }
-        Node::Quote => {}
+        Node::Quote => {
+            buffer.extend_from_slice(b"</p></blockquote>");
+        }
     }
 }
 

@@ -26,7 +26,7 @@ pub enum Token<'t> {
         text: &'t [u8],
     },
     Code(&'t [u8]),
-    Quote(u8),
+    Quote,
     TableRow(&'t [u8]),
     Break {
         hard: bool,
@@ -80,7 +80,7 @@ impl fmt::Debug for Token<'_> {
                 .debug_tuple("Code")
                 .field(&String::from_utf8_lossy(x))
                 .finish(),
-            Self::Quote(x) => f.debug_tuple("Quote").field(x).finish(),
+            Self::Quote => f.write_str("Quote"),
             Self::TableRow(x) => f
                 .debug_tuple("TableRow")
                 .field(&String::from_utf8_lossy(x))

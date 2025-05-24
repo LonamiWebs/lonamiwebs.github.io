@@ -252,8 +252,7 @@ impl<'t> Iterator for Tokens<'t> {
 
                     emit!(Token::Fence {
                         lang: &self.text[j..k],
-                        text: &self.text[self.text.len().min(k + 1)
-                            ..self.text.len().min(k + 1).max(m - separator.len())], // todo!() eh?
+                        text: &self.text[self.text.len().min(k + 1)..m - separator.len()],
                     } => m + 1);
                 }
 
@@ -267,7 +266,11 @@ impl<'t> Iterator for Tokens<'t> {
                 // Blockquotes
                 b'>' if start_of_line => {
                     flush_text!();
-                    emit!(Token::Quote(1) => i + 1);
+                    let mut j = i + 1;
+                    while matches!(self.char_at(j), b' ') {
+                        j += 1;
+                    }
+                    emit!(Token::Quote => j);
                 }
 
                 // Table rows
