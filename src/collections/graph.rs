@@ -36,7 +36,7 @@ impl<T> Graph<T> {
         }
     }
 
-    pub fn root<'a>(&'a self) -> NodeRef<'a, T> {
+    pub fn root(&self) -> NodeRef<T> {
         NodeRef {
             arena: self,
             index: 0,
@@ -65,6 +65,10 @@ impl<'a, T> NodeRef<'a, T> {
             parent: *self,
             current: 0,
         }
+    }
+
+    pub fn is_leaf(&self) -> bool {
+        self.arena.nodes.borrow()[self.index].children.is_empty()
     }
 
     pub fn child_count(&self) -> usize {
@@ -165,13 +169,13 @@ impl<T: Clone + fmt::Debug> NodeRef<'_, T> {
         let blank = "";
         let has_children = self.child(0).is_some();
         if has_children {
-            write!(f, "{blank: >i$}{:?} {{\n", self.value(), i = indent)?;
+            writeln!(f, "{blank: >i$}{:?} {{", self.value(), i = indent)?;
             for child in self.children() {
                 child.debug_at_nesting(indent + 2, f)?;
             }
-            write!(f, "{blank: >i$}}}\n", i = indent)
+            writeln!(f, "{blank: >i$}}}", i = indent)
         } else {
-            write!(f, "{blank: >i$}{:?} {{ }}\n", self.value(), i = indent)
+            writeln!(f, "{blank: >i$}{:?} {{ }}", self.value(), i = indent)
         }
     }
 }

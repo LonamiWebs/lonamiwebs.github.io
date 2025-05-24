@@ -133,7 +133,7 @@ pub fn parse(tokens: Tokens) -> Graph<Node> {
 }
 
 fn remove_empty_paragraphs(node: Ref<Node>) {
-    if matches!(node.value(), Node::Paragraph) && node.child_count() == 0 {
+    if matches!(node.value(), Node::Paragraph) && node.is_leaf() {
         node.remove_reparent(false);
     } else {
         for child in node.children() {
