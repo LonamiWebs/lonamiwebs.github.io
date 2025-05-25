@@ -1,6 +1,8 @@
-Source for lonami.dev's website.
+# lonami.dev
 
-# Contributing
+Source for [lonami.dev](https://lonami.dev)'s website.
+
+## Contributing
 
 Typo fixes to the `content` are welcome.
 
@@ -11,14 +13,14 @@ The `src` folder *is* open source though, so you can make use of it as the licen
 You are allowed to cite the published `content` and copy excerpts of it to other spaces,
 but please do not copy it wholesale or pretend it is your own.
 
-# Building Site
+## Building Site
 
 Requires [Rust](https://www.rust-lang.org/).
 
 Build:
 
 ```sh
-pushd site; cargo build {,--release}; popd
+cargo build {,--release}
 ```
 
 Optionally symlink:
@@ -33,16 +35,16 @@ See available commands by running:
 ./site -h
 ```
 
-# File Structure
+## File Structure
 
-## content
+### content
 
 The website's content.
 
-## src
+### src
 
 The website's `site`-executable source code.
 
-## www
+### www
 
 Built page.
