@@ -39,12 +39,10 @@ fn test_raw() {
     assert_eq!(
         lex(text).collect::<Vec<_>>(),
         vec![
-            Token::Raw(b"<h1>h1</h1>"),
+            Token::Raw(b"<h1>h1</h1>\n"),
+            Token::Raw(b"<p>long\nparagraph</p>\n"),
             Token::Break { hard: false },
-            Token::Raw(b"<p>long\nparagraph</p>"),
-            Token::Break { hard: true },
-            Token::Raw(b"<h2 id=\"about\">h2</h2>"),
-            Token::Break { hard: false },
+            Token::Raw(b"<h2 id=\"about\">h2</h2>\n"),
             Token::Raw(b"<p>another paragraph</p>"),
         ],
     );
@@ -53,10 +51,7 @@ fn test_raw() {
 
     assert_eq!(
         lex(text).collect::<Vec<_>>(),
-        vec![
-            Token::Raw(b"<script></script>"),
-            Token::Break { hard: false }
-        ]
+        vec![Token::Raw(b"<script></script>\n"),]
     );
 
     let text = b"<span class=\"cls\">span</span>[^ref] text\n\n# heading";
@@ -121,8 +116,8 @@ fn test_html() {
     assert_eq!(
         lex(text).collect::<Vec<_>>(),
         vec![
-            Token::Raw(b"<noscript>js</noscript>"),
-            Token::Break { hard: true },
+            Token::Raw(b"<noscript>js</noscript>\n"),
+            Token::Break { hard: false },
             Token::Quote,
             Token::Indent(1),
             Token::Text(b"quote"),

@@ -65,8 +65,14 @@ impl<'t> Iterator for Tokens<'t> {
                         _ => unreachable!(),
                     };
                     let j = self.substring_end(closing_tag, i + closing_tag.len() - 1);
+                    let k = if self.char_at(j) == b'\n' {
+                        self.next_is_start_of_line = self.char_at(j - 1) == b'\n';
+                        j + 1
+                    } else {
+                        j
+                    };
 
-                    emit!(Token::Raw(&self.text[i..j]) => j);
+                    emit!(Token::Raw(&self.text[i..k]) => k);
                 }
 
                 // HTML tags that may be separated from upcoming markdown
@@ -388,7 +394,8 @@ impl<'t> Tokens<'t> {
                 if self.text[search_start + j] == b'\n' {
                     search_start + j + 2
                 } else {
-                    search_start + j + tag.len() + 3
+                    let k = search_start + j + tag.len() + 3;
+                    if self.char_at(k) == b'\n' { k + 1 } else { k }
                 }
             })
             .unwrap_or(self.text.len())
