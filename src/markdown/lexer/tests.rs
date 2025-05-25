@@ -317,6 +317,15 @@ fn test_emphasis() {
 }
 
 #[test]
+fn test_deleted() {
+    let text = b"~~del~~";
+    assert_eq!(
+        lex(text).collect::<Vec<_>>(),
+        vec![Token::Deleted, Token::Text(b"del"), Token::Deleted,]
+    );
+}
+
+#[test]
 fn test_reference() {
     for bang in [false, true] {
         for lazy in [false, true] {
