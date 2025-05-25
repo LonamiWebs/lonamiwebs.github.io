@@ -12,7 +12,7 @@ This post will be mostly me ranting about setting up a new laptop, but I also ju
 Last Sunday, I ordered a Asus Rog Strix G531GT-BQ165 for 900€ (on a 20% discount) with the following specifications:
 
 * Intel® Core i7-9750H (6 cores, 12MB cache, 2.6GHz up to 4.5GHz, 64-bit)
-* 16GB RAM (8GB*2) DDR4 2666MHz
+* 16GB RAM (8GB\*2) DDR4 2666MHz
 * 512GB SSD M.2 PCIe® NVMe
 * Display 15.6" (1920x1080/16:9) 60Hz
 * Graphics NVIDIA® GeForce® GTX1650 4GB GDDR5 VRAM
@@ -354,7 +354,7 @@ Oh come on. After waiting for the next day, I headed over, downloaded their soft
 
 Well, at least rebooting worked. I tried to [uninstall Aura, but of course that failed](https://answers.microsoft.com/en-us/windows/forum/all/unable-to-uninstall-asus-aura-sync-utility/e9bec36c-e62f-4773-80be-88fb68dace16). Using the [troubleshooter to uninstall programs](https://support.microsoft.com/en-us/help/17588/windows-fix-problems-that-block-programs-being-installed-or-removed) helped me remove most of the crap that was installed.
 
-After searching around how to disable the lights (because [my BIOS did not have this setting](https://rog.asus.com/forum/showthread.php?112786-Option-to-Disable-Aura-Lights-on-Strix-G-series-(G531GT)-irrespective-of-OSes)), I stumbled upon ["Armoury Crate"](https://rog.asus.com/us/innovation/armoury_crate/). Okay, fine, I will install that.
+After searching around how to disable the lights (because [my BIOS did not have this setting](https://rog.asus.com/forum/showthread.php?112786-Option-to-Disable-Aura-Lights-on-Strix-G-series-(G531GT%29-irrespective-of-OSes)), I stumbled upon ["Armoury Crate"](https://rog.asus.com/us/innovation/armoury_crate/). Okay, fine, I will install that.
 
 The experience wasn't much better. It did the same thing with a lot of consoles flashing on screen. And of course, it resulted in another blue-screen, this time `KERNEL_SECURITY_CHECK_FAILURE`. To finish up, the BSOD kept happening as I rebooted the system. ~~Time to reinstall Windows once more.~~ After booting and crashing a few more times I could get into secure mode and perform the reinstall from there, which saved me from burning the `.iso` again.
 

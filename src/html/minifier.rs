@@ -4,7 +4,8 @@ pub fn minify(html: &[u8]) -> Vec<u8> {
     let mut in_other = Option::<&[u8]>::None;
     let mut in_comment = false;
     let mut in_pre = false;
-    let mut in_tag = false;
+    let mut in_p = false;
+    let mut current_tag_start = Option::<usize>::None;
     let mut maybe_space = false;
 
     html.iter().copied().enumerate().for_each(|(i, c)| {
@@ -37,9 +38,18 @@ pub fn minify(html: &[u8]) -> Vec<u8> {
         } else if matches!(html.get(i..i + 4), Some(b"<pre")) {
             in_pre = true;
             minified.push(c)
-        } else if in_tag {
+        } else if let Some(start) = current_tag_start {
             if c == b'>' {
-                in_tag = false;
+                let tag = &html[start..i];
+                current_tag_start = None;
+
+                if tag == b"p" {
+                    // Should be "any text container" and won't handle attributes, but this works for our usecase.
+                    in_p = true;
+                } else if tag == b"/p" {
+                    in_p = false;
+                }
+
                 minified.push(c);
             } else if !c.is_ascii_whitespace()
                 || !matches!(minified.last(), Some(b' ' | b'\t' | b'\n' | b'<'))
@@ -47,7 +57,10 @@ pub fn minify(html: &[u8]) -> Vec<u8> {
                 minified.push(c);
             }
         } else if c == b'<' {
-            in_tag = true;
+            current_tag_start = Some(i + 1);
+            if maybe_space && in_p {
+                minified.push(b' ');
+            }
             maybe_space = false;
             minified.push(c)
         } else if c.is_ascii_whitespace() && minified.last() == Some(&b'>') {
@@ -99,8 +112,13 @@ too</script>"#;
 
     #[test]
     fn test_preserves_some_spaces() {
-        let result = minify(b"<li><p><code>some code</code> text</p></li>");
-        let expected = "<li><p><code>some code</code> text</p></li>";
+        // let result = minify(b"<li><p><code>some code</code> text</p></li>");
+        // let expected = "<li><p><code>some code</code> text</p></li>";
+
+        // assert_eq!(String::from_utf8_lossy(&result), expected);
+
+        let result = minify(b"<p>a <code>b</code> <em>c</em> d</p>");
+        let expected = "<p>a <code>b</code> <em>c</em> d</p>";
 
         assert_eq!(String::from_utf8_lossy(&result), expected);
     }

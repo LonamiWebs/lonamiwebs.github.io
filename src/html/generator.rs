@@ -43,6 +43,9 @@ fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
                 _ => panic!("bad emphasis strength"),
             });
         }
+        Node::Deleted => {
+            buffer.extend_from_slice(b"<del>");
+        }
         Node::FootnoteReference(identifier) => {
             buffer.extend_from_slice(b"<a href=\"#fn:");
             buffer.extend_from_slice(identifier);
@@ -97,7 +100,7 @@ fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
             buffer.extend_from_slice(b"<code>");
         }
         Node::Quote => {
-            buffer.extend_from_slice(b"<blockquote><p>");
+            buffer.extend_from_slice(b"<blockquote>");
         }
     }
     for child in cursor.children() {
@@ -130,6 +133,9 @@ fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
                 _ => unreachable!(),
             });
         }
+        Node::Deleted => {
+            buffer.extend_from_slice(b"</del>");
+        }
         Node::FootnoteReference(_) => {
             buffer.extend_from_slice(b"</sup></a>");
         }
@@ -159,7 +165,7 @@ fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
             buffer.extend_from_slice(b"</code>");
         }
         Node::Quote => {
-            buffer.extend_from_slice(b"</p></blockquote>");
+            buffer.extend_from_slice(b"</blockquote>");
         }
     }
 }

@@ -4,34 +4,41 @@ mod tests;
 
 pub use node::Node;
 
-use super::{Token, Tokens};
+use super::{Token, Tokens, Tokens3Window};
 use crate::collections::{Graph, GraphNodeRef as Ref};
 
 pub fn parse(tokens: Tokens) -> Graph<Node> {
     let arena = Graph::new(Node::Empty);
     let mut cursor = arena.root();
 
-    let mut last_token = Token::Break {
-        hard: true,
-        indent: 0,
-    };
-
     let mut nodes_with_references_to_resolve = Vec::new();
 
-    for token in tokens {
+    for (prev, token, next) in Tokens3Window::new(tokens) {
         match token {
             Token::Text(text) => {
-                let needs_p = !can_contain_text_at(cursor);
-                if needs_p && matches!(cursor.value(), Node::Image(_)) {
+                if let Some(Token::Indent(indent)) = prev {
+                    while let Some(last_indent) = list_indent_at(cursor) {
+                        if indent > last_indent {
+                            break;
+                        }
+                        cursor = cursor.up();
+                    }
+                }
+                if matches!(cursor.value(), Node::Image(_)) {
                     cursor.append_child(Node::AltText(text));
+                } else if text == b"\n" {
+                    cursor.append_child(Node::Joiner { inline: false });
                 } else {
-                    if needs_p {
+                    if !is_in_text_container_at(cursor) {
                         cursor = cursor.append_child(Node::Paragraph);
                     }
                     cursor.append_child(Node::Text(text));
                 }
             }
             Token::Raw(text) => {
+                if !text.ends_with(b"\n") && !is_in_text_container_at(cursor) {
+                    cursor = cursor.append_child(Node::Paragraph);
+                }
                 cursor.append_child(Node::Raw(text));
             }
             Token::Meta(_) => {}
@@ -50,13 +57,14 @@ pub fn parse(tokens: Tokens) -> Graph<Node> {
                 cursor = cursor.append_child(Node::DefinitionItem(identifier));
             }
             Token::BeginItem { ordered } => {
-                let indent = match last_token {
-                    Token::Break { hard: _, indent } => indent,
+                let indent = match prev {
+                    Some(Token::Indent(i)) => i,
                     _ => 0,
                 };
                 if list_indent_at(cursor).is_none() {
-                    // Exit any text content.
-                    cursor = cursor.root();
+                    while is_in_text_container_at(cursor) {
+                        cursor = cursor.up();
+                    }
                 } else {
                     while let Some(last_indent) = list_indent_at(cursor) {
                         if indent > last_indent {
@@ -76,12 +84,14 @@ pub fn parse(tokens: Tokens) -> Graph<Node> {
                         }
                     }
                 }
-                cursor = cursor.append_child(Node::List { ordered, indent });
-                cursor = cursor.append_child(Node::ListItem);
-                cursor = cursor.append_child(Node::Paragraph);
+                cursor = cursor
+                    .append_child(Node::List { ordered, indent })
+                    .append_child(Node::ListItem)
+                    .append_child(Node::Paragraph);
             }
+            Token::Indent(_) => {}
             Token::Emphasis(strength) => {
-                if !can_contain_text_at(cursor) {
+                if !is_in_text_container_at(cursor) {
                     cursor = cursor.append_child(Node::Paragraph);
                 }
 
@@ -93,10 +103,29 @@ pub fn parse(tokens: Tokens) -> Graph<Node> {
                     cursor = cursor.append_child(Node::Emphasis(strength));
                 }
             }
-            Token::FootnoteReference(identifier) => {
-                cursor.append_child(Node::FootnoteReference(identifier));
+            Token::Deleted => {
+                if !is_in_text_container_at(cursor) {
+                    cursor = cursor.append_child(Node::Paragraph);
+                }
+
+                let mut open = true;
+                while matches!(cursor.value(), Node::Deleted)
+                    || cursor
+                        .ancestors()
+                        .any(|node| matches!(node.value(), Node::Deleted))
+                {
+                    cursor = cursor.up();
+                    open = false;
+                }
+
+                if open {
+                    cursor = cursor.append_child(Node::Deleted);
+                }
             }
             Token::BeginReference { bang } => {
+                if !is_in_text_container_at(cursor) {
+                    cursor = cursor.append_child(Node::Paragraph);
+                }
                 cursor = cursor.append_child(if bang {
                     Node::Image(b"")
                 } else {
@@ -111,7 +140,16 @@ pub fn parse(tokens: Tokens) -> Graph<Node> {
                     match cursor.value() {
                         Node::Empty => {}
                         Node::Image(_) => cursor.set_value(Node::Image(uri)),
-                        Node::Reference(_) => cursor.set_value(Node::Reference(uri)),
+                        Node::Reference(_) => {
+                            if lazy && uri.starts_with(b"^") {
+                                cursor.set_value(Node::FootnoteReference(&uri[1..]));
+                                while let Some(child) = cursor.child(0) {
+                                    child.remove_reparent(false);
+                                }
+                            } else {
+                                cursor.set_value(Node::Reference(uri))
+                            }
+                        }
                         _ => {
                             cursor = cursor.up();
                             continue;
@@ -126,44 +164,64 @@ pub fn parse(tokens: Tokens) -> Graph<Node> {
             }
             Token::Heading(level) => {
                 // Deliberately not supporting titles in lists for simplicity.
-                cursor = cursor.root();
-                cursor = cursor.append_child(Node::Heading(level));
+                cursor = cursor.root().append_child(Node::Heading(level));
             }
             Token::Fence { lang, text } => {
-                let pre = cursor.append_child(Node::Pre(lang));
-                pre.append_child(Node::Text(text));
+                cursor = cursor.root();
+                cursor
+                    .append_child(Node::Pre(lang))
+                    .append_child(Node::Text(text));
             }
             Token::Code(text) => {
-                let code = cursor.append_child(Node::Code);
-                code.append_child(Node::Text(text));
+                if !is_in_text_container_at(cursor) {
+                    cursor = cursor.append_child(Node::Paragraph);
+                }
+                cursor
+                    .append_child(Node::Code)
+                    .append_child(Node::Text(text));
             }
-            Token::Quote => match cursor.last_child() {
-                Some(child) if matches!(child.value(), Node::Quote) => cursor = child,
-                _ => cursor = cursor.append_child(Node::Quote),
-            },
-            Token::Break { hard, indent } => {
-                if is_in_quote_at(cursor) {
-                    while is_in_quote_at(cursor) {
-                        cursor = cursor.up();
-                    }
-                } else if hard {
-                    if list_indent_at(cursor).is_some() && indent > 0 {
+            Token::Quote => {
+                if !is_in_quote_at(cursor) {
+                    cursor = cursor.append_child(Node::Quote);
+                }
+            }
+            Token::Break { hard } => {
+                let indent = match next {
+                    Some(Token::Indent(i)) => i,
+                    _ => 0,
+                };
+                if hard {
+                    if is_in_quote_at(cursor) {
+                        while is_in_quote_at(cursor) {
+                            cursor = cursor.up();
+                        }
+                    } else if list_indent_at(cursor).is_some() && indent > 0 {
                         while !matches!(cursor.value(), Node::ListItem) {
                             cursor = cursor.up();
                         }
                         cursor = cursor.append_child(Node::Paragraph);
                     } else {
-                        //
                         cursor = cursor.root();
                     }
                 } else {
-                    cursor.append_child(Node::Joiner {
-                        inline: indent == 0,
-                    });
+                    match cursor.last_child() {
+                        Some(child) if matches!(child.value(), Node::Joiner { .. }) => {
+                            child.remove_reparent(false);
+                            while is_in_text_container_at(cursor) {
+                                cursor = cursor.up();
+                            }
+                        }
+                        _ => {
+                            if is_in_text_container_at(cursor) {
+                                cursor.append_child(Node::Joiner {
+                                    inline: indent == 0 || list_indent_at(cursor).is_some(),
+                                });
+                            }
+                        }
+                    }
                 }
             }
         }
-        last_token = token;
     }
 
     let root = cursor.root();
@@ -195,11 +253,19 @@ fn resolve_references<'t>(root: Ref<Node<'t>>, pending: Vec<Ref<Node<'t>>>) {
             Node::Image(identifier) => {
                 if let Some(value) = find_definition(root, identifier) {
                     node.set_value(Node::Image(value));
+                } else {
+                    // On missing definition, restore assumed original formatting.
+                    // There's no need to flatten the nested text tags either.
+                    node.set_value(Node::Text(b"!["));
+                    node.append_child(Node::Text(b"]"));
                 }
             }
             Node::Reference(identifier) => {
                 if let Some(value) = find_definition(root, identifier) {
                     node.set_value(Node::Reference(value));
+                } else {
+                    node.set_value(Node::Text(b"["));
+                    node.append_child(Node::Text(b"]"));
                 }
             }
             _ => {}
@@ -230,6 +296,23 @@ fn trim_joiners(node: Ref<Node>) {
             _ => break,
         }
     }
+    'paragraph_joiners: loop {
+        for i in 2..node.child_count() {
+            match node.child(i - 2).zip(node.child(i - 1)).zip(node.child(i)) {
+                Some(((a, b), c))
+                    if is_text_container(a)
+                        && matches!(b.value(), Node::Joiner { .. })
+                        && is_text_container(c) =>
+                {
+                    b.remove_reparent(false);
+                    continue 'paragraph_joiners;
+                }
+                _ => {}
+            }
+        }
+        break;
+    }
+
     for child in node.children() {
         trim_joiners(child);
     }
@@ -288,31 +371,29 @@ fn remove_paragraphs_from_simple_lists(node: Ref<Node>) {
     }
 }
 
-fn can_contain_text_at(node: Ref<Node>) -> bool {
-    fn can_contain_text(node: Ref<Node>) -> bool {
-        match node.value() {
-            Node::Empty
-            | Node::Raw(_)
-            | Node::Text(_)
-            | Node::AltText(_)
-            | Node::Image(_)
-            | Node::Joiner { .. }
-            | Node::Separator
-            | Node::List { .. }
-            | Node::ListItem
-            | Node::FootnoteReference(_) => false,
-            Node::Paragraph
-            | Node::Emphasis(_)
-            | Node::Reference(_)
-            | Node::Heading(_)
-            | Node::Pre(_)
-            | Node::Code
-            | Node::Quote
-            | Node::DefinitionItem(_) => true,
-        }
+fn is_text_container(node: Ref<Node>) -> bool {
+    match node.value() {
+        Node::Empty
+        | Node::Raw(_)
+        | Node::Text(_)
+        | Node::AltText(_)
+        | Node::Image(_)
+        | Node::Joiner { .. }
+        | Node::Separator
+        | Node::List { .. }
+        | Node::ListItem
+        | Node::Emphasis(_)
+        | Node::Deleted
+        | Node::Reference(_)
+        | Node::Code
+        | Node::Quote
+        | Node::FootnoteReference(_) => false,
+        Node::Paragraph | Node::Heading(_) | Node::Pre(_) | Node::DefinitionItem(_) => true,
     }
+}
 
-    can_contain_text(node) || node.ancestors().any(|node| can_contain_text(node))
+fn is_in_text_container_at(node: Ref<Node>) -> bool {
+    is_text_container(node) || node.ancestors().any(|node| is_text_container(node))
 }
 
 fn is_in_quote_at(node: Ref<Node>) -> bool {

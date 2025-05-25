@@ -39,8 +39,13 @@ fn test_raw() {
     assert_eq!(
         lex(text).collect::<Vec<_>>(),
         vec![
-            Token::Raw(b"<h1>h1</h1>\n<p>long\nparagraph</p>\n\n"),
-            Token::Raw(b"<h2 id=\"about\">h2</h2>\n<p>another paragraph</p>")
+            Token::Raw(b"<h1>h1</h1>"),
+            Token::Break { hard: false },
+            Token::Raw(b"<p>long\nparagraph</p>"),
+            Token::Break { hard: true },
+            Token::Raw(b"<h2 id=\"about\">h2</h2>"),
+            Token::Break { hard: false },
+            Token::Raw(b"<p>another paragraph</p>"),
         ],
     );
 
@@ -50,11 +55,46 @@ fn test_raw() {
         lex(text).collect::<Vec<_>>(),
         vec![
             Token::Raw(b"<script></script>"),
-            Token::Break {
-                hard: false,
-                indent: 0
-            }
+            Token::Break { hard: false }
         ]
+    );
+
+    let text = b"<span class=\"cls\">span</span>[^ref] text\n\n# heading";
+    assert_eq!(
+        lex(text).collect::<Vec<_>>(),
+        vec![
+            Token::Raw(b"<span class=\"cls\">span</span>"),
+            Token::BeginReference { bang: false },
+            Token::Text(b"^ref"),
+            Token::EndReference {
+                uri: b"^ref",
+                alt: b"",
+                lazy: true
+            },
+            Token::Text(b" text"),
+            Token::Break { hard: true },
+            Token::Heading(1),
+            Token::Text(b"heading"),
+        ]
+    );
+
+    let text = b"<details open><summary>summary</summary>\n\n> quote\n\n</details>";
+    assert_eq!(
+        lex(text).collect::<Vec<_>>(),
+        vec![
+            Token::Raw(b"<details open><summary>summary</summary>\n\n"),
+            Token::Quote,
+            Token::Indent(1),
+            Token::Text(b"quote"),
+            Token::Break { hard: true },
+            Token::Raw(b"</details>"),
+        ]
+    );
+
+    let text = b"&nbsp; & text ;";
+    assert_eq!(
+        lex(text).collect::<Vec<_>>(),
+        vec![Token::Raw(b"&nbsp;"), Token::Text(b" & text ;"),]
     );
 }
 
@@ -64,16 +104,15 @@ fn test_html() {
     assert_eq!(
         lex(text).collect::<Vec<_>>(),
         vec![
-            Token::Raw(b"<p>p *tag*</p><details>\n\n"),
+            Token::Raw(b"<p>p *tag*</p>"),
+            Token::Raw(b"<details>\n\n"),
             Token::Text(b"details "),
             Token::Emphasis(1),
             Token::Text(b"tag"),
             Token::Emphasis(1),
-            Token::Break {
-                hard: true,
-                indent: 0
-            },
-            Token::Raw(b"</details>\n\n"),
+            Token::Break { hard: true },
+            Token::Raw(b"</details>"),
+            Token::Break { hard: true },
             Token::Text(b"text"),
         ],
     );
@@ -82,8 +121,10 @@ fn test_html() {
     assert_eq!(
         lex(text).collect::<Vec<_>>(),
         vec![
-            Token::Raw(b"<noscript>js</noscript>\n\n"),
+            Token::Raw(b"<noscript>js</noscript>"),
+            Token::Break { hard: true },
             Token::Quote,
+            Token::Indent(1),
             Token::Text(b"quote"),
         ],
     );
@@ -109,15 +150,9 @@ fn test_metadata_ok() {
             lex(text).collect::<Vec<_>>(),
             vec![
                 Token::Text(separator.as_bytes()),
-                Token::Break {
-                    hard: false,
-                    indent: 0
-                },
+                Token::Break { hard: false },
                 Token::Text(b"meta"),
-                Token::Break {
-                    hard: false,
-                    indent: 0
-                },
+                Token::Break { hard: false },
                 Token::Text(format!("{separator}text").as_bytes())
             ]
         );
@@ -132,25 +167,13 @@ fn test_metadata_ok() {
         lex(text).collect::<Vec<_>>(),
         vec![
             Token::Text(b"text"),
-            Token::Break {
-                hard: false,
-                indent: 0
-            },
+            Token::Break { hard: false },
             Token::Text(b"+++"),
-            Token::Break {
-                hard: false,
-                indent: 0
-            },
+            Token::Break { hard: false },
             Token::Text(b"meta"),
-            Token::Break {
-                hard: false,
-                indent: 0
-            },
+            Token::Break { hard: false },
             Token::Text(b"+++"),
-            Token::Break {
-                hard: false,
-                indent: 0
-            },
+            Token::Break { hard: false },
             Token::Text(b"text")
         ]
     );
@@ -168,10 +191,7 @@ fn test_separator() {
                 lex(text).collect::<Vec<_>>(),
                 vec![
                     Token::Text(b"start"),
-                    Token::Break {
-                        hard: false,
-                        indent: 0
-                    },
+                    Token::Break { hard: false },
                     Token::Separator(c)
                 ]
             );
@@ -182,15 +202,9 @@ fn test_separator() {
                 lex(text).collect::<Vec<_>>(),
                 vec![
                     Token::Text(b"start"),
-                    Token::Break {
-                        hard: false,
-                        indent: 0
-                    },
+                    Token::Break { hard: false },
                     Token::Separator(c),
-                    Token::Break {
-                        hard: false,
-                        indent: 0
-                    },
+                    Token::Break { hard: false },
                     Token::Text(b"text")
                 ]
             );
@@ -220,22 +234,13 @@ fn test_item() {
         vec![
             Token::BeginItem { ordered: false },
             Token::Text(b"star"),
-            Token::Break {
-                hard: false,
-                indent: 0
-            },
+            Token::Break { hard: false },
             Token::BeginItem { ordered: true },
             Token::Text(b"zero"),
-            Token::Break {
-                hard: false,
-                indent: 0
-            },
+            Token::Break { hard: false },
             Token::BeginItem { ordered: false },
             Token::Text(b"dash"),
-            Token::Break {
-                hard: false,
-                indent: 0
-            },
+            Token::Break { hard: false },
             Token::BeginItem { ordered: true },
             Token::Text(b"one"),
         ]
@@ -247,10 +252,7 @@ fn test_item() {
         vec![
             Token::BeginItem { ordered: false },
             Token::Text(b"a"),
-            Token::Break {
-                hard: false,
-                indent: 0
-            },
+            Token::Break { hard: false },
             Token::BeginItem { ordered: false },
             Token::BeginReference { bang: false },
             Token::Text(b"b"),
@@ -259,21 +261,13 @@ fn test_item() {
                 alt: b"",
                 lazy: false
             },
-            Token::Break {
-                hard: false,
-                indent: 0
-            },
+            Token::Break { hard: false },
             Token::BeginItem { ordered: false },
             Token::Text(b"c"),
-            Token::Break {
-                hard: true,
-                indent: 2
-            },
+            Token::Break { hard: true },
+            Token::Indent(2),
             Token::Text(b"c"),
-            Token::Break {
-                hard: false,
-                indent: 0
-            },
+            Token::Break { hard: false },
             Token::BeginItem { ordered: false },
             Token::Text(b"d")
         ]
@@ -286,10 +280,7 @@ fn test_item() {
             Token::BeginItem { ordered: false },
             Token::Code(b"code"),
             Token::Text(b" text"),
-            Token::Break {
-                hard: false,
-                indent: 0
-            },
+            Token::Break { hard: false },
             Token::BeginItem { ordered: false },
             Token::Text(b"text"),
         ]
@@ -301,10 +292,8 @@ fn test_item() {
         vec![
             Token::BeginItem { ordered: false },
             Token::Text(b"text"),
-            Token::Break {
-                hard: false,
-                indent: 2
-            },
+            Token::Break { hard: false },
+            Token::Indent(2),
             Token::BeginItem { ordered: false },
             Token::Text(b"text"),
         ]
@@ -360,21 +349,37 @@ fn test_reference() {
     }
 
     let text = b"[text]]()";
-    assert_eq!(lex(text).collect::<Vec<_>>(), vec![Token::Text(text)]);
+    assert_eq!(
+        lex(text).collect::<Vec<_>>(),
+        vec![
+            Token::BeginReference { bang: false },
+            Token::Text(b"text"),
+            Token::EndReference {
+                uri: b"text",
+                alt: b"",
+                lazy: true
+            },
+            Token::Text(b"]()")
+        ]
+    );
 }
 
 #[test]
 fn test_footnote() {
-    let text = b"text![^1]\n\n[^1]: footnote";
+    let text = b"text![^1]:\n\n[^1]: footnote";
     assert_eq!(
         lex(text).collect::<Vec<_>>(),
         vec![
             Token::Text(b"text!"),
-            Token::FootnoteReference(b"1"),
-            Token::Break {
-                hard: true,
-                indent: 0
+            Token::BeginReference { bang: false },
+            Token::Text(b"^1"),
+            Token::EndReference {
+                uri: b"^1",
+                alt: b"",
+                lazy: true
             },
+            Token::Text(b":"),
+            Token::Break { hard: true },
             Token::BeginDefinition(b"^1"),
             Token::Text(b"footnote"),
         ],
@@ -392,10 +397,7 @@ fn test_heading() {
             vec![
                 Token::Heading(length as u8),
                 Token::Text(b"heading"),
-                Token::Break {
-                    hard: false,
-                    indent: 0
-                },
+                Token::Break { hard: false },
                 Token::Text(b"text"),
             ]
         );
@@ -443,7 +445,19 @@ fn test_quote() {
 
     assert_eq!(
         lex(text).collect::<Vec<_>>(),
-        vec![Token::Quote, Token::Text(b"quote")]
+        vec![Token::Quote, Token::Indent(1), Token::Text(b"quote")]
+    );
+
+    let text = b"> * list";
+
+    assert_eq!(
+        lex(text).collect::<Vec<_>>(),
+        vec![
+            Token::Quote,
+            Token::Indent(1),
+            Token::BeginItem { ordered: false },
+            Token::Text(b"list")
+        ]
     );
 }
 
@@ -452,25 +466,13 @@ fn test_break() {
     let text = b"\n\nleading";
     assert_eq!(
         lex(text).collect::<Vec<_>>(),
-        vec![
-            Token::Break {
-                hard: true,
-                indent: 0
-            },
-            Token::Text(b"leading")
-        ]
+        vec![Token::Break { hard: true }, Token::Text(b"leading")]
     );
 
     let text = b"trailing\n\n";
     assert_eq!(
         lex(text).collect::<Vec<_>>(),
-        vec![
-            Token::Text(b"trailing"),
-            Token::Break {
-                hard: true,
-                indent: 0
-            },
-        ]
+        vec![Token::Text(b"trailing"), Token::Break { hard: true },]
     );
 
     let text = b"mid\ndle";
@@ -478,10 +480,7 @@ fn test_break() {
         lex(text).collect::<Vec<_>>(),
         vec![
             Token::Text(b"mid"),
-            Token::Break {
-                hard: false,
-                indent: 0
-            },
+            Token::Break { hard: false },
             Token::Text(b"dle")
         ]
     );
@@ -491,10 +490,7 @@ fn test_break() {
         lex(text).collect::<Vec<_>>(),
         vec![
             Token::Text(b"mid"),
-            Token::Break {
-                hard: true,
-                indent: 0
-            },
+            Token::Break { hard: true },
             Token::Text(b"dle")
         ]
     );

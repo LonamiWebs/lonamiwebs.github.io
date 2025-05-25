@@ -2,14 +2,14 @@
 mod tests;
 mod token;
 
-pub use token::Token;
+pub use token::{Token, Tokens3Window};
 
 pub struct Tokens<'t> {
     text: &'t [u8],
     pos: usize,
     possible_text_start: usize,
-    last_token_was_break: bool,
-    waiting_reference_end: bool,
+    next_is_start_of_line: bool,
+    reference_text_start: Option<usize>,
 }
 
 impl<'t> Iterator for Tokens<'t> {
@@ -36,25 +36,29 @@ impl<'t> Iterator for Tokens<'t> {
 
         while let Some(&c) = self.text.get(self.pos) {
             let i = self.pos;
-            let start_of_line = self.last_token_was_break;
-            self.last_token_was_break = false;
+            let start_of_line = self.next_is_start_of_line;
+            self.next_is_start_of_line = false;
 
             match c {
                 // Escape sequences '\X'
                 b'\\' => {
                     flush_text!();
-                    self.possible_text_start = self.pos + 1;
-                    self.pos = self.text.len().min(self.pos + 2);
+                    self.possible_text_start = i + 1;
+                    self.pos = self.text.len().min(i + 2);
+                    if self.char_at(i + 1) == b'\n' {
+                        self.next_is_start_of_line = true;
+                        flush_text!();
+                    }
                     continue;
                 }
 
                 // HTML tags that do not contain markdown to be parsed
-                b'<' if self.text_at(self.pos + 1).starts_with(b"pre")
-                    || self.text_at(self.pos + 1).starts_with(b"script")
-                    || self.text_at(self.pos + 1).starts_with(b"style") =>
+                b'<' if self.text_at(i + 1).starts_with(b"pre")
+                    || self.text_at(i + 1).starts_with(b"script")
+                    || self.text_at(i + 1).starts_with(b"style") =>
                 {
                     flush_text!();
-                    let closing_tag = match self.char_at(self.pos + 2) {
+                    let closing_tag = match self.char_at(i + 2) {
                         b'r' => b"</pre>".as_ref(),
                         b'c' => b"</script>".as_ref(),
                         b't' => b"</style>".as_ref(),
@@ -68,10 +72,28 @@ impl<'t> Iterator for Tokens<'t> {
                 // HTML tags that may be separated from upcoming markdown
                 b'<' if matches!(self.char_at(i + 1), b'/' | b'A'..=b'Z' | b'a'..=b'z') => {
                     flush_text!();
-                    let separator = b"\n\n";
-                    let j = self.substring_end(separator, i + 3); // 3 = <X>
-                    self.last_token_was_break = true;
+                    let j = if self.char_at(i + 1) == b'/' {
+                        self.substring_end(b">", i + 2)
+                    } else {
+                        let k = i
+                            + 1
+                            + self
+                                .text_at(i + 1)
+                                .iter()
+                                .take_while(
+                                    |c| matches!(c,  b'A'..=b'Z' | b'a'..=b'z'| b'0'..=b'9'| b'-'),
+                                )
+                                .count();
+                        self.tag_end(self.text_in(i + 1, k), k + 1)
+                    };
+                    self.next_is_start_of_line = self.char_at(j - 1) == b'\n';
 
+                    emit!(Token::Raw(&self.text[i..j]) => j);
+                }
+
+                b'&' if self.entity_end(i + 1).is_some() => {
+                    flush_text!();
+                    let j = self.entity_end(i + 1).unwrap(); // won't panic due to match guard
                     emit!(Token::Raw(&self.text[i..j]) => j);
                 }
 
@@ -87,7 +109,7 @@ impl<'t> Iterator for Tokens<'t> {
                     if self.char_at(k - separator.len() - 1) == b'\n'
                         && matches!(self.char_at(k), 0 | b'\n')
                     {
-                        self.last_token_was_break = true;
+                        self.next_is_start_of_line = true;
                         emit!(Token::Meta(&self.text[j..k - separator.len() - 1]) => k + 1);
                     }
                 }
@@ -131,10 +153,17 @@ impl<'t> Iterator for Tokens<'t> {
                     emit!(Token::Emphasis(strength as u8) => i + strength);
                 }
 
+                // Deleted
+                b'~' if self.char_at(i + 1) == b'~' => {
+                    flush_text!();
+                    emit!(Token::Deleted => i + 2);
+                }
+
                 // Definition
-                b'[' if self
-                    .unescaped_reference_end(i + 1)
-                    .is_some_and(|j| self.char_at(j + 1) == b':') =>
+                b'[' if start_of_line
+                    && self
+                        .unescaped_reference_end(i + 1)
+                        .is_some_and(|j| self.char_at(j + 1) == b':') =>
                 {
                     flush_text!();
                     let j = self.unescaped_reference_end(i + 1).unwrap();
@@ -145,34 +174,25 @@ impl<'t> Iterator for Tokens<'t> {
                     emit!(Token::BeginDefinition(&self.text[i + 1..j]) => k);
                 }
 
-                // Footnote
-                b'[' if self.char_at(i + 1) == b'^'
-                    && self.unescaped_reference_end(i + 1).is_some() =>
-                {
-                    flush_text!();
-                    let j = self.unescaped_reference_end(i + 1).unwrap(); // won't panic due to match guard
-                    emit!(Token::FootnoteReference(&self.text[i + 2..j]) => j + 1);
-                }
-
                 // Reference
                 b'!' if self.char_at(i + 1) == b'['
                     && self.char_at(i + 2) != b'^'
-                    && self.has_inline_reference_text_end(i + 2) =>
+                    && self.unescaped_reference_end(i + 2).is_some() =>
                 {
                     flush_text!();
-                    self.waiting_reference_end = true;
+                    self.reference_text_start = Some(i + 2);
                     emit!(Token::BeginReference { bang: true } => i + 2);
                 }
 
-                b'[' if self.has_inline_reference_text_end(i + 1) => {
+                b'[' if self.unescaped_reference_end(i + 1).is_some() => {
                     flush_text!();
-                    self.waiting_reference_end = true;
+                    self.reference_text_start = Some(i + 1);
                     emit!(Token::BeginReference { bang: false } => i + 1);
                 }
 
-                b']' if self.waiting_reference_end => {
+                b']' if self.reference_text_start.is_some() => {
                     flush_text!();
-                    self.waiting_reference_end = false;
+                    let rts = self.reference_text_start.take().unwrap(); // won't panic due to match guard
                     let d = self.char_at(i + 1);
                     if d == b'[' || d == b'(' {
                         let e = if d == b'[' { b']' } else { b')' };
@@ -194,7 +214,7 @@ impl<'t> Iterator for Tokens<'t> {
                             lazy: d == b'[',
                         } => j + 1);
                     } else {
-                        emit!(Token::EndReference { uri: b"", alt: b"", lazy: true } => i + 1);
+                        emit!(Token::EndReference { uri: self.text_in(rts, i), alt: b"", lazy: true } => i + 1);
                     }
                 }
 
@@ -268,11 +288,8 @@ impl<'t> Iterator for Tokens<'t> {
                 // Blockquotes
                 b'>' if start_of_line => {
                     flush_text!();
-                    let mut j = i + 1;
-                    while matches!(self.char_at(j), b' ') {
-                        j += 1;
-                    }
-                    emit!(Token::Quote => j);
+                    self.next_is_start_of_line = true;
+                    emit!(Token::Quote => i + 1);
                 }
 
                 // Paragraph break
@@ -291,11 +308,18 @@ impl<'t> Iterator for Tokens<'t> {
                         j += 1;
                     }
 
-                    self.last_token_was_break = true;
-                    emit!(Token::Break {
-                        hard: k != i + 1,
-                        indent: j - k,
-                    } => j);
+                    self.next_is_start_of_line = true;
+                    emit!(Token::Break { hard: k != i + 1 } => k);
+                }
+
+                // Indent after break
+                b' ' if start_of_line => {
+                    let mut j = i + 1;
+                    while matches!(self.char_at(j), b' ') {
+                        j += 1;
+                    }
+                    self.next_is_start_of_line = true;
+                    emit!(Token::Indent(j - i) => j);
                 }
 
                 _ => {}
@@ -336,9 +360,7 @@ impl<'t> Tokens<'t> {
 
     #[inline]
     fn char_start_till(&self, needle: u8, search_start: usize, search_end: usize) -> usize {
-        self.text
-            .get(search_start..search_end)
-            .unwrap_or(b"")
+        self.text_in(search_start, search_end)
             .iter()
             .position(|&t| t == needle)
             .map(|j| search_start + j)
@@ -347,18 +369,44 @@ impl<'t> Tokens<'t> {
 
     #[inline]
     fn substring_end(&self, needle: &[u8], search_start: usize) -> usize {
-        self.text
-            .get(search_start..)
-            .unwrap_or(b"")
+        self.text_at(search_start)
             .windows(needle.len())
             .position(|t| t == needle)
             .map(|j| search_start + j + needle.len())
             .unwrap_or(self.text.len())
     }
 
-    fn has_inline_reference_text_end(&self, i: usize) -> bool {
-        self.unescaped_reference_end(i)
-            .is_some_and(|j| matches!(self.char_at(j + 1), b'[' | b'('))
+    fn tag_end(&self, tag: &[u8], search_start: usize) -> usize {
+        self.text_at(search_start)
+            .windows(tag.len() + 3)
+            .position(|t| {
+                let e = t.len() - 1;
+                t[0] == b'\n' && t[1] == b'\n'
+                    || (t[0] == b'<' && t[1] == b'/' && &t[2..e] == tag && t[e] == b'>')
+            })
+            .map(|j| {
+                if self.text[search_start + j] == b'\n' {
+                    search_start + j + 2
+                } else {
+                    search_start + j + tag.len() + 3
+                }
+            })
+            .unwrap_or(self.text.len())
+    }
+
+    fn entity_end(&self, search_start: usize) -> Option<usize> {
+        let j = search_start
+            + self
+                .text_at(search_start)
+                .iter()
+                .take_while(|c| c.is_ascii_alphabetic())
+                .count();
+
+        if self.char_at(j) == b';' {
+            Some(j + 1)
+        } else {
+            None
+        }
     }
 
     fn unescaped_reference_end(&self, i: usize) -> Option<usize> {
@@ -374,7 +422,7 @@ pub fn lex(text: &[u8]) -> Tokens {
         text,
         pos: 0,
         possible_text_start: 0,
-        last_token_was_break: true,
-        waiting_reference_end: false,
+        next_is_start_of_line: true,
+        reference_text_start: None,
     }
 }

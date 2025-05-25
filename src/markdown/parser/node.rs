@@ -13,6 +13,7 @@ pub enum Node<'t> {
     ListItem,
     DefinitionItem(&'t [u8]),
     Emphasis(u8),
+    Deleted,
     FootnoteReference(&'t [u8]),
     Reference(&'t [u8]),
     Image(&'t [u8]),
@@ -38,6 +39,7 @@ impl fmt::Debug for Node<'_> {
                 write!(f, "DefinitionItem({})", String::from_utf8_lossy(identifier))
             }
             Self::Emphasis(strength) => write!(f, "Emphasis({strength})"),
+            Self::Deleted => write!(f, "Deleted"),
             Self::FootnoteReference(url) => {
                 write!(f, "FootnoteReference({})", String::from_utf8_lossy(url))
             }

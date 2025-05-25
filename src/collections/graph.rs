@@ -152,12 +152,16 @@ impl<'a, T> NodeRef<'a, T> {
     pub fn remove_reparent(&self, reparent: bool) {
         let mut arena = self.arena.nodes.borrow_mut();
         let parent = arena[self.index].parent;
-        if let Some(i) = arena[parent].children.iter().position(|&n| n == self.index) {
+        let child_i = if let Some(i) = arena[parent].children.iter().position(|&n| n == self.index)
+        {
             arena[parent].children.remove(i);
-        }
+            i
+        } else {
+            arena[parent].children.len()
+        };
         let children = mem::take(&mut arena[self.index].children);
         if reparent {
-            arena[parent].children.extend_from_slice(&children);
+            arena[parent].children.splice(child_i..child_i, children);
         }
         arena[self.index].parent = self.index;
     }
@@ -195,7 +199,9 @@ impl<T> Copy for NodeRef<'_, T> {}
 
 impl<T: Clone + PartialEq> PartialEq for NodeRef<'_, T> {
     fn eq(&self, other: &Self) -> bool {
-        self.value() == other.value() && self.children().zip(other.children()).all(|(a, b)| a == b)
+        self.value() == other.value()
+            && self.child_count() == other.child_count()
+            && self.children().zip(other.children()).all(|(a, b)| a == b)
     }
 }
 
@@ -285,7 +291,6 @@ mod tests {
         let _ = ab1.append_child("ab1c1");
         let _ = ab1.append_child("ab1c2");
         let _ = ab1.append_child("ab2c1");
-        let _ = ab1.append_child("ab2c2");
 
         assert_eq!(actual.root(), expected.root());
     }

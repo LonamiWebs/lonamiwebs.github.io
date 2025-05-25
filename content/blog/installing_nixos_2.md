@@ -104,8 +104,7 @@ nixos-install
 
 Well, that was pretty painless. You can now `reboot` and enjoy your new, functional system.
 
-Afterword
----------
+## Afterword
 
 The process of installing NixOS was really painless once you have made sense out of what things mean. I was far more pleased this time than in my previous attempt, despite the four attempts I needed to have it up and running.
 
@@ -123,8 +122,7 @@ But despite all of this, I think it was a worth installing it again. One sure se
 
 If there's something I overlooked or that could be done better, or maybe you can explain it differently, please be sure to [contact me](https://lonami.dev/contact) to let me know!
 
-Update
-------
+## Update
 
 Well, that was surprisingly fast feedback. Thank you very much [@bb010g](https://bb010g.keybase.pub/) for it! As they rightfully pointed out, one can avoid adding `/home` manually to `hardware-configuration.nix` if you mount it before generating the configuration files. However, the installation process doesn't need `/home` mounted, so I didn't do it.
 

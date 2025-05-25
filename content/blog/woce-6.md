@@ -46,7 +46,7 @@ Not all hope is lost! The game must *somehow* have a way to reliably find this v
 >
 > Example of a more complicated instruction:
 >
-> [EAX*2+EDX+00000310] eax=4C and edx=00801234.
+> [EAX\*2+EDX+00000310] eax=4C and edx=00801234.
 >
 > In this case EDX would be the value the pointer has, and EAX\*2+00000310 the offset, so the offset you'd fill in would be 2\*4C+00000310=3A8.  (this is all in hex, use calc.exe from windows in scientific mode to calculate).
 >

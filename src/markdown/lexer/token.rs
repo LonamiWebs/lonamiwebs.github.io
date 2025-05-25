@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum Token<'t> {
     Text(&'t [u8]),
     Raw(&'t [u8]),
@@ -10,8 +10,9 @@ pub enum Token<'t> {
     BeginItem {
         ordered: bool,
     },
+    Indent(usize),
     Emphasis(u8),
-    FootnoteReference(&'t [u8]),
+    Deleted,
     BeginReference {
         bang: bool,
     },
@@ -29,7 +30,6 @@ pub enum Token<'t> {
     Quote,
     Break {
         hard: bool,
-        indent: usize,
     },
 }
 
@@ -54,11 +54,9 @@ impl fmt::Debug for Token<'_> {
                 .debug_struct("BeginItem")
                 .field("ordered", ordered)
                 .finish(),
+            Self::Indent(x) => f.debug_tuple("Indent").field(x).finish(),
             Self::Emphasis(x) => f.debug_tuple("Emphasis").field(x).finish(),
-            Self::FootnoteReference(x) => f
-                .debug_tuple("FootnoteReference")
-                .field(&String::from_utf8_lossy(x))
-                .finish(),
+            Self::Deleted => f.write_str("Deleted"),
             Self::BeginReference { bang } => f
                 .debug_struct("BeginReference")
                 .field("bang", bang)
@@ -80,11 +78,30 @@ impl fmt::Debug for Token<'_> {
                 .field(&String::from_utf8_lossy(x))
                 .finish(),
             Self::Quote => f.write_str("Quote"),
-            Self::Break { hard, indent } => f
-                .debug_struct("Break")
-                .field("hard", hard)
-                .field("indent", indent)
-                .finish(),
+            Self::Break { hard } => f.debug_struct("Break").field("hard", hard).finish(),
         }
+    }
+}
+
+pub struct Tokens3Window<'t, I: Iterator<Item = Token<'t>>> {
+    iter: I,
+    buffer: [Option<Token<'t>>; 3],
+}
+
+impl<'t, I: Iterator<Item = Token<'t>>> Tokens3Window<'t, I> {
+    pub fn new(mut iter: I) -> Self {
+        let buffer = [None, None, iter.next()];
+        Self { iter, buffer }
+    }
+}
+
+impl<'t, I: Iterator<Item = Token<'t>>> Iterator for Tokens3Window<'t, I> {
+    type Item = (Option<Token<'t>>, Token<'t>, Option<Token<'t>>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.buffer[0] = self.buffer[1];
+        self.buffer[1] = self.buffer[2];
+        self.buffer[2] = self.iter.next();
+        self.buffer[1].map(|current| (self.buffer[0], current, self.buffer[2]))
     }
 }
