@@ -1,10 +1,13 @@
-<h1 class="title">My Blog</h1>
++++
+title = "My Blog"
+date =
++++
 
 <p id="welcome" onclick="pls_stop()">Welcome to my blog!</p>
 
-<p>Here I occasionally post new entries, mostly tech related. Perhaps it's tips for a new game I'm playing, perhaps it has something to do with FFI, or perhaps I'm fighting the borrow checker (just kidding, I'm over that. Mostly).</p>
+Here I occasionally post new entries, mostly tech related. Perhaps it's tips for a new game I'm playing, perhaps it has something to do with FFI, or perhaps I'm fighting the borrow checker (just kidding, I'm over that. Mostly).
 
-<hr>
+---
 
 <script>
     const WELCOME_EN = 'Welcome to my blog!'

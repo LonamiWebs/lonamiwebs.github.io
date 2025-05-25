@@ -41,6 +41,12 @@ pub fn apply(template: &[u8], entry: entry::Entry) -> Vec<u8> {
         .as_os_str()
         .to_string_lossy();
 
+    let path_stem = entry
+        .path
+        .file_stem()
+        .expect("path to have file stem")
+        .to_string_lossy();
+
     let mut result = Vec::<u8>::with_capacity(
         template.len() + ESTIMATED_TEMPLATE_OVERHEAD + entry.contents.len(),
     );
@@ -57,9 +63,9 @@ pub fn apply(template: &[u8], entry: entry::Entry) -> Vec<u8> {
             if slot_name == b"TITLE" {
                 if first_path_component == "index.md" {
                     result.extend_from_slice(b"Lonami's Site");
-                } else if first_path_component == "blog.md" {
+                } else if first_path_component == "blog" && path_stem == "_index" {
                     result.extend_from_slice(b"Lonami's Blog");
-                } else if first_path_component == "golb.md" {
+                } else if first_path_component == "golb" && path_stem == "_index" {
                     result.extend_from_slice(b"Lonami's Golb");
                 } else if first_path_component == "blog" || first_path_component == "golb" {
                     result.extend_from_slice(entry.title.as_bytes());
@@ -74,16 +80,19 @@ pub fn apply(template: &[u8], entry: entry::Entry) -> Vec<u8> {
                 if first_path_component == "blog" || first_path_component == "golb" {
                     result.extend_from_slice(b"<h1 class=\"title\">");
                     result.extend_from_slice(entry.title.as_bytes());
-                    result.extend_from_slice(b"</h1><div class=\"time\"><p>");
-                    result.extend_from_slice(entry.date.as_bytes());
-                    if let Some(updated) = entry.updated.as_ref() {
-                        if *updated != entry.date {
-                            result.extend_from_slice(b"<p>last updated ");
-                            result.extend_from_slice(updated.as_bytes());
-                            result.extend_from_slice(b"</p>");
+                    result.extend_from_slice(b"</h1>");
+                    if !entry.date.is_empty() {
+                        result.extend_from_slice(b"<div class=\"time\"><p>");
+                        result.extend_from_slice(entry.date.as_bytes());
+                        if let Some(updated) = entry.updated.as_ref() {
+                            if *updated != entry.date {
+                                result.extend_from_slice(b"<p>last updated ");
+                                result.extend_from_slice(updated.as_bytes());
+                                result.extend_from_slice(b"</p>");
+                            }
                         }
+                        result.extend_from_slice(b"</div>");
                     }
-                    result.extend_from_slice(b"</div>");
                 }
             } else if slot_name == b"CONTENT" {
                 result.extend_from_slice(&entry.contents);
@@ -100,12 +109,13 @@ pub fn apply(template: &[u8], entry: entry::Entry) -> Vec<u8> {
                     result.extend_from_slice(b"class=selected");
                 }
             } else if slot_name == b"BLOGLIST" {
-                if first_path_component == "blog.md" {
-                    extend_entries(&mut result, entry::from_markdown_in_path("blog"));
-                }
-            } else if slot_name == b"GOLBLIST" {
-                if first_path_component == "golb.md" {
-                    extend_entries(&mut result, entry::from_markdown_in_path("golb"));
+                if path_stem == "_index" {
+                    extend_entries(
+                        &mut result,
+                        entry::from_markdown_in_path(
+                            entry.path.parent().expect("path to have parent"),
+                        ),
+                    );
                 }
             } else {
                 panic!(

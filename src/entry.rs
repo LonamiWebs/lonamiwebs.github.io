@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::{fs, io};
 
 use crate::conf::INPUT_FOLDER;
@@ -103,7 +103,7 @@ pub fn from_markdown(path: PathBuf, contents: Vec<u8>) -> Entry {
     }
 }
 
-pub fn from_markdown_in_path(folder: &str) -> Vec<Entry> {
+pub fn from_markdown_in_path(folder: &Path) -> Vec<Entry> {
     let mut path = PathBuf::from(INPUT_FOLDER);
     path.push(folder);
 
@@ -118,6 +118,10 @@ pub fn from_markdown_in_path(folder: &str) -> Vec<Entry> {
                 path.push("index.md");
             } else if !file_type.is_file()
                 || path.extension().and_then(|e| e.to_str()) != Some("md")
+                || path
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .is_some_and(|s| s.starts_with("_"))
             {
                 return None;
             }

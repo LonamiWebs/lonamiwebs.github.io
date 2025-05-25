@@ -7,3 +7,7 @@ page_template = "blog-page.html"
 category = ["algos"]
 tags = ["series", "bigdata", "databases"]
 +++
+
+[Go back to the main blog post listing.](/blog)
+
+---

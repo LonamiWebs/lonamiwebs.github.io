@@ -37,12 +37,14 @@ fn process_file(template: &[u8], path: &Path) -> Result<(PathBuf, Vec<u8>), Box<
                 &entry.contents,
             ))));
             let contents = template::apply(template, entry);
-            let path = if path.file_stem().and_then(|s| s.to_str()) == Some("index") {
-                path.with_extension("html")
-            } else {
-                let mut path = path.with_extension("");
-                path.push("index.html");
-                path
+            let path = match path.file_stem().and_then(|s| s.to_str()) {
+                Some("index") => path.with_extension("html"),
+                Some("_index") => path.with_file_name("index.html"),
+                _ => {
+                    let mut path = path.with_extension("");
+                    path.push("index.html");
+                    path
+                }
             };
             (path, contents)
         }
