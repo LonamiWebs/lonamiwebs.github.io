@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::{Ref, RefCell};
 use std::{fmt, mem};
 
 pub struct Graph<T> {
@@ -128,6 +128,10 @@ impl<'a, T> NodeRef<'a, T> {
             arena: self.arena,
             index: 0,
         }
+    }
+
+    pub fn borrow(&self) -> Ref<T> {
+        Ref::map(self.arena.nodes.borrow(), |nodes| &nodes[self.index].value)
     }
 
     pub fn set_value(&self, value: T) {

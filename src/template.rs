@@ -1,8 +1,9 @@
-use crate::entry;
+use crate::{Entry, conf};
 
 const ESTIMATED_TEMPLATE_OVERHEAD: usize = 256;
 
-fn extend_entries(result: &mut Vec<u8>, mut entries: Vec<entry::Entry>) {
+fn extend_entries<'a>(result: &mut Vec<u8>, entries: impl Iterator<Item = &'a Entry>) {
+    let mut entries = entries.collect::<Vec<_>>();
     entries.sort_by(|a, b| b.date.cmp(&a.date));
 
     result.extend_from_slice(b"<ul>");
@@ -12,14 +13,14 @@ fn extend_entries(result: &mut Vec<u8>, mut entries: Vec<entry::Entry>) {
         result.extend_from_slice(b"\">");
         result.extend_from_slice(entry.title.as_bytes());
         result.extend_from_slice(b"</a>");
-        if let Some(category) = entry.category {
+        if let Some(category) = entry.category.as_ref() {
             result.extend_from_slice(b"<span class=\"dim\"> [mod ");
             result.extend_from_slice(category.as_bytes());
             result.extend_from_slice(b"; ");
             result.extend_from_slice(
                 entry
                     .tags
-                    .into_iter()
+                    .iter()
                     .map(|tag| format!("'{tag}"))
                     .collect::<Vec<_>>()
                     .join(", ")
@@ -32,9 +33,15 @@ fn extend_entries(result: &mut Vec<u8>, mut entries: Vec<entry::Entry>) {
     result.extend_from_slice(b"</ul>");
 }
 
-pub fn apply(template: &[u8], entry: entry::Entry) -> Vec<u8> {
+pub fn apply(template: &[u8], entries: &[Entry], entry: &Entry) -> Vec<u8> {
+    if entry.path.extension().is_none_or(|ext| ext != "md") {
+        return entry.processed_contents.clone();
+    }
+
     let first_path_component = entry
         .path
+        .strip_prefix(conf::INPUT_FOLDER)
+        .unwrap_or(&entry.path)
         .components()
         .next()
         .expect("path to have at least one component")
@@ -48,7 +55,7 @@ pub fn apply(template: &[u8], entry: entry::Entry) -> Vec<u8> {
         .to_string_lossy();
 
     let mut result = Vec::<u8>::with_capacity(
-        template.len() + ESTIMATED_TEMPLATE_OVERHEAD + entry.contents.len(),
+        template.len() + ESTIMATED_TEMPLATE_OVERHEAD + entry.processed_contents.len(),
     );
 
     let mut iter = template.iter().copied().enumerate();
@@ -95,7 +102,7 @@ pub fn apply(template: &[u8], entry: entry::Entry) -> Vec<u8> {
                     }
                 }
             } else if slot_name == b"CONTENT" {
-                result.extend_from_slice(&entry.contents);
+                result.extend_from_slice(&entry.processed_contents);
             } else if slot_name == b"ROOT" {
                 if first_path_component == "index.md" {
                     result.extend_from_slice(b"class=selected");
@@ -112,9 +119,11 @@ pub fn apply(template: &[u8], entry: entry::Entry) -> Vec<u8> {
                 if path_stem == "_index" {
                     extend_entries(
                         &mut result,
-                        entry::from_markdown_in_path(
-                            entry.path.parent().expect("path to have parent"),
-                        ),
+                        entries.iter().filter(|e| {
+                            e.path.extension() == entry.path.extension()
+                                && e.path_parent() == entry.path_parent()
+                                && e.path != entry.path
+                        }),
                     );
                 }
             } else {

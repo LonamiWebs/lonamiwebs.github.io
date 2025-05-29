@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process;
 use std::{fs, thread};
@@ -10,6 +8,7 @@ pub mod conf;
 pub mod css;
 pub mod date;
 pub mod entry;
+pub mod feed;
 pub mod file_watcher;
 pub mod html;
 pub mod http;
@@ -19,46 +18,17 @@ pub mod toml;
 pub mod walkdir;
 #[cfg(target_os = "windows")]
 pub mod winapi;
+pub mod xml;
+
+use entry::Entry;
 
 fn load_template() -> Vec<u8> {
-    let mut path = PathBuf::from(conf::INPUT_FOLDER);
-    path.push(conf::TEMPLATE_NAME);
-    html::minify(&fs::read(&path).expect("path to be a readable file"))
-}
-
-fn process_file(template: &[u8], path: &Path) -> Result<(PathBuf, Vec<u8>), Box<dyn Error>> {
-    let contents = fs::read(path)?;
-    let path = path.strip_prefix(conf::INPUT_FOLDER)?;
-
-    let (path, contents) = match path.extension().and_then(|e| e.to_str()) {
-        Some("md") => {
-            let mut entry = entry::from_markdown(path.to_owned(), contents);
-            entry.contents = html::minify(&html::generate(markdown::parse(markdown::lex(
-                &entry.contents,
-            ))));
-            let contents = template::apply(template, entry);
-            let path = match path.file_stem().and_then(|s| s.to_str()) {
-                Some("index") => path.with_extension("html"),
-                Some("_index") => path.with_file_name("index.html"),
-                _ => {
-                    let mut path = path.with_extension("");
-                    path.push("index.html");
-                    path
-                }
-            };
-            (path, contents)
-        }
-        Some("css") => (path.to_owned(), css::minify(&contents)),
-        Some("html") => (path.to_owned(), html::minify(&contents)),
-        _ => (path.to_owned(), contents),
-    };
-
-    let mut output_path = PathBuf::from(conf::OUTPUT_FOLDER);
-    output_path.push(path);
-    Ok((output_path, contents))
+    let path = PathBuf::from(conf::INPUT_FOLDER).join(conf::TEMPLATE_NAME);
+    html::minify(&fs::read(path).expect("path to be a readable file"))
 }
 
 fn commit_file(path: &Path, contents: &[u8]) {
+    let path = PathBuf::from(conf::OUTPUT_FOLDER).join(path);
     fs::create_dir_all(path.parent().expect("path to have a parent"))
         .expect("parent directories to be created");
 
@@ -66,25 +36,25 @@ fn commit_file(path: &Path, contents: &[u8]) {
 }
 
 fn build(config: cli::BuildConfig) {
-    let mut generated = HashMap::<PathBuf, Vec<u8>>::new();
+    let mut entries = Vec::<Entry>::new();
 
-    let mut cname_path = PathBuf::from(conf::OUTPUT_FOLDER);
-    cname_path.push("CNAME");
-    generated.insert(cname_path, conf::CNAME.as_bytes().to_vec());
+    entries.push(Entry::from_new_path_with_contents(
+        PathBuf::from("CNAME"),
+        conf::CNAME.as_bytes().to_vec(),
+    ));
 
     let template = load_template();
-    for entry in walkdir::walk(PathBuf::from(conf::INPUT_FOLDER)) {
-        if entry.file_name() == conf::TEMPLATE_NAME {
+    for dir_entry in walkdir::walk(PathBuf::from(conf::INPUT_FOLDER)) {
+        if dir_entry.file_name() == conf::TEMPLATE_NAME {
             continue;
         }
 
-        let path = entry.path();
-        match process_file(&template, &path) {
-            Ok((path, contents)) => {
-                generated.insert(path, contents);
+        match Entry::load_from_path(dir_entry.path()) {
+            Ok(entry) => {
+                entries.push(entry);
             }
             Err(error) => {
-                println!("failed to process file: {path:?}\n  {error}");
+                println!("failed to process file: {:?}\n  {error}", dir_entry.path());
                 if config.ignore_errors {
                     continue;
                 }
@@ -93,13 +63,27 @@ fn build(config: cli::BuildConfig) {
         }
     }
 
+    entries.push(Entry::from_new_path_with_contents(
+        PathBuf::from("blog/atom.xml"),
+        feed::from_markdown_entries(entries.iter().filter(|entry| {
+            entry.path.extension().is_some_and(|e| e == "md")
+                && entry.path.file_stem().is_none_or(|s| s != "_index")
+                && entry.path_parent() == Some(&PathBuf::from(conf::INPUT_FOLDER).join("blog"))
+        }))
+        .to_string()
+        .into_bytes(),
+    ));
+
     if config.write {
         if config.force {
             let _ = fs::remove_dir_all(conf::OUTPUT_FOLDER);
         }
 
-        for (path, contents) in generated {
-            commit_file(&path, &contents);
+        for entry in &entries {
+            commit_file(
+                &entry.processed_path,
+                &template::apply(&template, &entries, entry),
+            );
         }
     }
 }
@@ -109,8 +93,11 @@ fn serve(config: cli::ServeConfig) {
         thread::spawn(|| {
             let template = load_template();
             for path in file_watcher::watch(conf::INPUT_FOLDER) {
-                if let Ok((path, contents)) = process_file(&template, &path) {
-                    commit_file(&path, &contents);
+                if let Ok(entry) = Entry::load_from_path(path) {
+                    commit_file(
+                        &entry.processed_path,
+                        &template::apply(&template, &[], &entry),
+                    );
                 }
             }
         });
