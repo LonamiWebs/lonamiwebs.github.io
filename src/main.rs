@@ -31,7 +31,6 @@ fn load_template() -> Vec<u8> {
 }
 
 fn commit_file(path: &Path, contents: &[u8]) {
-    let path = PathBuf::from(conf::OUTPUT_FOLDER).join(path);
     fs::create_dir_all(path.parent().expect("path to have a parent"))
         .expect("parent directories to be created");
 
