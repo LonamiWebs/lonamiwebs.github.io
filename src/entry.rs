@@ -7,6 +7,7 @@ pub struct Entry {
     pub path: PathBuf,
     pub processed_path: PathBuf,
     pub processed_contents: Vec<u8>,
+    pub append_css_style: Vec<u8>,
     pub append_siblings_listing: bool,
     pub permalink: String,
     pub title: String,
@@ -62,9 +63,9 @@ fn from_markdown(path: PathBuf, contents: Vec<u8>) -> Entry {
             _ => continue,
         }
     }
-    entry.processed_contents = html::minify(&html::generate(markdown::parse(markdown::lex(
-        &entry.processed_contents,
-    ))));
+    let parsed = markdown::parse(markdown::lex(&entry.processed_contents));
+    entry.append_css_style = parsed.additional_style;
+    entry.processed_contents = html::minify(&html::generate(parsed.ast));
 
     const INDEX_LISTING: &str = "/_index.md";
     const INDEX_NESTED: &str = "/index.md";
@@ -145,6 +146,7 @@ fn from_new_path(path: PathBuf, contents: Vec<u8>) -> Entry {
         path,
         processed_path,
         processed_contents: contents,
+        append_css_style: Vec::new(),
         append_siblings_listing: false,
         permalink,
         title,

@@ -64,7 +64,7 @@ closing paragraph
         .append_child(Node::Paragraph)
         .append_child(Node::Text(b"closing paragraph"));
 
-    assert_eq!(parse(tokens).root(), expected);
+    assert_eq!(parse(tokens).ast.root(), expected);
 }
 
 #[test]
@@ -113,7 +113,7 @@ fn test_references() {
         .append_child(Node::DefinitionItem(b"r"))
         .append_child(Node::Text(b"https://example.com/reusable"));
 
-    assert_eq!(parse(tokens).root(), expected);
+    assert_eq!(parse(tokens).ast.root(), expected);
 }
 
 #[test]
@@ -126,7 +126,7 @@ fn test_paragraph_gets_added() {
     p.append_child(Node::Emphasis(1))
         .append_child(Node::Text(b"emphasis"));
     p.append_child(Node::Text(b" text"));
-    assert_eq!(parse(tokens).root(), expected);
+    assert_eq!(parse(tokens).ast.root(), expected);
 
     let tokens = lex(b"`code` text");
 
@@ -135,7 +135,7 @@ fn test_paragraph_gets_added() {
     let p = expected.append_child(Node::Paragraph);
     p.append_child(Node::Code).append_child(Node::Text(b"code"));
     p.append_child(Node::Text(b" text"));
-    assert_eq!(parse(tokens).root(), expected);
+    assert_eq!(parse(tokens).ast.root(), expected);
 
     let tokens = lex(b"[ref](url) text");
 
@@ -145,7 +145,7 @@ fn test_paragraph_gets_added() {
     p.append_child(Node::Reference(b"url"))
         .append_child(Node::Text(b"ref"));
     p.append_child(Node::Text(b" text"));
-    assert_eq!(parse(tokens).root(), expected);
+    assert_eq!(parse(tokens).ast.root(), expected);
 
     let tokens = lex(b"[^ref] text");
 
@@ -154,7 +154,7 @@ fn test_paragraph_gets_added() {
     let p = expected.append_child(Node::Paragraph);
     p.append_child(Node::FootnoteReference(b"ref"));
     p.append_child(Node::Text(b" text"));
-    assert_eq!(parse(tokens).root(), expected);
+    assert_eq!(parse(tokens).ast.root(), expected);
 
     let tokens = lex(b"text\n```lang\npre\n```\n\nremaining `code` word");
 
@@ -170,7 +170,7 @@ fn test_paragraph_gets_added() {
     p.append_child(Node::Text(b"remaining "));
     p.append_child(Node::Code).append_child(Node::Text(b"code"));
     p.append_child(Node::Text(b" word"));
-    assert_eq!(parse(tokens).root(), expected);
+    assert_eq!(parse(tokens).ast.root(), expected);
 }
 
 #[test]
@@ -187,7 +187,7 @@ fn test_hard_breaks_inside_quotes() {
     quote
         .append_child(Node::Paragraph)
         .append_child(Node::Text(b"end"));
-    assert_eq!(parse(tokens).root(), expected);
+    assert_eq!(parse(tokens).ast.root(), expected);
 }
 
 #[test]
@@ -215,7 +215,7 @@ fn test_nested_list_does_not_reorder_text() {
     ol.append_child(Node::ListItem)
         .append_child(Node::Text(b"3"));
 
-    assert_eq!(parse(tokens).root(), expected);
+    assert_eq!(parse(tokens).ast.root(), expected);
 }
 
 #[test]
@@ -238,7 +238,7 @@ fn test_list_inside_quote() {
     quote
         .append_child(Node::Paragraph)
         .append_child(Node::Text(b"end"));
-    assert_eq!(parse(tokens).root(), expected);
+    assert_eq!(parse(tokens).ast.root(), expected);
 
     let tokens = lex(b"> * list\n>   * nested");
 
@@ -258,7 +258,7 @@ fn test_list_inside_quote() {
     })
     .append_child(Node::ListItem)
     .append_child(Node::Text(b"nested"));
-    assert_eq!(parse(tokens).root(), expected);
+    assert_eq!(parse(tokens).ast.root(), expected);
 }
 
 #[test]
@@ -289,7 +289,7 @@ fn test_soft_breaks_inside_quote() {
     p.append_child(Node::Text(b" "));
     p.append_child(Node::Raw(b"<kbd>b</kbd>"));
 
-    assert_eq!(parse(tokens).root(), expected);
+    assert_eq!(parse(tokens).ast.root(), expected);
 }
 
 #[test]
@@ -309,5 +309,5 @@ fn test_lazy_reference_with_formatting() {
         .append_child(Node::DefinitionItem(b"`lazy`"))
         .append_child(Node::Text(b"url"));
 
-    assert_eq!(parse(tokens).root(), expected);
+    assert_eq!(parse(tokens).ast.root(), expected);
 }

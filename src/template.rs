@@ -83,6 +83,8 @@ pub fn apply(template: &[u8], entries: &[Entry], entry: &Entry) -> Vec<u8> {
                         String::from_utf8_lossy(slot_name)
                     );
                 }
+            } else if slot_name == b"CSS" {
+                result.extend_from_slice(&entry.append_css_style);
             } else if slot_name == b"BLOGPOSTINTRO" {
                 if first_path_component == "blog" || first_path_component == "golb" {
                     result.extend_from_slice(b"<h1 class=\"title\">");

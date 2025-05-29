@@ -7,7 +7,13 @@ pub use node::Node;
 use super::{Token, Tokens, Tokens3Window};
 use crate::collections::{Graph, GraphNodeRef as Ref};
 
-pub fn parse(tokens: Tokens) -> Graph<Node> {
+pub struct ParseResult<'t> {
+    pub additional_style: Vec<u8>,
+    pub ast: Graph<Node<'t>>,
+}
+
+pub fn parse(tokens: Tokens) -> ParseResult {
+    let mut additional_style = Vec::new();
     let arena = Graph::new(Node::Empty);
     let mut cursor = arena.root();
 
@@ -36,10 +42,14 @@ pub fn parse(tokens: Tokens) -> Graph<Node> {
                 }
             }
             Token::Raw(text) => {
-                if !text.ends_with(b"\n") && !is_in_text_container_at(cursor) {
-                    cursor = cursor.append_child(Node::Paragraph);
+                if text.starts_with(b"<style>") {
+                    additional_style.extend_from_slice(text);
+                } else {
+                    if !text.ends_with(b"\n") && !is_in_text_container_at(cursor) {
+                        cursor = cursor.append_child(Node::Paragraph);
+                    }
+                    cursor.append_child(Node::Raw(text));
                 }
-                cursor.append_child(Node::Raw(text));
             }
             Token::Meta(_) => {}
             Token::Separator(_) => {
@@ -230,7 +240,11 @@ pub fn parse(tokens: Tokens) -> Graph<Node> {
     trim_joiners(root);
     merge_lists_with_same_indent(root);
     remove_paragraphs_from_simple_lists(root);
-    arena
+
+    ParseResult {
+        additional_style,
+        ast: arena,
+    }
 }
 
 fn resolve_references<'t>(root: Ref<Node<'t>>, pending: Vec<Ref<Node<'t>>>) {
