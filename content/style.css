@@ -4,16 +4,16 @@ body {
     margin: 0;
 }
 
-article {
+main {
     background-color: #fffff0;
 }
 
-nav, main, footer div {
+nav, article, footer div {
     max-width: 720px;
     margin: 0 auto;
 }
 
-main {
+article {
     padding: 10px 20px;
     border-radius: 4px;
     background-color: #fffff7;
@@ -24,10 +24,10 @@ main {
     body {
         color: #eee;
     }
-    article {
+    main {
         background-color: #0f0a0a;
     }
-    main {
+    article {
         background-color: #070404;
         box-shadow: 0 0 10px #000;
     }

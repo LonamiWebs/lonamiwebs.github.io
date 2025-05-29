@@ -8,28 +8,28 @@
     <link rel="stylesheet" type="text/css" href="/style.css">
   </head>
   <body>
-    <article>
-      <nav class="sections">
-        <ul class="left">
-          <li><a $ROOT href="/">lonami's&nbsp;site</a></li>
-          <li><a $BLOG href="/blog">blog</a></li>
-          <li><a $GOLB href="/golb">golb</a></li>
-        </ul>
-        <div class="right">
-          <a href="https://github.com/LonamiWebs"><img src="/img/github.svg" alt="github"></a>
-          <a href="/blog/atom.xml"><img src="/img/rss.svg" alt="rss"></a>
-        </div>
-      </nav>
-      <main>$BLOGPOSTINTRO$CONTENT$BLOGLIST</main>
-      <footer>
-        <div>
-          <p>
-            Share your thoughts! —
-            <a href="mailto:totufals@hotmail.com"><img src="/img/mail.svg" alt="Mail"></a>
-          </p>
-        </div>
-      </footer>
-    </article>
+    <nav class="sections">
+      <ul class="left">
+        <li><a $ROOT href="/">lonami's&nbsp;site</a></li>
+        <li><a $BLOG href="/blog">blog</a></li>
+        <li><a $GOLB href="/golb">golb</a></li>
+      </ul>
+      <div class="right">
+        <a href="https://github.com/LonamiWebs"><img src="/img/github.svg" alt="github"></a>
+        <a href="/blog/atom.xml"><img src="/img/rss.svg" alt="rss"></a>
+      </div>
+    </nav>
+    <main>
+      <article>$BLOGPOSTINTRO$CONTENT$BLOGLIST</article>
+    </main>
+    <footer>
+      <div>
+        <p>
+          Share your thoughts! —
+          <a href="mailto:totufals@hotmail.com"><img src="/img/mail.svg" alt="Mail"></a>
+        </p>
+      </div>
+    </footer>
     <p class="abyss" onclick="egg()">Gaze into the abyss… Oh hi there!</p>
     <script>
       const egg = () => {
