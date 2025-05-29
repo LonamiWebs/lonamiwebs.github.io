@@ -17,7 +17,8 @@ h1 {
     font-family: 'Droid Serif', serif;
 }
 
-p, label {
+p,
+label {
     font-family: 'Crimson Text', serif;
     font-size: 18px;
 }
@@ -33,7 +34,8 @@ code {
     font-size: 16px;
 }
 
-pre, textarea {
+pre,
+textarea {
     color: #b1ddd9;
     background-color: #212121;
     font-family: monospace;
@@ -42,12 +44,12 @@ pre, textarea {
 }
 
 textarea {
-  white-space: pre;
-  overflow-wrap: normal;
+    white-space: pre;
+    overflow-wrap: normal;
 }
 
 /* Flaired edges, by Tomas Theunissen
-   Reference: https://www.css-tricks.com/examples/hrs/ 
+   Reference: https://www.css-tricks.com/examples/hrs/
 */
 hr {
     height: 30px;
@@ -56,6 +58,7 @@ hr {
     border-width: 1px 0 0 0;
     border-radius: 20px;
 }
+
 hr:before {
     display: block;
     content: "";

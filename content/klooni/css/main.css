@@ -10,7 +10,7 @@
     src: url('../font/Kirvy.otf');
 }
 
-::-moz-selection { 
+::-moz-selection {
     background-color: #FFAA00;
     color: #000000;
 }
@@ -36,7 +36,8 @@ img.emoji {
     height: 32px;
 }
 
-h2, p {
+h2,
+p {
     text-shadow: 2px 2px 5px #000;
 }
 
@@ -106,7 +107,8 @@ a:hover {
         height: auto;
     }
 
-    .band.left img, .band.right img {
+    .band.left img,
+    .band.right img {
         margin: 20px;
         float: none;
     }
