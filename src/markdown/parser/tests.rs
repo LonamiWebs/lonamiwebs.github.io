@@ -325,3 +325,54 @@ fn html_inside_headings() {
 
     assert_eq!(parse(tokens).ast.root(), expected);
 }
+
+#[test]
+fn no_stray_paragraphs() {
+    let tokens = lex(br"
+<span>no p</span>
+
+yes <span>p</span>
+
+<span>no p</span>
+  <span>no p</span>
+"
+    .trim_ascii());
+
+    let expected = Graph::new(Node::Empty);
+    let expected = expected.root();
+
+    expected.append_child(Node::Raw(b"<span>no p</span>"));
+    let p = expected.append_child(Node::Paragraph);
+    p.append_child(Node::Text(b"yes "));
+    p.append_child(Node::Raw(b"<span>p</span>"));
+    expected.append_child(Node::Raw(b"<span>no p</span>"));
+    expected.append_child(Node::Raw(b"<span>no p</span>"));
+
+    assert_eq!(parse(tokens).ast.root(), expected);
+
+    let tokens = lex(br"
+text
+
+<details><summary>details</summary>
+
+> text
+
+</details>
+"
+    .trim_ascii());
+
+    let expected = Graph::new(Node::Empty);
+    let expected = expected.root();
+
+    expected
+        .append_child(Node::Paragraph)
+        .append_child(Node::Text(b"text"));
+    expected.append_child(Node::Raw(b"<details><summary>details</summary>"));
+    expected
+        .append_child(Node::Quote)
+        .append_child(Node::Paragraph)
+        .append_child(Node::Text(b"text"));
+    expected.append_child(Node::Raw(b"</details>"));
+
+    assert_eq!(parse(tokens).ast.root(), expected);
+}

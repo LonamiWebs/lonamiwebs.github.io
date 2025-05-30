@@ -79,7 +79,8 @@ fn test_raw() {
     assert_eq!(
         lex(text).collect::<Vec<_>>(),
         vec![
-            Token::Raw(b"<details open><summary>summary</summary>\n\n"),
+            Token::Raw(b"<details open><summary>summary</summary>"),
+            Token::Break { hard: true },
             Token::Quote,
             Token::Indent(1),
             Token::Text(b"quote"),
@@ -102,7 +103,8 @@ fn test_html() {
         lex(text).collect::<Vec<_>>(),
         vec![
             Token::Raw(b"<p>p *tag*</p>"),
-            Token::Raw(b"<details>\n\n"),
+            Token::Raw(b"<details>"),
+            Token::Break { hard: true },
             Token::Text(b"details "),
             Token::Emphasis(1),
             Token::Text(b"tag"),

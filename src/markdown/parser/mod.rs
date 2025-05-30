@@ -45,7 +45,11 @@ pub fn parse(tokens: Tokens) -> ParseResult {
                 if text.starts_with(b"<style>") {
                     additional_style.extend_from_slice(text);
                 } else {
-                    if !text.ends_with(b"\n") && !is_in_text_container_at(cursor) {
+                    let standalone_line =
+                        matches!(prev, None | Some(Token::Break { .. } | Token::Indent(_)))
+                            && matches!(next, None | Some(Token::Break { .. }));
+
+                    if !standalone_line && !is_in_text_container_at(cursor) {
                         cursor = cursor.append_child(Node::Paragraph);
                     }
                     cursor.append_child(Node::Raw(text));

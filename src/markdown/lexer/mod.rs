@@ -92,7 +92,6 @@ impl<'t> Iterator for Tokens<'t> {
                                 .count();
                         self.tag_end(self.text_in(i + 1, k), k + 1)
                     };
-                    self.next_is_start_of_line = self.char_at(j - 1) == b'\n';
 
                     emit!(Token::Raw(&self.text[i..j]) => j);
                 }
@@ -392,7 +391,7 @@ impl<'t> Tokens<'t> {
             })
             .map(|j| {
                 if self.text[search_start + j] == b'\n' {
-                    search_start + j + 2
+                    search_start + j
                 } else {
                     search_start + j + tag.len() + 3
                 }
