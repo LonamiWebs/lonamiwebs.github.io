@@ -296,8 +296,6 @@ fn test_soft_breaks_inside_quote() {
 fn test_lazy_reference_with_formatting() {
     let tokens = lex(b"[`lazy`]\n\n[`lazy`]: url");
 
-    dbg!(lex(b"[`lazy`]\n\n[`lazy`]: url").collect::<Vec<_>>());
-
     let expected = Graph::new(Node::Empty);
     let expected = expected.root();
     expected
@@ -308,6 +306,22 @@ fn test_lazy_reference_with_formatting() {
     expected
         .append_child(Node::DefinitionItem(b"`lazy`"))
         .append_child(Node::Text(b"url"));
+
+    assert_eq!(parse(tokens).ast.root(), expected);
+}
+
+#[test]
+fn html_inside_headings() {
+    let tokens = lex(b"# heading <abbr>abbr</abbr>\n\ncontinued");
+
+    let expected = Graph::new(Node::Empty);
+    let expected = expected.root();
+    let heading = expected.append_child(Node::Heading(1));
+    heading.append_child(Node::Text(b"heading "));
+    heading.append_child(Node::Raw(b"<abbr>abbr</abbr>"));
+    expected
+        .append_child(Node::Paragraph)
+        .append_child(Node::Text(b"continued"));
 
     assert_eq!(parse(tokens).ast.root(), expected);
 }

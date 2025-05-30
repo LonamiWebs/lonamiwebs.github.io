@@ -394,8 +394,7 @@ impl<'t> Tokens<'t> {
                 if self.text[search_start + j] == b'\n' {
                     search_start + j + 2
                 } else {
-                    let k = search_start + j + tag.len() + 3;
-                    if self.char_at(k) == b'\n' { k + 1 } else { k }
+                    search_start + j + tag.len() + 3
                 }
             })
             .unwrap_or(self.text.len())
