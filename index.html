@@ -1,0 +1,23 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="description" content="Official Lonami's website"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"><title>Lonami's Site</title><link rel="stylesheet" type="text/css" href="/style.css"> <style>
+.golb {
+    transform: scaleY(-1);
+    transition: transform 300ms;
+}
+
+.golb:hover {
+    transform: scaleY(1);
+}
+</style>
+
+</head><body><nav><ul><li><a class=selected href="/">lonami's&nbsp;site</a></li><li><a  href="/blog">blog</a></li><li><a  href="/golb">golb</a></li></ul><div><a href="https://github.com/LonamiWebs"><img src="/img/github.svg" alt="github"></a><a href="/blog/atom.xml"><img src="/img/rss.svg" alt="rss"></a></div></nav><main><article><h1 id="lonamis-site"><a href="#lonamis-site">Lonami's Site</a></h1><p>Welcome to my personal website! This page has had several redesigns over time, but now I've decided to let it be as minimalist as possible (proud to be under 32KB!).</p><h2 id="about-me"><a href="#about-me">About me</a></h2><p>Spanish male <span id="age">born in 1998</span>. I have been programming <span id="programming">since 2012</span> and it is my passion.</p><p>I enjoy nature, taking pictures, playing video-games, drawing vector graphics, or just chatting online.</p><p>I can speak perfect Spanish, read and write perfect English and Python, and have programmed in C#, Java, JavaScript, Rust, some C and C++, and designed pages like this with plain HTML and CSS.</p><p>On the Internet, I'm often known as <em>Lonami</em>, although my real name is simply my nick name, put the other way round.</p><h2 id="project-highlights"><a href="#project-highlights">Project highlights</a></h2><ul><li><a href="https://github.com/LonamiWebs/Telethon/">Telethon</a>: Python implementation of the Telegram's API.</li><li><a href="/klooni">1010! Klooni</a>: libGDX simple puzzle game based on the original <em>1010!</em>.</li><li><a href="https://github.com/LonamiWebs/Stringlate/">Stringlate</a>: Android application that makes it easy to translate other FOSS apps.</li></ul><p>These are only my <em>Top 3</em> projects, the ones I consider to be the most successful. If you're curious about what else I've done, feel free to check out my <a href="https://github.com/LonamiWebs/">GitHub</a>.</p><h1 id="more-links"><a href="#more-links">More links</a></h1><dl><dt><a href="/blog"><img src="/img/blog.svg" alt=""> My blog</a></dt><dd>Sometimes I blog about things, whether it's games, techy stuff, or random life stuff.</dd><dt><a href="/golb"><img src="/img/blog.svg" class="golb" alt=""> My golb</a></dt><dd>What? You don't know what a golb is? It's like a blog, but less conventional.</dd><dt><a href="https://github.com/LonamiWebs"><img src="/img/github.svg" alt=""> My GitHub</a></dt><dd>By far what I'm most proud of. I love releasing my projects as open source. There is no reason not to!</dd><dt><a href="/utils"><img src="/img/utils.svg" alt=""> Several Utilities</a></dt><dd>Random things I've put online because I keep forgetting about them.</dd><dt><a href="/stopwatch.html"><img src="/stopwatch.svg" width="24" height="24" alt=""> stopwatch</a> &amp; <a href="/canvas.html">canvas</a></dt><dd>An extremely simple JavaScript-based stopwatch &amp; canvas for sketching.</dd><dt><a href="donate"><img src="/img/donate.svg" alt=""> Donate</a></dt><dd>Some people like what I do and want to compensate me for it, but I'm fine with compliments if you can't afford a donation!</dd><dt><a href="humans.txt"><img src="/img/humans.svg" alt=""> humans.txt</a></dt><dd><a href="http://humanstxt.org/">We are humans, not robots.</a></dd></dl><h2 id="contact"><a href="#contact">Contact</a></h2><p>You can send me a private email to <a href="mailto:totufals@hotmail.com">totufals[at]hotmail[dot]com</a> and I will try to reply as soon as I can. Please don't use the email if you need help with a specific project, this is better discussed in a different public place where everyone can benefit from it.</p><script>
+    now = (new Date()).getFullYear();
+    document.getElementById("age").innerHTML = "aged " + (now - 1999);
+    document.getElementById("programming").innerHTML = "for " + (now - 2012) + " years";
+</script></article></main><footer><p> Share your thoughts! —
+<a href="mailto:totufals@hotmail.com"><img src="/img/mail.svg" alt="Mail"></a> </p><p class="abyss" onclick="egg()">Gaze into the abyss… Oh hi there!</p></footer><script>
+      const egg = () => {
+    const audio = document.createElement('audio')
+    audio.src = 'https://oriath.net/Audio/Dialogue/NPC/ShaperCombat/SH25b.dialogue.ogg'
+    audio.play()
+}
+    </script></body></html>

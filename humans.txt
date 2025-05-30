@@ -1,0 +1,13 @@
+﻿/* TEAM */
+	Chef, UI Developer, Illustrator, Standart Man & Web Designer: Lonami Exo
+	Contact: https://lonami.dev/contact
+	From: Spain
+	
+	
+/* SITE */
+	Last update: 2019/01/16
+	Language: English
+	Doctype: HTML5
+	Standards: HTML5, CSS3
+	IDE: nvim, git, Inkscape
+	Software: nvim, git, Inkscape

@@ -1,0 +1,206 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="description" content="Official Lonami's website"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"><title>Writing our own Cheat Engine: Floating points | Lonami's Blog</title><link rel="stylesheet" type="text/css" href="/style.css"> 
+</head><body><nav><ul><li><a  href="/">lonami's&nbsp;site</a></li><li><a class=selected href="/blog">blog</a></li><li><a  href="/golb">golb</a></li></ul><div><a href="https://github.com/LonamiWebs"><img src="/img/github.svg" alt="github"></a><a href="/blog/atom.xml"><img src="/img/rss.svg" alt="rss"></a></div></nav><main><article><h1 class="title">Writing our own Cheat Engine: Floating points</h1><div class="time"><p>2021-02-28</p></div><p>This is part 4 on the <em>Writing our own Cheat Engine</em> series:</p><ul><li><a href="/blog/woce-1">Part 1: Introduction</a> (start here if you're new to the series!)</li><li><a href="/blog/woce-2">Part 2: Exact Value scanning</a></li><li><a href="/blog/woce-3">Part 3: Unknown initial value</a></li><li>Part 4: Floating points</li><li><a href="/blog/woce-5">Part 5: Code finder</a></li><li><a href="/blog/woce-6">Part 6: Pointers</a></li><li><a href="/blog/woce-7">Part 7: Code Injection</a></li><li><a href="/blog/woce-8">Part 8: Multilevel pointers</a></li></ul><p>In part 3 we did a fair amount of plumbing in order to support scan modes beyond the trivial "exact value scan". As a result, we have abstracted away the <code>Scan</code>, <code>CandidateLocations</code> and <code>Value</code> types as a separate <code>enum</code> each. Scanning for changed memory regions in an opened process can now be achieved with three lines of code:</p><pre><code class="language-rust">let regions = process.memory_regions();
+let first_scan = process.scan_regions(&amp;regions, Scan::InRange(0, 500));
+let second_scan = process.rescan_regions(&amp;first_scan, Scan::DecreasedBy(7));
+</code></pre><p>How's that for programmability? No need to fire up Cheat Engine's GUI anymore!</p><p>The <code>first_scan</code> in the example above remembers all the found <code>Value</code> within the range specified by <code>Scan</code>. Up until now, we have only worked with <code>i32</code>, so that's the type the scans expect and what they work with.</p><p>Now it's time to introduce support for different types, like <code>f32</code>, <code>i64</code>, or even more atypical ones, like arbitrary sequences of bytes (think of strings) or even numbers in big-endian.</p><p>Tighten your belt, because this post is quite the ride. Let's get right into it!</p><h2 id="floating-points"><a href="#floating-points">Floating points</a></h2><details open><summary>Cheat Engine Tutorial: Step 4</summary><blockquote><p>In the previous tutorial we used bytes to scan, but some games store information in so called 'floating point' notations. (probably to prevent simple memory scanners from finding it the easy way). A floating point is a value with some digits behind the point. (like 5.12 or 11321.1)</p><p>Below you see your health and ammo. Both are stored as Floating point notations, but health is stored as a float and ammo is stored as a double. Click on hit me to lose some health, and on shoot to decrease your ammo with 0.5</p><p>You have to set BOTH values to 5000 or higher to proceed.</p><p>Exact value scan will work fine here, but you may want to experiment with other types too.</p><p>Hint: It is recommended to disable "Fast Scan" for type double</p></blockquote></details><h2 id="generic-values"><a href="#generic-values">Generic values</a></h2><p>The <code>Value</code> enumeration holds scanned values, and is currently hardcoded to store <code>i32</code>. The <code>Scan</code> type also holds a value, the value we want to scan for. Changing it to support other types is trivial:</p><pre><code class="language-rust">pub enum Scan&lt;T&gt; {
+    Exact(T),
+    Unknown,
+    Decreased,
+    // ...other variants...
+}
+
+pub enum Value&lt;T&gt; {
+    Exact(T),
+    AnyWithin(Vec&lt;u8&gt;),
+}
+</code></pre><p><code>AnyWithin</code> is the raw memory, and <code>T</code> can be interpreted from any sequence of bytes thanks to our friend <a href="https://doc.rust-lang.org/stable/std/mem/fn.transmute.html"><code>mem::transmute</code></a>. This change alone is enough to store an arbitrary <code>T</code>! So we're done now? Not really, no.</p><p>First of all, we need to update all the places where <code>Scan</code> or <code>Value</code> are used. Our first stop is the scanned <code>Region</code>, which holds the found <code>Value</code>:</p><pre><code class="language-rust">pub struct Region&lt;T&gt; {
+    pub info: MEMORY_BASIC_INFORMATION,
+    pub locations: CandidateLocations,
+    pub value: Value&lt;T&gt;,
+}
+</code></pre><p>Then, we need to update everywhere <code>Region</code> is used, and on and on… All in all this process is just repeating <code>cargo check</code>, letting the compiler vent on you, and taking good care of it by fixing the errors. It's quite reassuring to know you will not miss a single place. Thank you, compiler!</p><p>But wait, how could scanning for a decreased value work for any <code>T</code>? The type is not <code>Ord</code>, we should add some trait bounds. And also, what happens if the type is not <code>Copy</code>? It could implement <code>Drop</code><a href="#fn:1"><sup id="fnref:1">↪1</sup></a>, and we will be transmuting from raw bytes, which would trigger the <code>Drop</code> implementation when we're done with the value! Not memory safe at all! And how could we possibly cast raw memory to the type without knowing its siz– oh nevermind, <a href="https://doc.rust-lang.org/stable/std/marker/trait.Sized.html"><code>T</code> is already <code>Sized</code> by default</a>. But anyway, we need the other bounds.</p><p>In order to not repeat ourselves, we will implement a new <code>trait</code>, let's say <code>Scannable</code>, which requires all other bounds:</p><pre><code class="language-rust">pub trait Scannable: Copy + PartialEq + PartialOrd {}
+
+impl&lt;T: Copy + PartialEq + PartialOrd&gt; Scannable for T {}
+</code></pre><p>And fix our definitions:</p><pre><code class="language-rust">pub enum Scan&lt;T: Scannable&gt; { ... }
+pub enum Value&lt;T: Scannable&gt; { ... }
+pub struct Region&lt;T: Scannable&gt; { ... }
+
+// ...and the many other places referring to T
+</code></pre><p>Every type which is <code>Copy</code>, <code>PartialEq</code> and <code>PartialOrd</code> can be scanned over<a href="#fn:2"><sup id="fnref:2">↪2</sup></a>, because we <code>impl Scan for T</code> where the bounds are met. Unfortunately, we cannot require <code>Eq</code> or <code>Ord</code> because the floating point types do not implement it.</p><h2 id="transmuting-memory"><a href="#transmuting-memory">Transmuting memory</a></h2><p>Also known as reinterpreting a bunch of bytes as something else, or perhaps it stands for "summoning the demon":</p><blockquote><p><code>transmute</code> is <strong>incredibly</strong> unsafe. There are a vast number of ways to cause <a href="https://doc.rust-lang.org/stable/reference/behavior-considered-undefined.html">undefined behavior</a> with this function. <code>transmute</code> should be the absolute last resort.</p></blockquote><p>Types like <code>i32</code> define methods such as <a href="https://doc.rust-lang.org/stable/std/primitive.i32.html#method.from_ne_bytes"><code>from_ne_bytes</code></a> and <a href="https://doc.rust-lang.org/stable/std/primitive.i32.html#method.to_ne_bytes"><code>to_ne_bytes</code></a> which convert raw bytes from and into its native representation. This is all really nice, but unfortunately, there's no standard trait in the Rust's standard library to "interpret a type <code>T</code> as the byte sequence of its native representation". <code>transmute</code>, however, does exist, and similar to any other <code>unsafe</code> function, it's safe to call <strong>as long as we respect its invariants</strong>. What are these invariants<a href="#fn:3"><sup id="fnref:3">↪3</sup></a>?</p><blockquote><p>Both types must have the same size</p></blockquote><p>Okay, we can just assert that the window length matches the type's length. What else?</p><blockquote><p>Neither the original, nor the result, may be an <a href="https://doc.rust-lang.org/nomicon/what-unsafe-does.html">invalid value</a>.</p></blockquote><p>What's an invalid value?</p><blockquote><ul><li>a <code>bool</code> that isn't 0 or 1</li><li>an <code>enum</code> with an invalid discriminant</li><li>a null <code>fn</code> pointer</li><li>a <code>char</code> outside the ranges [0x0, 0xD7FF] and [0xE000, 0x10FFFF]</li><li>a <code>!</code> (all values are invalid for this type)</li><li>an integer (<code>i*</code>/<code>u*</code>), floating point value (<code>f*</code>), or raw pointer read from uninitialized memory, or uninitialized memory in a <code>str</code>.</li><li>a reference/<code>Box</code> that is dangling, unaligned, or points to an invalid value.</li><li>a wide reference, <code>Box</code>, or raw pointer that has invalid metadata:<ul><li><code>dyn Trait</code> metadata is invalid if it is not a pointer to a vtable for <code>Trait</code> that matches the actual dynamic trait the pointer or reference points to</li><li>slice metadata is invalid if the length is not a valid <code>usize</code> (i.e., it must not be read from uninitialized memory)</li></ul></li><li>a type with custom invalid values that is one of those values, such as a <code>NonNull</code> that is null. (Requesting custom invalid values is an unstable feature, but some stable libstd types, like <code>NonNull</code>, make use of it.)</li></ul></blockquote><p>Okay, that's actually an awful lot. Types like <code>bool</code> implement all the trait bounds we defined, and it would be insta-UB to ever try to cast them from arbitrary bytes. The same goes for <code>char</code>, and all <code>enum</code> are out of our control, too. At least we're safe on the "memory is initialized" front.</p><p>Dang it, I really wanted to use <code>transmute</code>! But if we were to use it for arbitrary types, it would trigger undefined behaviour sooner than later.</p><p>We have several options here:</p><ul><li>Make it an <code>unsafe trait</code>. Implementors will be responsible for ensuring that the type they're implementing it for can be safely transmuted from and into.</li><li><a href="https://rust-lang.github.io/api-guidelines/future-proofing.html">Seal the <code>trait</code></a> and implement it only for types we know are safe<a href="#fn:4"><sup id="fnref:4">↪4</sup></a>, like <code>i32</code>.</li><li>Add methods to the <code>trait</code> definition that do the conversion of the type into its native representation.</li></ul><p>We will go with the first option<a href="#fn:5"><sup id="fnref:5">↪5</sup></a>, because I really want to use <code>transmute</code>, and I want users to be able to implement the trait on their own types.</p><p>In any case, we need to change our <code>impl</code> to something more specific, in order to prevent it from automatically implementing the trait for types for which their memory representation has invalid values. So we get rid of this:</p><pre><code class="language-rust">pub trait Scannable: Copy + PartialEq + PartialOrd {}
+
+impl&lt;T: Copy + PartialEq + PartialOrd&gt; Scannable for T {}
+</code></pre><p>And replace it with this:</p><pre><code class="language-rust">pub unsafe trait Scannable: Copy + PartialEq + PartialOrd {}
+
+macro_rules! impl_many {
+    ( unsafe impl $trait:tt for $( $ty:ty ),* ) =&gt; {
+        $( unsafe impl $trait for $ty {} )*
+    };
+}
+
+// SAFETY: all these types respect `Scannable` invariants.
+impl_many!(unsafe impl Scannable for i8, u8, i16, u16, i32, u32, i64, u64, f32, f64);
+</code></pre><p>Making a small macro for things like these is super useful. You could of course write <code>unsafe impl Scannable for T</code> for all ten <code>T</code> as well, but that introduces even more <code>unsafe</code> to read. Last but not least, let's replace the hardcoded <code>i32::from_ne_bytes</code> and <code>i32::to_ne_bytes</code> with <code>mem::transmute</code>.</p><p>All the <code>windows(4)</code> need to be replaced with <code>windows(mem::size_of::&lt;T&gt;())</code> because the size may no longer be <code>4</code>. All the <code>i32::from_ne_bytes(...)</code> need to be replaced with <code>mem::transmute::&lt;_, T&gt;(...)</code>. We explicitly write out <code>T</code> to make sure the compiler doesn't accidentally infer something we didn't intend.</p><p>And… it doesn't work at all. We're working with byte slices of arbitrary length. We cannot transmute a <code>&amp;[]</code> type, which is 16 bytes (8 for the pointer and 8 for the length), to our <code>T</code>. My plan to use transmute can't possibly work here. Sigh.</p><h2 id="not-quite-transmuting-memory"><a href="#not-quite-transmuting-memory">Not quite transmuting memory</a></h2><p>Okay, we can't transmute, because we don't have a sized value, we only have a slice of bytes pointing somewhere else. What we <em>could</em> do is reinterpret the pointer to those bytes as a different type, and then dereference it! This is still a form of "transmutation", just without using <code>transmute</code>.</p><pre><code class="language-rust">let value = unsafe { *(window.as_ptr() as *const T) };
+</code></pre><p>Woop! You can compile this and test it out on the step 2 and 3 of the tutorial, using <code>i32</code>, and it will still work! Something troubles me, though. Can you see what it is?</p><p>When we talked about invalid values, it had a note about unaligned references:</p><blockquote><p>a reference/<code>Box</code> that is dangling, unaligned, or points to an invalid value.</p></blockquote><p>Our <code>window</code> is essentially a reference to <code>T</code>. The only difference is we're working at the pointer level, but they're pretty much references. Let's see what the documentation for <a href="https://doc.rust-lang.org/std/primitive.pointer.html"><code>pointer</code></a> has to say as well, since we're dereferencing pointers:</p><blockquote><p>when a raw pointer is dereferenced (using the <code>*</code> operator), it must be non-null and aligned.</p></blockquote><p>It must be aligned. The only reason why our data is aligned is because we are also performing a "fast scan", so we only look at aligned locations. This is a time bomb waiting to blow up. Is there any other way to <a href="https://doc.rust-lang.org/std/ptr/fn.read.html"><code>read</code></a> from a pointer which is safer?</p><blockquote><p><code>src</code> must be properly aligned. Use <a href="https://doc.rust-lang.org/std/ptr/fn.read_unaligned.html"><code>read_unaligned</code></a> if this is not the case.</p></blockquote><p>Bingo! Both <code>read</code> and <code>read_unaligned</code>, unlike dereferencing the pointer, will perform a copy, but if it can make the code less prone to blowing up, I'll take it<a href="#fn:6"><sup id="fnref:6">↪6</sup></a>. Let's change the code one more time:</p><pre><code class="language-rust">let current = unsafe { window.as_ptr().cast::&lt;T&gt;().read_unaligned() };
+</code></pre><p>I prefer to avoid type annotations in variables where possible, which is why I use the <a href="https://www.reddit.com/r/rust/comments/3fimgp/why_double_colon_rather_that_dot/ctozkd0/">turbofish</a> so often. You can get rid of the cast and use a type annotation instead, but make sure the type is known, otherwise it will think it's <code>u8</code> because <code>window</code> is a <code>&amp;[u8]</code>.</p><p>Now, this is all cool and good. You can replace <code>i32</code> with <code>f32</code> for <code>T</code> and you'll be able to get halfway done with the step 4 of Cheat Engine's tutorial. Unfortunately, as it is, this code is not enough to complete step 4 with exact scans<a href="#fn:7"><sup id="fnref:7">↪7</sup></a>. You see, comparing floating point values is not as simple as checking for bitwise equality. We were actually really lucky that the <code>f32</code> part works! But the values in the <code>f64</code> part are not as precise as our inputs, so our exact scan fails.</p><p>Using a fixed type parameter is pretty limiting as well. On the one hand, it is nice that, if you scan for <code>i32</code>, the compiler statically guarantees that subsequent scans will also happen on <code>i32</code> and thus be compatible. On the other, this requires us to know the type at compile time, which for an interactive program, is not possible. While we <em>could</em> create different methods for each supported type and, at runtime, decide to which we should jump, I am not satisfied with that solution. It also means we can't switch from scanning an <code>u32</code> to an <code>i32</code>, for whatever reason.</p><p>So we need to work around this once more.</p><h2 id="rethinking-the-scans"><a href="#rethinking-the-scans">Rethinking the scans</a></h2><p>What does our scanning function need, really? It needs a way to compare two chunks of memory as being equal or not (as we have seen, this isn't trivial with types such as floating point numbers) and, for other types of scans, it needs to be able to produce an ordering, or calculate a difference.</p><p>Instead of having a our trait require the bounds <code>PartialEq</code> and <code>PartialOrd</code>, we can define our own methods to compare <code>Self</code> with <code>&amp;[u8]</code>. It still should be <code>Clone</code>, so we can pass it around without worrying about lifetimes:</p><pre><code class="language-rust">// Callers must `assert_eq!(memory.len(), mem::size_of::&lt;Self&gt;())`.
+unsafe fn eq(&amp;self, memory: &amp;[u8]) -&gt; bool;
+unsafe fn cmp(&amp;self, memory: &amp;[u8]) -&gt; Ordering;
+</code></pre><p>This can be trivially implemented for all integer types:</p><pre><code class="language-rust">macro_rules! impl_scannable_for_int {
+    ( $( $ty:ty ),* ) =&gt; {
+        $(
+            // SAFETY: caller is responsible to `assert_eq!(memory.len(), mem::size_of::&lt;T&gt;())`
+            impl Scannable for $ty {
+                unsafe fn eq(&amp;self, memory: &amp;[u8]) -&gt; bool {
+                    let other = unsafe { memory.as_ptr().cast::&lt;$ty&gt;().read_unaligned() };
+                    *self == other
+                }
+
+                unsafe fn cmp(&amp;self, memory: &amp;[u8]) -&gt; Ordering {
+                    let other = unsafe { memory.as_ptr().cast::&lt;$ty&gt;().read_unaligned() };
+                    &lt;$ty as Ord&gt;::cmp(self, &amp;other)
+                }
+            }
+        )*
+    };
+}
+
+impl_scannable_for_int!(i8, u8, i16, u16, i32, u32, i64, u64);
+</code></pre><p>The funny <code>&lt;$ty as Ord&gt;</code> is because I decided to call the method <code>Scannable::cmp</code>, so I have to disambiguate between it and <code>Ord::cmp</code>. We can go ahead and update the code using <code>Scannable</code> to use these new functions instead.</p><p>Now, you may have noticed I only implemented it for the integer types. That's because floats need some extra care. Unfortunately, floating point types do not have any form of "precision" embedded in them, so we can't accurately say "compare these floats to the precision level the user specified". What we can do, however, is drop a few bits from the mantissa, so "relatively close" quantities are considered equal. It's definitely not as good as comparing floats to the user's precision, but it will get the job done.</p><p>I'm going to arbitrarily say that we are okay comparing with "half" the precision. We can achieve that by masking half of the bits from the mantissa to zero:</p><pre><code class="language-rust">
+macro_rules! impl_scannable_for_float {
+    ( $( $ty:ty : $int_ty:ty ),* ) =&gt; {
+        $(
+            #[allow(unused_unsafe)] // mind you, it is necessary
+            impl Scannable for $ty {
+                unsafe fn eq(&amp;self, memory: &amp;[u8]) -&gt; bool {
+                    const MASK: $int_ty = !((1 &lt;&lt; (&lt;$ty&gt;::MANTISSA_DIGITS / 2)) - 1);
+
+                    // SAFETY: caller is responsible to `assert_eq!(memory.len(), mem::size_of::&lt;T&gt;())`
+                    let other = unsafe { memory.as_ptr().cast::&lt;$ty&gt;().read_unaligned() };
+                    let left = &lt;$ty&gt;::from_bits(self.to_bits() &amp; MASK);
+                    let right = &lt;$ty&gt;::from_bits(other.to_bits() &amp; MASK);
+                    left == right
+                }
+
+                ...
+            }
+        )*
+    };
+}
+
+impl_scannable_for_float!(f32: u32, f64: u64);
+</code></pre><p>You may be wondering what's up with that weird <code>MASK</code>. Let's visualize it with a <a href="https://en.wikipedia.org/wiki/Bfloat16_floating-point_format"><code>f16</code></a>. This type has 16 bits, 1 for sign, 5 for exponent, and 10 for the mantissa:</p><pre>S EEEEE MMMMMMMMMM
+</pre><p>If we substitute the constant with the numeric value and operate:</p><pre><code class="language-rust">!((1 &lt;&lt; (10 / 2)) - 1)
+!((1 &lt;&lt; 5) - 1)
+!(0b00000000_00100000 - 1)
+!(0b00000000_00011111)
+0b11111111_11100000
+</code></pre><p>So effectively, half of the mantisssa bit will be masked to 0. For the <code>f16</code> example, this makes us lose 5 bits of precision. Comparing two floating point values with their last five bits truncated is equivalent to checking if they are "roughly equal"!</p><p>When Cheat Engine scans for floating point values, several additional settings show, and one such option is "truncated". I do not know if it behaves like this, but it might.</p><p>Let's try this out:</p><pre><code class="language-rust">#[test]
+fn f32_roughly_eq() {
+    let left = 0.25f32;
+    let right = 0.25000123f32;
+    let memory = unsafe { mem::transmute::&lt;_, [u8; 4]&gt;(right) };
+    assert_ne!(left, right);
+    assert!(unsafe { Scannable::eq(&amp;left, &amp;memory) });
+}
+</code></pre><pre>&gt;cargo test f32_roughly_eq
+
+running 1 test
+test scan::candidate_location_tests::f32_roughly_eq ... ok
+</pre><p>Huzzah! The <code>assert_ne!</code> makes sure that a normal comparision would fail, and then we <code>assert!</code> that our custom one passes the test. When the user performs an exact scan, the code will be more tolerant to the user's less precise inputs, which overall should result in a nicer experience.</p><h2 id="dynamically-sized-scans"><a href="#dynamically-sized-scans">Dynamically sized scans</a></h2><p>The second problem we need to solve is the possibility of the size not being known at compile time<a href="#fn:8"><sup id="fnref:8">↪8</sup></a>. While we can go as far as scanning over strings of a known length, this is rather limiting, because we need to know the length at compile time<a href="#fn:9"><sup id="fnref:9">↪9</sup></a>. Heap allocated objects are another problem, because we don't want to compare the memory representation of the stack object, but likely the memory where they point to (such as <code>String</code>).</p><p>Instead of using <code>mem::size_of</code>, we can add a new method to our <code>Scannable</code>, <code>size</code>, which will tell us the size required of the memory view we're comparing against:</p><pre><code class="language-rust">unsafe impl Scannable {
+    ...
+
+    fn size(&amp;self) -&gt; usize;
+}
+</code></pre><p>It is <code>unsafe</code> to implement, because we are relying on the returned value to be truthful and unchanging. It should be safe to call, because it cannot have any invariants. Unfortunately, signaling "unsafe to implement" is done by marking the entire trait as <code>unsafe</code>, since "unsafe to call" is reserved for <code>unsafe fn</code>, and even though the rest of methods are not necessarily unsafe to implement, they're treated as such.</p><p>At the moment, <code>Scannable</code> cannot be made into a trait object because it is <a href="https://doc.rust-lang.org/stable/error-index.html#E0038">not object safe</a>. This is caused by the <code>Clone</code> requirement on all <code>Scannable</code> object, which in turn needs the types to be <code>Sized</code> because <code>clone</code> returns <code>Self</code>. Because of this, the size must be known.</p><p>However, we <em>can</em> move the <code>Clone</code> requirement to the methods that need it! This way, <code>Scannable</code> can remain object safe, enabling us to do the following:</p><pre><code class="language-rust">unsafe impl&lt;T: AsRef&lt;dyn Scannable&gt; + AsMut&lt;dyn Scannable&gt;&gt; Scannable for T {
+    unsafe fn eq(&amp;self, memory: &amp;[u8]) -&gt; bool {
+        self.as_ref().eq(memory)
+    }
+
+    unsafe fn cmp(&amp;self, memory: &amp;[u8]) -&gt; Ordering {
+        self.as_ref().cmp(memory)
+    }
+
+    fn mem_view(&amp;self) -&gt; &amp;[u8] {
+        self.as_ref().mem_view()
+    }
+
+    fn size(&amp;self) -&gt; usize {
+        self.as_ref().size()
+    }
+}
+</code></pre><p>Any type which can be interpreted as a reference to <code>Scannable</code> is also a scannable! This enables us to perform scans over <code>Box&lt;dyn i32&gt;</code>, where the type is known at runtime! Or rather, it would, if <code>Box&lt;dyn T&gt;</code> implemented <code>Clone</code>, which it can't<a href="#fn:10"><sup id="fnref:10">↪10</sup></a> because that's what prompted this entire issue. Dang it! I can't catch a breath today!</p><p>Okay, let's step back. Why did we need our scannables to be clone in the first place? When we perform exact scans, we store the original value in the region, which we don't own, so we clone it. But what if we <em>did</em> own the value? Instead of taking the <code>Scan</code> by reference, which holds <code>T: Scannable</code>, we could take it by value. If we get rid of all the <code>Clone</code> bounds and update <code>Scan::run</code> to take <code>self</code>, along with updating all the things that take a <code>Region</code> to take them by value as well, it should all work out.</p><p>But it does not. If we take <code>Scan</code> by value, with it not being <code>Clone</code>, we simply can't use it to scan over multiple regions. After the first region, we have lost the <code>Scan</code>.</p><p>Let's take a second step back. We are scanning memory, and we want to compare memory, but we want to treat the memory with different semantics (for example, if we treat it as <code>f32</code>, we want to check for rough equality). Instead of storing the <em>value</em> itself, we could store its <em>memory representation</em>, and when we compare memory representations, we can do so under certain semantics.</p><p>First off, let's revert getting rid of all <code>Clone</code>. Wherever we stored a <code>T</code>, we will now store a <code>Vec&lt;u8&gt;</code>. We will still use a type parameter to represent the "implementations of <code>Scannable</code>". For this to work, our definitions need to use <code>T</code> somewhere, or else the compiler refuses to compile the code with error <a href="https://doc.rust-lang.org/stable/error-index.html#E0392">E0392</a>. For this, I will stick a <a href="https://doc.rust-lang.org/stable/std/marker/struct.PhantomData.html"><code>PhantomData</code></a> in the <code>Exact</code> variant. It's a bit pointless to include it in all variants, and <code>Exact</code> seems the most appropriated:</p><pre><code class="language-rust">pub enum Scan&lt;T: Scannable&gt; {
+    Exact(Vec&lt;u8&gt;, PhantomData&lt;T&gt;),
+    Unknown,
+    ...
+}
+</code></pre><p>This keeps in line with <code>Value</code>:</p><pre><code class="language-rust">pub enum Value&lt;T: Scannable&gt; {
+    Exact(Vec&lt;u8&gt;, PhantomData&lt;T&gt;),
+    ...
+}
+</code></pre><p>Our <code>Scannable</code> will no longer work on <code>T</code> and <code>&amp;[u8]</code>. Instead, it will work on two <code>&amp;[u8]</code>. We will also need a way to interpret a <code>T</code> as <code>&amp;[u8]</code>, which we can achieve with a new method, <code>mem_view</code>. This method interprets the raw memory representation of <code>self</code> as its raw bytes. It also lets us get rid of <code>size</code>, because we can simply do <code>mem_view().len()</code>. It's still <code>unsafe</code> to implement, because it should return the same length every time:</p><pre><code class="language-rust">pub unsafe trait Scannable {
+    // Callers must `assert_eq!(left.len(), right.len(), self.mem_view().len())`.
+    unsafe fn eq(left: &amp;[u8], right: &amp;[u8]) -&gt; bool;
+    unsafe fn cmp(left: &amp;[u8], right: &amp;[u8]) -&gt; Ordering;
+    fn mem_view(&amp;self) -&gt; &amp;[u8];
+}
+</code></pre><p>But now we can't use it in trait object, so the following no longer works:</p><pre><code class="language-rust">unsafe impl&lt;T: AsRef&lt;dyn Scannable&gt; + AsMut&lt;dyn Scannable&gt;&gt; Scannable for T {
+    ...
+}
+</code></pre><p>Ugh! Well, to be fair, we no longer have a "scannable" at this point. It's more like a scan mode that tells us how memory should be compared according to a certain type. Let's split the trait into two: one for the scan mode, and other for "things which are scannable":</p><pre><code class="language-rust">pub trait ScanMode {
+    unsafe fn eq(left: &amp;[u8], right: &amp;[u8]) -&gt; bool;
+    unsafe fn cmp(left: &amp;[u8], right: &amp;[u8]) -&gt; Ordering;
+}
+
+pub unsafe trait Scannable {
+    type Mode: ScanMode;
+
+    fn mem_view(&amp;self) -&gt; &amp;[u8];
+}
+</code></pre><p>Note that we have an associated <code>type Mode</code> which contains the corresponding <code>ScanMode</code>. If we used a trait bound such as <code>Scannable: ScanMode</code>, we'd be back to square one: it would inherit the method definitions that don't use <code>&amp;self</code> and thus cannot be used as trait objects.</p><p>With these changes, it is possible to implement <code>Scannable</code> for any <code>dyn Scannable</code>:</p><pre><code class="language-rust">unsafe impl&lt;T: ScanMode + AsRef&lt;dyn Scannable&lt;Mode = Self&gt;&gt;&gt; Scannable for T {
+    type Mode = Self;
+
+    fn mem_view(&amp;self) -&gt; &amp;[u8] {
+        self.as_ref().mem_view()
+    }
+}
+</code></pre><p>We do have to adjust a few places of the code to account for both <code>Scannable</code> and <code>ScanMode</code>, but all in all, it's pretty straightforward. Things like <code>Value</code> don't need to store the <code>Scannable</code> anymore, just a <code>Vec&lt;u8&gt;</code>. It also doesn't need the <code>ScanMode</code>, because it's not going to be scanning anything on its own. This applies transitively to <code>Region</code> which was holding a <code>Value</code>.</p><p><code>Value</code> <em>does</em> need to be updated to store the size of the region we are scanning for, however, because we need that information when running a subsequent scan. For all <code>Scan</code> that don't have a explicit thing to scan for (like <code>Decreased</code>), the <code>size</code> also needs to be stored in them.</p><p>Despite all our efforts, we're still unable to return an <code>Scannable</code> chosen at runtime.</p><pre><code class="language-rust">fn prompt_user_for_scan() -&gt; Scan&lt;Box&lt;dyn Scannable&lt;Mode = ???&gt;&gt;&gt; {
+    todo!()
+}
+</code></pre><p>As far as I can tell, there's simply no way to specify that type. We want to return a type which is scannable, which has itself (which is also a <code>ScanMode</code>) as the corresponding mode. Even if we just tried to return the mode, we simply can't, because it's not object-safe. Is this the end of the road?</p><h2 id="specifying-the-scan-mode"><a href="#specifying-the-scan-mode">Specifying the scan mode</a></h2><p>We need a way to pass an arbitrary scan mode to our <code>Scan</code>. This scan mode should go in tandem with <code>Scannable</code> types, because it would be unsafe otherwise. We've seen that using a type just doesn't cut it. What else can we do?</p><p>Using an enumeration is a no-go, because I want users to be able to extend it further. I also would like to avoid having to update the <code>enum</code> and all the matches every time I come up with a different type combination. And it could get pretty complicated if I ever built something dynamically, such as letting the user combine different scans in one pass.</p><p>So what if we make <code>Scannable</code> return a value that implements the functions we need?</p><pre><code class="language-rust">pub struct ScanMode {
+    eq: unsafe fn(left: &amp;[u8], right: &amp;[u8]) -&gt; bool,
+    cmp: unsafe fn(left: &amp;[u8], right: &amp;[u8]) -&gt; Ordering,
+}
+</code></pre><p>It's definitely… non-conventional. But hey, now we're left with the <code>Scannable</code> trait, which is object-safe, and does not have any type parameters!</p><pre><code class="language-rust">pub unsafe trait Scannable {
+    fn mem_view(&amp;self) -&gt; &amp;[u8];
+    fn scan_mode(&amp;self) -&gt; ScanMode;
+}
+</code></pre><p>It is a bit weird, but defining local functions and using those in the returned value is a nice way to keep things properly scoped:</p><pre><code class="language-rust">macro_rules! impl_scannable_for_int {
+    ( $( $ty:ty ),* ) =&gt; {
+        $(
+            unsafe impl Scannable for $ty {
+                fn mem_view(&amp;self) -&gt; &amp;[u8] {
+                    unsafe { std::slice::from_raw_parts(self as *const _ as *const u8, mem::size_of::&lt;$ty&gt;()) }
+                }
+
+                fn scan_mode(&amp;self) -&gt; ScanMode {
+                    unsafe fn eq(left: &amp;[u8], right: &amp;[u8]) -&gt; bool {
+                        ...
+                    }
+
+                    unsafe fn cmp(left: &amp;[u8], right: &amp;[u8]) -&gt; Ordering {
+                        ...
+                    }
+
+                    ScanMode { eq, cmp }
+                }
+            }
+        )*
+    };
+}
+</code></pre><p>Our <code>Scan</code> needs to store the <code>Scannable</code> type, and not just the memory, once again. For variants that don't need any value, they can store the <code>ScanMode</code> and size instead.</p><p>Does this solution work? Yes! It's possible to return a <code>Box&lt;dyn Scannable&gt;</code> from a function, and underneath, it may be using any type which is <code>Scannable</code>. Is this the best solution? Well, that's hard to say. This is <em>one</em> of the possible solutions.</p><p>We have been going around in circles for quite some time now, so I'll leave it there. It's a solution, which may not be pretty, but it works. With these changes, the code is capable of completing all of the steps in the Cheat Engine tutorial up until point!</p><h2 id="finale"><a href="#finale">Finale</a></h2><p>If there's one lesson to learn from this post, it's that there is often no single correct solution to a problem. We could have approached the scan types in many, many ways (and we tried quite a few!), but in the end, choosing one option or the other comes down to your (sometimes self-imposed) requirements.</p><p>You may <a href="https://github.com/lonami/memo">obtain the code for this post</a> over at my GitHub. You can run <code>git checkout step4</code> after cloning the repository to get the right version of the code. The code has gone through a lot of iterations, and I'd still like to polish it a bit more, so it might slightly differ from the code presented in this entry.</p><p>If you feel adventurous, Cheat Engine has different options for scanning floating point types: "rounded (default)", "rounded (extreme)", and truncated. Optionally, it can scan for "simple values only". You could go ahead and toy around with these!</p><p>We didn't touch on types with different lengths, such as strings. You could support UTF-8, UTF-16, or arbitrary byte sequences. This post also didn't cover scanning for multiple things at once, known as "groupscan commands", although from what I can tell, these are just a nice way to scan for arbitrary byte sequences.</p><p>We also didn't look into supporting different the same scan with different alignments. All these things may be worth exploring depending on your requirements. You could even get rid of such genericity and go with something way simpler. Supporting <code>i32</code>, <code>f32</code> and <code>f64</code> is enough to complete the Cheat Engine tutorial. But I wanted something more powerful, although my solution currently can't scan for a sequence such as "exact type, unknown, exact matching the unknown". So yeah.</p><p>In the <a href="/blog/woce-5">next post</a>, we'll tackle the fifth step of the tutorial: Code finder. Cheat Engine attaches its debugger to the process for this one, and then replaces the instruction that performs the write with a different no-op so that nothing is written anymore. This will be quite the challenge!</p><h3 id="footnotes"><a href="#footnotes">Footnotes</a></h3><p id="fn:1" class="footnote-definition"><span>1</span><a href="https://doc.rust-lang.org/stable/std/ops/trait.Drop.html#copy-and-drop-are-exclusive"><code>Copy</code> and <code>Drop</code> are exclusive</a>. See also <a href="https://doc.rust-lang.org/stable/error-index.html#E0184">E0184</a>.&nbsp;<a href="#fnref:1">↩</a></p><p id="fn:2" class="footnote-definition"><span>2</span> If you added more scan types that require additional bounds, make sure to add them too. For example, the "decreased by" scan requires the type to <code>impl Sub</code>.&nbsp;<a href="#fnref:2">↩</a></p><p id="fn:3" class="footnote-definition"><span>3</span> This is a good time to remind you to read the documentation. It is of special importance when dealing with <code>unsafe</code> methods; I recommend reading it a couple times.&nbsp;<a href="#fnref:3">↩</a></p><p id="fn:4" class="footnote-definition"><span>4</span> Even with this option, it would not be a bad idea to make the trait <code>unsafe</code>.&nbsp;<a href="#fnref:4">↩</a></p><p id="fn:5" class="footnote-definition"><span>5</span> Not for long. As we will find out later, this approach has its limitations.&nbsp;<a href="#fnref:5">↩</a></p><p id="fn:6" class="footnote-definition"><span>6</span> We can still perform the pointer dereference when we know it's aligned. This would likely be an optimization, although it would definitely complicate the code more.&nbsp;<a href="#fnref:6">↩</a></p><p id="fn:7" class="footnote-definition"><span>7</span> It <em>would</em> work if you scanned for unknown values and then checked for decreased values repeatedly. But we can't just leave exact scan broken!&nbsp;<a href="#fnref:7">↩</a></p><p id="fn:8" class="footnote-definition"><span>8</span> Unfortunately, this makes some optimizations harder or even impossible to perform. Providing specialized functions for types where the size is known at compile time could be worth doing. Programming is all tradeoffs.&nbsp;<a href="#fnref:8">↩</a></p><p id="fn:9" class="footnote-definition"><span>9</span><a href="https://blog.rust-lang.org/2021/02/26/const-generics-mvp-beta.html">Rust 1.51</a>, which was not out at the time of writing, would make it a lot easier to allow scanning for fixed-length sequences of bytes, thanks to const generics.&nbsp;<a href="#fnref:9">↩</a></p><p id="fn:10" class="footnote-definition"><span>10</span> Workarounds do exist, such as <a href="https://crates.io/crates/dyn-clone">dtolnay's <code>dyn-clone</code></a>. But I would rather not go that route.&nbsp;<a href="#fnref:10">↩</a></p></article></main><footer><p> Share your thoughts! —
+<a href="mailto:totufals@hotmail.com"><img src="/img/mail.svg" alt="Mail"></a> </p><p class="abyss" onclick="egg()">Gaze into the abyss… Oh hi there!</p></footer><script>
+      const egg = () => {
+    const audio = document.createElement('audio')
+    audio.src = 'https://oriath.net/Audio/Dialogue/NPC/ShaperCombat/SH25b.dialogue.ogg'
+    audio.play()
+}
+    </script></body></html>

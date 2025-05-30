@@ -1,0 +1,102 @@
+<!DOCTYPE html><html><head><title>Stringlate</title><link rel="stylesheet" type="text/css" href="style.css"><link href="https://fonts.googleapis.com/css?family=Crimson+Text|Droid+Serif" rel="stylesheet"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"><link rel="shortcut icon" href="favicon.ico"></head><body><main><h1>Stringlate</h1><p><em>Help translating FOSS applications.</em></p><h2>Deprecation Notice</h2><p>I, Lonami, have lost most interest in maintaining Stringlate.</p><p><strong>There are a few big issues with a big impact and I don't want
+them to cause more harm than good</strong>, so I'm making it clear that
+I am aware of the issues and that you should know about them too if you
+still decide to make use the application.</p><p>Stringlate started as an idea to suit my personal needs. My mum wanted
+an application but it was only available in English, so I decided to
+translate it myself. However, doing so proved very inconvenient, and I
+decided to make my own Android application to help me in the process. In
+the end though, I made the translation by hand far sooner, before the
+application was ready :)</p><p>It was a fun project, and I learnt a lot, but any issues in the
+application have serious implications, since they impact a lot of open
+source projects. There are several big issues:</p><ul><li>Making a pull request may use old state of the repository</li><li>Some tags like bool and string arrays aren't handled well</li><li>Some projects only accept changes through other platforms</li><li>Integration with other services could really be improved</li></ul><p><strong>In short</strong>, please consider other ways to help
+translating the project you like instead of using Stringlate.</p><p>If you're interested in
+<strong>maintaining Stringlate</strong>,
+please
+<a href="https://lonami.dev/contact">contact me</a> and
+we can discuss it further. Thank you for your interest, and thanks to
+everyone who has contributed translations. It's been a nice journey!</p><p><em>(The rest of the page remains the same for historical
+purposes.)</em></p><h1>About Stringlate</h1><p> This application is meant to help the FOSS community translate their
+Android applications in an easy way. Any free moment you have could
+be invested into translating that application you love, but is not
+available in your language, or has some strings wrong.
+</p><p> The application works by fetching a
+<code>git</code> repository (yes, any!)
+to retrieve all the available strings, for you to translate whenever
+you want, offline. Once you're done, submit your work!
+</p><p> This application is of course open source, and is available on both
+<a href="https://github.com/LonamiWebs/Stringlate">GitHub</a> and
+<a href="https://f-droid.org/app/io.github.lonamiwebs.stringlate">F-Droid</a>.
+</p><h1>Integrating with your own app</h1><p> Are you a developer? Are you interested on people knowing that they
+can use Stringlate to translate your application? If both answers are
+yes, that's awesome!
+</p><p> There are several ways to do this, one is from in-app, for which
+you can check and use this plain simple
+<a href="https://github.com/LonamiWebs/Stringlate/blob/master/src/app/src/main/java/io/github/lonamiwebs/stringlate/utilities/StringlateApi.java">API</a> <sup>(<a href="https://github.com/LonamiWebs/Stringlate/issues/72">original issue</a>)</sup>.
+</p><p> Another way is by creating a
+<a href="http://shields.io/">badge</a> <sup>(<a href="https://github.com/gsantner/memetastic">original idea</a>)</sup> for Stringlate:
+</p><img src="https://img.shields.io/badge/translate%20with-stringlate-green.svg" alt="translate with stringlate badge"><pre>&lt;a href="https://lonami.dev/stringlate/translate?git={git url}"&gt;
+  &lt;img
+    src="https://img.shields.io/badge/translate%20with-stringlate-green.svg"
+    alt="Translate - with Stringlate" /&gt;
+&lt;/a&gt;
+
+&lt;!-- or using markdown --&gt;
+[![Translate - with Stringlate](https://img.shields.io/badge/translate%20with-stringlate-green.svg)](https://lonami.dev/stringlate/translate?git={git url})</pre><p> You should replace
+<code>{git url}</code> to wherever your project's
+<code>git</code> lives. It should be encoded to be a valid parameter
+though.
+</p><noscript><p> You can also enable JavaScript to simply generate the badge link
+right from this page!
+</p></noscript><div id="generateUrlDiv" style="display:none"><p>You can also enter said URL here and get the code straight away:</p><label for="gitUrl">Project's
+<code>git</code> URL:</label><input type="text" id="gitUrl" oninput="updateBadgeCode()"><select id="genKind" onchange="updateBadgeCode()"><option value="html">HTML</option><option value="md">Markdown</option></select><p>Generated code (copy and paste this on your
+<code>README</code>):</p><textarea id="generatedCode" readonly></textarea><br><button id="copyButton" onclick="copyGenerated()">Copy text</button></div><noscript>If you want <p> If you had JavaScript enabled, I could tell you which repository you
+were trying to translate. But it's fine!
+</p></noscript><p id="whichAppP" style="display:none"> You were probably trying to translate
+<a id="whichAppA"></a>.
+</p></main><script>
+      var generateUrlDiv = document.getElementById('generateUrlDiv');
+      generateUrlDiv.style.display = '';
+
+      var gitUrl = document.getElementById('gitUrl');
+      var genKind = document.getElementById('genKind');
+      var generatedCode = document.getElementById('generatedCode');
+      var copyButton = document.getElementById('copyButton');
+
+      function updateBadgeCode() {
+        var translateUrl =
+          'https://lonami.dev/stringlate/translate?git='+
+          encodeURIComponent(gitUrl.value);
+
+        var badgeUrl =
+          'https://img.shields.io/badge/translate%20with-stringlate-green.svg';
+
+        switch (genKind.value) {
+          case 'html':
+            generatedCode.rows = 5;
+            generatedCode.value =
+              '<a href="'+translateUrl+
+              '>\n  <img\n    src="'+badgeUrl+
+              '"\n    alt="Translate - with Stringlate" />\n</a>';
+            break;
+          case 'md':
+            generatedCode.rows = 2;
+            generatedCode.value =
+              '[![Translate - with Stringlate]('+badgeUrl+
+              ')]('+translateUrl+')';
+            break;
+        }
+      }
+
+      function copyGenerated() {
+        generatedCode.select();
+        try {
+            var ok = document.execCommand('copy');
+            if (ok) copyButton.innerHTML = 'Copied!';
+            else    copyButton.innerHTML = 'Unable to copy!';
+        } catch (err) {
+            answer.innerHTML = 'Unsupported browser!';
+        }
+
+        setTimeout(function(){ copyButton.innerHTML = 'Copy text'; }, 2000);
+      }
+    </script></body></html>
