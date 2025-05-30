@@ -177,22 +177,6 @@ impl<T: Clone> NodeRef<'_, T> {
     }
 }
 
-impl<T: Clone + fmt::Debug> NodeRef<'_, T> {
-    fn debug_at_nesting(&self, indent: usize, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let blank = "";
-        let has_children = self.child(0).is_some();
-        if has_children {
-            writeln!(f, "{blank: >i$}{:?} {{", self.value(), i = indent)?;
-            for child in self.children() {
-                child.debug_at_nesting(indent + 2, f)?;
-            }
-            writeln!(f, "{blank: >i$}}}", i = indent)
-        } else {
-            writeln!(f, "{blank: >i$}{:?} {{ }}", self.value(), i = indent)
-        }
-    }
-}
-
 impl<T> Clone for NodeRef<'_, T> {
     fn clone(&self) -> Self {
         *self
@@ -237,7 +221,12 @@ impl<'a, T> Iterator for NodeAncestors<'a, T> {
 
 impl<T: Clone + fmt::Debug> fmt::Debug for NodeRef<'_, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.debug_at_nesting(0, f)
+        self.value().fmt(f)?;
+        if self.child(0).is_some() {
+            f.write_str(" ")?;
+            f.debug_set().entries(self.children()).finish()?;
+        }
+        Ok(())
     }
 }
 
