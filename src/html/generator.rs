@@ -1,5 +1,8 @@
+use std::borrow::Cow;
+
 use super::{escape, escape_attribute};
 use crate::collections::{Graph, GraphNodeRef as Ref};
+use crate::html;
 use crate::markdown::Node;
 
 pub fn generate(arena: Graph<Node>) -> Vec<u8> {
@@ -60,7 +63,7 @@ fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
             buffer.extend_from_slice(b"\"");
             if let Some(Node::AltText(alt)) = cursor.last_child().map(|child| child.value()) {
                 buffer.extend_from_slice(b" title=\"");
-                buffer.extend_from_slice(&escape_attribute(alt));
+                buffer.extend_from_slice(&escape_attribute(alt.iter().copied()));
                 buffer.extend_from_slice(b"\"");
             }
             buffer.extend_from_slice(b">");
@@ -71,21 +74,53 @@ fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
             buffer.extend_from_slice(b"\"");
             if let Some(Node::AltText(alt)) = cursor.last_child().map(|child| child.value()) {
                 buffer.extend_from_slice(b" alt=\"");
-                buffer.extend_from_slice(&escape_attribute(alt));
+                buffer.extend_from_slice(&escape_attribute(alt.iter().copied()));
                 buffer.extend_from_slice(b"\"");
             }
             buffer.extend_from_slice(b">");
         }
         Node::Heading(level) => {
             buffer.extend_from_slice(match level {
-                1 => b"<h1>",
-                2 => b"<h2>",
-                3 => b"<h3>",
-                4 => b"<h4>",
-                5 => b"<h5>",
-                6 => b"<h6>",
+                1 => b"<h1",
+                2 => b"<h2",
+                3 => b"<h3",
+                4 => b"<h4",
+                5 => b"<h5",
+                6 => b"<h6",
                 _ => panic!("bad heading level"),
             });
+            if cursor.child_count() > 0 {
+                buffer.extend_from_slice(b" id=\"");
+                let id_start = buffer.len();
+                for child in cursor.children() {
+                    let text = match child.value() {
+                        Node::Text(text) => Cow::Borrowed(text),
+                        Node::Raw(raw) => Cow::Owned(html::text_content(raw)),
+                        _ => continue,
+                    };
+                    let mut last_was_separator = false;
+                    buffer.extend_from_slice(&escape_attribute(text.iter().copied().filter_map(
+                        |c| {
+                            if c.is_ascii_alphanumeric() {
+                                last_was_separator = false;
+                                Some(c.to_ascii_lowercase())
+                            } else if !last_was_separator && (c.is_ascii_whitespace() || c == b'-')
+                            {
+                                last_was_separator = true;
+                                Some(b'-')
+                            } else {
+                                None
+                            }
+                        },
+                    )));
+                }
+                let id_end = buffer.len();
+                buffer.push(b'"');
+                buffer.extend_from_slice(b"><a href=\"#");
+                buffer.extend_from_within(id_start..id_end);
+                buffer.push(b'"');
+            }
+            buffer.push(b'>');
         }
         Node::Pre(lang) => {
             if lang.is_empty() {
@@ -145,12 +180,12 @@ fn visit(cursor: Ref<Node>, buffer: &mut Vec<u8>) {
         Node::Image(_) => {}
         Node::Heading(level) => {
             buffer.extend_from_slice(match level {
-                1 => b"</h1>",
-                2 => b"</h2>",
-                3 => b"</h3>",
-                4 => b"</h4>",
-                5 => b"</h5>",
-                6 => b"</h6>",
+                1 => b"</a></h1>",
+                2 => b"</a></h2>",
+                3 => b"</a></h3>",
+                4 => b"</a></h4>",
+                5 => b"</a></h5>",
+                6 => b"</a></h6>",
                 _ => unreachable!(),
             });
         }
