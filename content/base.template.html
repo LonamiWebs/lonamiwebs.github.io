@@ -9,13 +9,13 @@
     $CSS
   </head>
   <body>
-    <nav class="sections">
-      <ul class="left">
+    <nav>
+      <ul>
         <li><a $ROOT href="/">lonami's&nbsp;site</a></li>
         <li><a $BLOG href="/blog">blog</a></li>
         <li><a $GOLB href="/golb">golb</a></li>
       </ul>
-      <div class="right">
+      <div>
         <a href="https://github.com/LonamiWebs"><img src="/img/github.svg" alt="github"></a>
         <a href="/blog/atom.xml"><img src="/img/rss.svg" alt="rss"></a>
       </div>
@@ -24,14 +24,12 @@
       <article>$BLOGPOSTINTRO$CONTENT$BLOGLIST</article>
     </main>
     <footer>
-      <div>
-        <p>
-          Share your thoughts! —
-          <a href="mailto:totufals@hotmail.com"><img src="/img/mail.svg" alt="Mail"></a>
-        </p>
-      </div>
+      <p>
+        Share your thoughts! —
+        <a href="mailto:totufals@hotmail.com"><img src="/img/mail.svg" alt="Mail"></a>
+      </p>
+      <p class="abyss" onclick="egg()">Gaze into the abyss… Oh hi there!</p>
     </footer>
-    <p class="abyss" onclick="egg()">Gaze into the abyss… Oh hi there!</p>
     <script>
       const egg = () => {
     const audio = document.createElement('audio')
