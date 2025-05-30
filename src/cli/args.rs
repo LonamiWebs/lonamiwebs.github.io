@@ -1,6 +1,6 @@
 use crate::conf;
 
-use super::{BuildConfig, Config, DeployConfig, ServeConfig};
+use super::{BuildConfig, Config, ServeConfig};
 use std::env;
 use std::fmt;
 use std::mem;
@@ -129,7 +129,6 @@ pub fn parse() -> Config {
     let mut force = false;
     let mut ignore_errors = false;
     let mut watch = false;
-    let mut token = None;
 
     for argument in env::args().skip(1).flat_map(parse_arg) {
         let shortcircuit_help = match &argument {
@@ -174,14 +173,11 @@ pub fn parse() -> Config {
                     process::exit(1);
                 }
             },
-            Some(Subcommand::Deploy) => match argument {
-                Arg::Value(value) if token.is_none() => token = Some(value),
-                arg => {
-                    print_usage(subcommand);
-                    println!("site: error: unrecognized arguments: {arg}");
-                    process::exit(1);
-                }
-            },
+            Some(Subcommand::Deploy) => {
+                print_usage(subcommand);
+                println!("site: error: unrecognized arguments: {argument}");
+                process::exit(1);
+            }
             Some(Subcommand::Serve) => match argument {
                 Arg::Short('w') => watch = true,
                 Arg::Long(x) if x == "watch" => watch = true,
@@ -206,7 +202,7 @@ pub fn parse() -> Config {
             ignore_errors,
             output_folder: PathBuf::from(conf::OUTPUT_FOLDER),
         }),
-        Some(Subcommand::Deploy) => Config::Deploy(DeployConfig { token }),
+        Some(Subcommand::Deploy) => Config::Deploy,
         Some(Subcommand::Serve) => Config::Serve(ServeConfig { watch }),
     }
 }
