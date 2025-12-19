@@ -10,13 +10,14 @@ body {
 }
 
 nav,
-article,
+main,
 footer p {
     max-width: 720px;
 }
 
 main {
     flex-grow: 1;
+    width: 100%;
 }
 
 article {
