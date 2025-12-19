@@ -94,12 +94,12 @@ pub fn apply(template: &[u8], entries: &[Entry], entry: &Entry) -> Vec<u8> {
                         result.extend_from_slice(b"<div class=\"time\"><p>");
                         result.extend_from_slice(entry.date.as_bytes());
                         result.extend_from_slice(b"</p>");
-                        if let Some(updated) = entry.updated.as_ref() {
-                            if *updated != entry.date {
-                                result.extend_from_slice(b"<p>last updated ");
-                                result.extend_from_slice(updated.as_bytes());
-                                result.extend_from_slice(b"</p>");
-                            }
+                        if let Some(updated) = entry.updated.as_ref()
+                            && *updated != entry.date
+                        {
+                            result.extend_from_slice(b"<p>last updated ");
+                            result.extend_from_slice(updated.as_bytes());
+                            result.extend_from_slice(b"</p>");
                         }
                         result.extend_from_slice(b"</div>");
                     }
