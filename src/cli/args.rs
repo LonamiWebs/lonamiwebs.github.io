@@ -81,7 +81,7 @@ fn print_usage(subcommand: Option<Subcommand>) {
     match subcommand {
         None => println!("usage: site [-h] {{build,deploy,serve}} ..."),
         Some(Subcommand::Build) => println!("usage: site build [-h] [-w] [-f] [--ignore-errors]"),
-        Some(Subcommand::Deploy) => println!("usage: site deploy [-h] [TOKEN]"),
+        Some(Subcommand::Deploy) => println!("usage: site deploy [-h]"),
         Some(Subcommand::Serve) => println!("usage: site serve [-h] [-w]"),
     }
 }
@@ -108,9 +108,6 @@ fn print_help(subcommand: Option<Subcommand>) {
             println!("  --ignore-errors  ignore errors during input processing");
         }
         Some(Subcommand::Deploy) => {
-            println!("positional arguments:");
-            println!("  TOKEN       when executing from the temporary directory and the parent");
-            println!("              folder name matches this value, the deploy process continues");
             println!("options:");
             println!("  -h, --help  show this help message and exit");
         }
