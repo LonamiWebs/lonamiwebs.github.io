@@ -68,9 +68,10 @@ fn handle_connection(mut stream: TcpStream) {
 }
 
 fn handle_request(request: Request) -> Response {
-    let root = PathBuf::from(conf::OUTPUT_FOLDER)
-        .canonicalize()
-        .expect("output folder to be valid");
+    let root = match PathBuf::from(conf::OUTPUT_FOLDER).canonicalize() {
+        Ok(root) => root,
+        Err(_) => return Response::from_status(Status::NotFound),
+    };
 
     let path = match root.join(&request.target[1..]).canonicalize() {
         Ok(x) if x.starts_with(&root) => x,
@@ -91,6 +92,15 @@ fn handle_request(request: Request) -> Response {
 
     Response {
         status: Status::Ok,
+        content_type: match path.extension().and_then(|e| e.to_str()) {
+            Some("css") => "text/css",
+            Some("html") => "text/html",
+            Some("ico") => "image/x-icon",
+            Some("js") => "text/javascript",
+            Some("png") => "image/png",
+            Some("svg") => "image/svg+xml",
+            _ => "",
+        },
         body: contents,
     }
 }

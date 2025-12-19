@@ -3,6 +3,7 @@ use std::io::Write as _;
 
 pub struct Response {
     pub status: Status,
+    pub content_type: &'static str,
     pub body: Vec<u8>,
 }
 
@@ -10,7 +11,8 @@ impl Response {
     pub fn from_status(status: Status) -> Self {
         Self {
             status,
-            body: Vec::new(),
+            content_type: "text/plain",
+            body: status.phrase().as_bytes().to_vec(),
         }
     }
 
@@ -27,6 +29,11 @@ impl Response {
 
         result.extend_from_slice(EOL);
         write!(result, "Content-Length: {}", self.body.len()).unwrap();
+
+        if !self.content_type.is_empty() {
+            result.extend_from_slice(EOL);
+            write!(result, "Content-Type: {}", self.content_type).unwrap();
+        }
 
         if self.closes() {
             result.extend_from_slice(EOL);
