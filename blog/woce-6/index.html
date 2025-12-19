@@ -1,0 +1,291 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="description" content="Official Lonami's website"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"><title>Writing our own Cheat Engine: Pointers | Lonami's Blog</title><link rel="stylesheet" type="text/css" href="/style.css"> 
+</head><body><nav><ul><li><a  href="/">lonami's&nbsp;site</a></li><li><a class=selected href="/blog">blog</a></li><li><a  href="/golb">golb</a></li></ul><div><a href="https://github.com/LonamiWebs"><img src="/img/github.svg" alt="github"></a><a href="/blog/atom.xml"><img src="/img/rss.svg" alt="rss"></a></div></nav><main><article><h1 class="title">Writing our own Cheat Engine: Pointers</h1><div class="time"><p>2021-03-13</p></div><p>This is part 6 on the <em>Writing our own Cheat Engine</em> series:</p><ul><li><a href="/blog/woce-1">Part 1: Introduction</a> (start here if you're new to the series!)</li><li><a href="/blog/woce-2">Part 2: Exact Value scanning</a></li><li><a href="/blog/woce-3">Part 3: Unknown initial value</a></li><li><a href="/blog/woce-4">Part 4: Floating points</a></li><li><a href="/blog/woce-5">Part 5: Code finder</a></li><li>Part 6: Pointers</li><li><a href="/blog/woce-7">Part 7: Code Injection</a></li><li><a href="/blog/woce-8">Part 8: Multilevel pointers</a></li></ul><p>In part 5 we wrote our very own debugger. We learnt that Cheat Engine is using hardware breakpoints to watch memory change, and how to do the same ourselves. We also learnt that hardware points are not the only way to achieve the effect of watchpoints, although they certainly are the fastest and cleanest approach.</p><p>In this post, we will be reusing some of that knowledge to find out a closely related value, the <em>pointer</em> that points to the real value<a href="#fn:1"><sup id="fnref:1">↪1</sup></a>. As a quick reminder, a pointer is nothing but an <code>usize</code><a href="#fn:2"><sup id="fnref:2">↪2</sup></a> representing the address of another portion of memory, in this case, the actual value we will be scanning for. A pointer is a value that, well, points elsewhere. In Rust we normally use reference instead, which are safer (typed and their lifetime is tracked) than pointers, but in the end we can achieve the same with both.</p><p>Why care about pointers? It turns out that things, such as your current health in-game, are very unlikely to end up in the same memory position when you restart the game (or even change to another level, or even during gameplay). So, if you perform a scan and find that the address where your health is stored is <code>0x73AABABE</code>, you might be tempted to save it and reuse it next time you launch the game. Now you don't need to scan for it again! Alas, as soon as you restart the game, the health is now stored at <code>0x5AADBEEF</code>.</p><p>Not all hope is lost! The game must <em>somehow</em> have a way to reliably find this value, and the way it's done is with pointers. There will always be some base address that holds a pointer, and the game code knows where to find this pointer. If we are also able to find the pointer at said base address, and follow it ourselves ("dereferencing" it), we can perform the same steps the game is doing, and reliably find the health no matter how much we restart the game<a href="#fn:3"><sup id="fnref:3">↪3</sup></a>.</p><h2 id="pointers"><a href="#pointers">Pointers</a></h2><details open><summary>Cheat Engine Tutorial: Step 6</summary><blockquote><p>In the previous step I explained how to use the Code finder to handle changing locations. But that method alone makes it difficult to find the address to set the values you want. That's why there are pointers:</p><p>At the bottom you'll find 2 buttons. One will change the value, and the other changes the value AND the location of the value. For this step you don't really need to know assembler, but it helps a lot if you do.</p><p>First find the address of the value. When you've found it use the function to find out what accesses this address.</p><p>Change the value again, and a item will show in the list. Double click that item. (or select and click on more info) and a new window will open with detailed information on what happened when the instruction ran.</p><p>If the assembler instruction doesn't have anything between a '[' and ']' then use another item in the list. If it does it will say what it think will be the value of the pointer you need.</p><p>Go back to the main cheat engine window (you can keep this extra info window open if you want, but if you close it, remember what is between the [ and ]) and do a 4 byte scan in hexadecimal for the value the extra info told you. When done scanning it may return 1 or a few hundred addresses. Most of the time the address you need will be the smallest one. Now click on manually add and select the pointer checkbox.</p><p>The window will change and allow you to type in the address of a pointer and a offset. Fill in as address the address you just found. If the assembler instruction has a calculation (e.g: [esi+12]) at the end then type the value in that's at the end. else leave it 0. If it was a more complicated instruction look at the calculation.</p><p>Example of a more complicated instruction:</p><p>[EAX*2+EDX+00000310] eax=4C and edx=00801234.</p><p>In this case EDX would be the value the pointer has, and EAX*2+00000310 the offset, so the offset you'd fill in would be 2*4C+00000310=3A8. (this is all in hex, use calc.exe from windows in scientific mode to calculate).</p><p>Back to the tutorial, click OK and the address will be added, If all went right the address will show P-&gt;xxxxxxx, with xxxxxxx being the address of the value you found. If thats not right, you've done something wrong. Now, change the value using the pointer you added in 5000 and freeze it. Then click Change pointer, and if all went right the next button will become visible.</p><p><em>extra</em>: And you could also use the pointer scanner to find the pointer to this address.</p></blockquote></details><h2 id="on-access-watchpoints"><a href="#on-access-watchpoints">On-access watchpoints</a></h2><p>Last time we managed to learn how hardware breakpoints were being set by observing Cheat Engine's behaviour. I think it's now time to handle this properly instead. We'll check out the <a href="https://wiki.osdev.org/CPU_Registers_x86#Debug_Registers">CPU Registers x86 page on OSDev</a> to learn about it:</p><ul><li>DR0, DR1, DR2 and DR3 can hold a memory address each. This address will be used by the breakpoint.</li><li>DR4 is actually an <a href="https://en.wikipedia.org/wiki/X86_debug_register">obsolete synonym</a> for DR6.</li><li>DR5 is another obsolete synonym, this time for DR7.</li><li>DR6 is debug status. The four lowest bits indicate which breakpoint was hit, and the four highest bits contain additional information. We should make sure to clear this ourselves when a breakpoint is hit.</li><li>DR7 is debug control, which we need to study more carefully.</li></ul><p>Each debug register DR0 through DR3 has two corresponding bits in DR7, starting from the lowest-order bit, to indicate whether the corresponding register is a <strong>L</strong>ocal or <strong>G</strong>lobal breakpoint. So it looks like this:</p><pre>  Meaning: [ .. .. | G3 | L3 | G2 | L2 | G1 | L1 | G0 | L0 ]
+Bit-index:   31-08 | 07 | 06 | 05 | 04 | 03 | 02 | 01 | 00
+</pre><p>Cheat Engine was using local breakpoints, because the zeroth bit was set. Probably because we don't want these breakpoints to infect other programs! Because we were using only one breakpoint, only the lowermost bit was being set. The local 1st, 2nd and 3rd bits were unset.</p><p>Now, each debug register DR0 through DR4 has four additional bits in DR7, two for the <strong>C</strong>ondition and another two for the <strong>S</strong>ize:</p><pre>  Meaning: [   S3  |   C3  |   S2  |   C2  |   S1  |   C1  |   S0  |   C0  | .. .. ]
+Bit-index:   31 30 | 29 28 | 27 26 | 25 24 | 23 22 | 21 20 | 19 18 | 17 16 | 15-00
+</pre><p>The two bits of the condition mean the following:</p><ul><li><code>00</code> execution breakpoint.</li><li><code>01</code> write watchpoint.</li><li><code>11</code> read/write watchpoint.</li><li><code>10</code> unsupported I/O read/write.</li></ul><p>When we were using Cheat Engine to add write watchpoints, the bits 17 and 16 were indeed set to <code>01</code>, and the bits 19 and 18 were set to <code>11</code>. Hm, but <em>11<sub>2</sub>&nbsp;=&nbsp;3<sub>10</sub></em>&nbsp;, and yet, we were watching writes to 4 bytes. So what's up with this? Is there a different mapping for the size which isn't documented at the time of writing? Seems we need to learn from Cheat Engine's behaviour one more time.</p><p>For reference, this is what DR7 looked like when we added a single write watchpoint:</p><pre>hex: 000d_0001
+bin: 00000000_00001101_00000000_00000001
+</pre><p>And this is the code I will be using to check the breakpoints of different sizes:</p><pre>thread::enum_threads(pid)
+    .unwrap()
+    .into_iter()
+    .for_each(|tid| {
+        let thread = thread::Thread::open(tid).unwrap();
+        let ctx = thread.get_context().unwrap();
+        eprintln!("hex: {:08x}", ctx.Dr7);
+        eprintln!("bin: {:032b}", ctx.Dr7);
+    });
+</pre><p>Let's compare this to watchpoints for sizes 1, 2, 4 and 8 bytes:</p><pre>1 byte
+hex: 0001_0401
+bin: 00000000_00000001_00000100_00000001
+
+2 bytes
+hex: 0005_0401
+bin: 00000000_00000101_00000100_00000001
+
+4 bytes
+hex: 000d_0401
+bin: 00000000_00001101_00000100_00000001
+
+8 bytes
+hex: 0009_0401
+bin: 00000000_00001001_00000100_00000001
+                            ^ wut?
+</pre><p>I have no idea what's up with that stray tenth bit. Its use does not seem documented, and things worked fine without it, so we'll ignore it. The lowest bit is set to indicate we're using DR0, bits 17 and 16 represent the write watchpoint, and the size seems to be as follows:</p><ul><li><code>00</code> for a single byte.</li><li><code>01</code> for two bytes (a "word").</li><li><code>11</code> for four bytes (a "double word").</li><li><code>10</code> for eight bytes (a "quadruple word").</li></ul><p>Doesn't make much sense if you ask me, but we'll roll with it. Just to confirm, this is what the "on-access" breakpoint looks like according to Cheat Engine:</p><pre>hex: 000f_0401
+bin: 00000000_00001111_00000100_00000001
+</pre><p>So it all checks out! The bit pattern is <code>11</code> for read/write (technically, a write is also an access). Let's implement this!</p><h2 id="proper-breakpoint-handling"><a href="#proper-breakpoint-handling">Proper breakpoint handling</a></h2><p>The first thing we need to do is represent the possible breakpoint conditions:</p><pre><code class="language-rust">#[repr(u8)]
+pub enum Condition {
+    Execute = 0b00,
+    Write = 0b01,
+    Access = 0b11,
+}
+</code></pre><p>And also the legal breakpoint sizes:</p><pre><code class="language-rust">#[repr(u8)]
+pub enum Size {
+    Byte = 0b00,
+    Word = 0b01,
+    DoubleWord = 0b11,
+    QuadWord = 0b10,
+}
+</code></pre><p>We are using <code>#[repr(u8)]</code> so that we can convert a given variant into the corresponding bit pattern. With the right types defined in order to set a breakpoint, we can start implementing the method that will set them (inside <code>impl Thread</code>):</p><pre><code class="language-rust">pub fn add_breakpoint(&amp;self, addr: usize, cond: Condition, size: Size) -&gt; io::Result&lt;Breakpoint&gt; {
+    let mut context = self.get_context()?;
+    todo!()
+}
+</code></pre><p>First, let's try finding an "open spot" where we could set our breakpoint. We will "slide" a the <code>0b11</code> bitmask over the lowest eight bits, and if and only if both the local and global bits are unset, then we're free to set a breakpoint at this index<a href="#fn:4"><sup id="fnref:4">↪4</sup></a>:</p><pre><code class="language-rust">let index = (0..4)
+    .find_map(|i| ((context.Dr7 &amp; (0b11 &lt;&lt; (i * 2))) == 0).then(|| i))
+    .ok_or_else(|| io::Error::new(io::ErrorKind::Other, "no debug register available"))?;
+</code></pre><p>Once an <code>index</code> is found, we can set the address we want to watch in the corresponding register and update the debug control bits:</p><pre><code class="language-rust">let addr = addr as u64;
+match index {
+    0 =&gt; context.Dr0 = addr,
+    1 =&gt; context.Dr1 = addr,
+    2 =&gt; context.Dr2 = addr,
+    3 =&gt; context.Dr3 = addr,
+    _ =&gt; unreachable!(),
+}
+
+let clear_mask = !((0b1111 &lt;&lt; (16 + index * 4)) | (0b11 &lt;&lt; (index * 2)));
+context.Dr7 &amp;= clear_mask;
+
+context.Dr7 |= 1 &lt;&lt; (index * 2);
+
+let sc = (((size as u8) &lt;&lt; 2) | (cond as u8)) as u64;
+context.Dr7 |= sc &lt;&lt; (16 + index * 4);
+
+self.set_context(&amp;context)?;
+Ok(Breakpoint {
+    thread: self,
+    clear_mask,
+})
+</code></pre><p>Note that we're first creating a "clear mask". We switch on all the bits that we may use for this breakpoint, and then negate. Effectively, <code>Dr7 &amp; clear_mask</code> will make sure we don't leave any bit high on accident. We apply the mask before OR-ing the rest of bits to also clear any potential garbage on the size and condition bits. Next, we set the bit to enable the new local breakpoint, and also store the size and condition bits at the right location.</p><p>With the context updated, we can set it back and return the <code>Breakpoint</code>. It stores the <code>thread</code> and the <code>clear_mask</code> so that it can clean up on <code>Drop</code>. We are technically relying on <code>Drop</code> to run behaviour here, but the cleanup is done on a best-effort basis. If the user intentionally forgets the <code>Breakpoint</code>, maybe they want the <code>Breakpoint</code> to forever be set.</p><p>This logic is begging for a testcase though; I'll split it into a new <code>Breakpoint::update_dbg_control</code> method and test that out:</p><pre><code class="language-rust">
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn brk_add_one() {
+        // DR7 starts with garbage which should be respected.
+        let (clear_mask, dr, dr7) =
+            Breakpoint::update_dbg_control(0x1700, Condition::Write, Size::DoubleWord).unwrap();
+
+        assert_eq!(clear_mask, 0xffff_ffff_fff0_fffc);
+        assert_eq!(dr, DebugRegister::Dr0);
+        assert_eq!(dr7, 0x0000_0000_000d_1701);
+    }
+
+    #[test]
+    fn brk_add_two() {
+        let (clear_mask, dr, dr7) = Breakpoint::update_dbg_control(
+            0x0000_0000_000d_0001,
+            Condition::Write,
+            Size::DoubleWord,
+        )
+        .unwrap();
+
+        assert_eq!(clear_mask, 0xffff_ffff_ff0f_fff3);
+        assert_eq!(dr, DebugRegister::Dr1);
+        assert_eq!(dr7, 0x0000_0000_00dd_0005);
+    }
+
+    #[test]
+    fn brk_try_add_when_max() {
+        assert!(Breakpoint::update_dbg_control(
+            0x0000_0000_dddd_0055,
+            Condition::Write,
+            Size::DoubleWord
+        )
+        .is_none());
+    }
+}
+</code></pre><pre>running 3 tests
+test thread::tests::brk_add_one ... ok
+test thread::tests::brk_add_two ... ok
+test thread::tests::brk_try_add_when_max ... ok
+</pre><p>Very good! With proper breakpoint handling usable, we can continue.</p><h2 id="inferring-the-pointer-value"><a href="#inferring-the-pointer-value">Inferring the pointer value</a></h2><p>After scanning memory for the location we're looking for (say, our current health), we then add an access watchpoint, and wait for an exception to occur. As a reminder, here's the page with the <a href="https://docs.microsoft.com/en-us/windows/win32/debug/debugging-events">Debugging Events</a>:</p><pre><code class="language-rust">let addr = ...;
+let mut threads = ...;
+
+let _watchpoints = threads
+    .iter_mut()
+    .map(|thread| {
+        thread
+            .add_breakpoint(addr, thread::Condition::Access, thread::Size::DoubleWord)
+            .unwrap()
+    })
+    .collect::&lt;Vec&lt;_&gt;&gt;();
+
+loop {
+    let event = debugger.wait_event(None).unwrap();
+    if event.dwDebugEventCode == winapi::um::minwinbase::EXCEPTION_DEBUG_EVENT {
+        let exc = unsafe { event.u.Exception() };
+        if exc.ExceptionRecord.ExceptionCode == winapi::um::minwinbase::EXCEPTION_SINGLE_STEP {
+            todo!();
+        }
+    }
+    debugger.cont(event, true).unwrap();
+}
+</code></pre><p>Now, inside the <code>todo!()</code> we will want to do a few things, namely printing out the instructions "around this location" and dumping the entire thread context on screen. To print the instructions, we need to import <code>iced_x86</code> again, iterate over all memory regions to find the region where the exception happened, read the corresponding bytes, decode the instructions, and when we find the one with a corresponding instruction pointer, print "around it":</p><pre><code class="language-rust">use iced_x86::{Decoder, DecoderOptions, Formatter, Instruction, NasmFormatter};
+
+let addr = exc.ExceptionRecord.ExceptionAddress as usize;
+let region = process
+    .memory_regions()
+    .into_iter()
+    .find(|region| {
+        let base = region.BaseAddress as usize;
+        base &lt;= addr &amp;&amp; addr &lt; base + region.RegionSize
+    })
+    .unwrap();
+
+let bytes = process
+    .read_memory(region.BaseAddress as usize, region.RegionSize)
+    .unwrap();
+
+let mut decoder = Decoder::new(64, &amp;bytes, DecoderOptions::NONE);
+decoder.set_ip(region.BaseAddress as _);
+
+let mut formatter = NasmFormatter::new();
+let mut output = String::new();
+
+let instructions = decoder.into_iter().collect::&lt;Vec&lt;_&gt;&gt;();
+for (i, ins) in instructions.iter().enumerate() {
+    if ins.next_ip() as usize == addr {
+        let low = i.saturating_sub(5);
+        let high = (i + 5).min(instructions.len());
+        for j in low..high {
+            let ins = &amp;instructions[j];
+            print!("{} {:016X} ", if j == i { "&gt;&gt;&gt;" } else { "   " }, ins.ip());
+            let k = (ins.ip() - region.BaseAddress as usize as u64) as usize;
+            let instr_bytes = &amp;bytes[k..k + ins.len()];
+            for b in instr_bytes.iter() {
+                print!("{:02X}", b);
+            }
+            if instr_bytes.len() &lt; 10 {
+                for _ in 0..10usize.saturating_sub(instr_bytes.len()) {
+                    print!("  ");
+                }
+            }
+
+            output.clear();
+            formatter.format(ins, &amp;mut output);
+            println!(" {}", output);
+        }
+        break;
+    }
+}
+debugger.cont(event, true).unwrap();
+break;
+</code></pre><p>The result is pretty fancy:</p><pre>    000000010002CAAC 48894DF0             mov [rbp-10h],rcx
+    000000010002CAB0 488955F8             mov [rbp-8],rdx
+    000000010002CAB4 48C745D800000000     mov qword [rbp-28h],0
+    000000010002CABC 90                   nop
+    000000010002CABD 488B050CA02D00       mov rax,[rel 100306AD0h]
+&gt;&gt;&gt; 000000010002CAC4 8B00                 mov eax,[rax]
+    000000010002CAC6 8945EC               mov [rbp-14h],eax
+    000000010002CAC9 B9E8030000           mov ecx,3E8h
+    000000010002CACE E88D2FFEFF           call 000000010000FA60h
+    000000010002CAD3 8945E8               mov [rbp-18h],eax
+</pre><p>Cool! So <code>rax</code> is holding an address, meaning it's a pointer, and the value it reads (dereferences) is stored back into <code>eax</code> (because it does not need <code>rax</code> anymore). Alas, the current thread context has the register state <em>after</em> the instruction was executed, and <code>rax</code> no longer contains the address at this point. However, notice how the previous instruction writes a fixed value to <code>rax</code>, and then that value is used to access memory, like so:</p><pre><code class="language-rust">let eax = memory[memory[0x100306AD0]];
+</code></pre><p>The value at <code>memory[0x100306AD0]</code> <em>is</em> the pointer! No offsets are used, because nothing is added to the pointer after it's read. This means that, if we simply scan for the address we were looking for, we should find out where the pointer is stored:</p><pre><code class="language-rust">let addr = ...;
+let scan = process.scan_regions(&amp;regions, Scan::Exact(addr as u64));
+
+scan.into_iter().for_each(|region| {
+    region.locations.iter().for_each(|ptr_addr| {
+        println!("[{:x}] = {:x}", ptr_addr, addr);
+    });
+});
+</code></pre><p>And just like that:</p><pre>[100306ad0] = 15de9f0
+</pre><p>Notice how the pointer address found matches with the offset used by the instructions:</p><pre>    000000010002CABD 488B050CA02D00       mov rax,[rel 100306AD0h]
+           this is the same as the value we just found ^^^^^^^^^^
+</pre><p>Very interesting indeed. We were actually very lucky to have only found a single memory location containing the pointer value, <code>0x15de9f0</code>. Cheat Engine somehow knows that this value is always stored at <code>0x100306ad0</code> (or rather, at <code>Tutorial-x86_64.exe+306AD0</code>), because the address shows green. How does it do this?</p><h2 id="base-addresses"><a href="#base-addresses">Base addresses</a></h2><p>Remember back in <a href="/blog/woce-2">part 2</a> when we introduced the memory regions? They're making a comeback! A memory region contains both the current memory protection option <em>and</em> the protection level when the region was created. If we try printing out the protection levels for both the memory region containing the value, and the memory region containing the pointer, this is what we get (the addresses differ from the ones previously because I restarted the tutorial):</p><pre>Region holding the value:
+    BaseAddress: 0xb0000
+    AllocationBase: 0xb0000
+    AllocationProtect: 0x4
+    RegionSize: 1007616
+    State: 4096
+    Protect: 4
+    Type: 0x20000
+
+Region holding the pointer:
+    BaseAddress: 0x100304000
+    AllocationBase: 0x100000000
+    AllocationProtect: 0x80
+    RegionSize: 28672
+    State: 4096
+    Protect: 4
+    Type: 0x1000000
+</pre><p>Interesting! According to the <a href="https://docs.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-memory_basic_information"><code>MEMORY_BASIC_INFORMATION</code> page</a>, the type for the first region is <code>MEM_PRIVATE</code>, and the type for the second region is <code>MEM_IMAGE</code> which:</p><blockquote><p>Indicates that the memory pages within the region are mapped into the view of an image section.</p></blockquote><p>The protection also changes from <code>PAGE_EXECUTE_WRITECOPY</code> to simply <code>PAGE_READWRITE</code>, but I don't think it's relevant. Neither the type seems to be much more relevant. In <a href="/blog/woce-2">part 2</a> we also mentioned the concept of "base address", but decided against using it, because starting to look for regions at address zero seemed to work fine. However, it would make sense that fixed "addresses" start at some known "base". Let's try getting the <a href="https://stackoverflow.com/a/26573045/4759433">base address for all loaded modules</a>. Currently, we only get the address for the base module, in order to retrieve its name, but now we need them all:</p><pre><code class="language-rust">pub fn enum_modules(&amp;self) -&gt; io::Result&lt;Vec&lt;winapi::shared::minwindef::HMODULE&gt;&gt; {
+    let mut size = 0;
+    if unsafe {
+        winapi::um::psapi::EnumProcessModules(
+            self.handle.as_ptr(),
+            ptr::null_mut(),
+            0,
+            &amp;mut size,
+        )
+    } == FALSE
+    {
+        return Err(io::Error::last_os_error());
+    }
+
+    let mut modules = Vec::with_capacity(size as usize / mem::size_of::&lt;HMODULE&gt;());
+    if unsafe {
+        winapi::um::psapi::EnumProcessModules(
+            self.handle.as_ptr(),
+            modules.as_mut_ptr(),
+            (modules.capacity() * mem::size_of::&lt;HMODULE&gt;()) as u32,
+            &amp;mut size,
+        )
+    } == FALSE
+    {
+        return Err(io::Error::last_os_error());
+    }
+
+    unsafe {
+        modules.set_len(size as usize / mem::size_of::&lt;HMODULE&gt;());
+    }
+
+    Ok(modules)
+}
+</code></pre><p>The first call is used to retrieve the correct <code>size</code>, then we allocate just enough, and make the second call. The returned type are pretty much memory addresses, so let's see if we can find regions that contain them:</p><pre><code class="language-rust">let mut bases = 0;
+let modules = process.enum_modules().unwrap();
+let regions = process.memory_regions();
+regions.iter().for_each(|region| {
+    if modules.iter().any(|module| {
+        let base = region.AllocationBase as usize;
+        let addr = *module as usize;
+        base &lt;= addr &amp;&amp; addr &lt; base + region.RegionSize
+    }) {
+        bases += 1;
+    }
+});
+
+println!(
+    "{}/{} regions have a module address within them",
+    bases,
+    regions.len()
+);
+</code></pre><pre>41/353 regions have a module address within them
+</pre><p>Exciting stuff! It appears <code>base == addr</code> also does the trick<a href="#fn:5"><sup id="fnref:5">↪5</sup></a>, so now we could build a <code>bases: HashSet&lt;usize&gt;</code> and simply check if <code>bases.contains(&amp;region.AllocationBase as usize)</code> to determine whether <code>region</code> is a base address or not<a href="#fn:6"><sup id="fnref:6">↪6</sup></a>. So there we have it! The address holding the pointer value does fall within one of these "base regions". You can also get the name from one of these module addresses, and print it in the same way as Cheat Engine does it (such as <code>Tutorial-x86_64.exe+306AD0</code>).</p><h2 id="finale"><a href="#finale">Finale</a></h2><p>So, there's no "automated" solution to all of this? That's the end? Well, yes, once you have a pointer you can dereference it once and then write to the given address to complete the tutorial step! I can understand how this would feel a bit underwhelming, but in all fairness, we were required to pretty-print assembly to guess what pointer address we could potentially need to look for. There is an <a href="https://www.intel.com/content/www/us/en/architecture-and-technology/64-ia-32-architectures-software-developer-vol-2a-manual.html">stupidly large amount of instructions</a>, and I'm sure a lot of them can access memory, so automating that would be rough. We were lucky that the instructions right before the one that hit the breakpoint were changing the memory address, but you could imagine this value coming from somewhere completely different. It could also be using a myriad of different techniques to apply the offset. I would argue manual intervention is a must here<a href="#fn:7"><sup id="fnref:7">↪7</sup></a>.</p><p>We have learnt how to pretty-print instructions, and had a very gentle introduction to figuring out what we may need to look for. The code to retrieve the loaded modules, and their corresponding regions, will come in handy later on. Having access to this information lets us know when to stop looking for additional pointers. As soon as a pointer is found within a memory region corresponding to a base module, we're done! Also, I know the title doesn't really much the contents of this entry (sorry about that), but I'm just following the convention of calling it whatever the Cheat Engine tutorial calls them.</p><p>The <a href="https://github.com/lonami/memo">code for this post</a> is available over at my GitHub. You can run <code>git checkout step6</code> after cloning the repository to get the right version of the code, although you will have to <code>checkout</code> to individual commits if you want to review, for example, how the instructions were printed out. Only the code necessary to complete the step is included at the <code>step6</code> tag.</p><p>In the <a href="/blog/woce-7">next post</a>, we'll tackle the seventh step of the tutorial: Code Injection. This will be pretty similar to part 5, but instead of writing out a simple NOP instruction, we will have to get a bit more creative.</p><h3 id="footnotes"><a href="#footnotes">Footnotes</a></h3><p id="fn:1" class="footnote-definition"><span>1</span> This will only be a gentle introduction to pointers. Part 8 of this series will have to rely on more advanced techniques.&nbsp;<a href="#fnref:1">↩</a></p><p id="fn:2" class="footnote-definition"><span>2</span> Kind of. The size of a pointer isn't necessarily the size as <code>usize</code>, although <code>usize</code> is guaranteed to be able of representing every possible address. For our purposes, we can assume a pointer is as big as <code>usize</code>.&nbsp;<a href="#fnref:2">↩</a></p><p id="fn:3" class="footnote-definition"><span>3</span> Game updates are likely to pull more code and shuffle stuff around. This is unfortunately a difficult problem to solve. But storing a pointer which is usable across restarts for as long as the game doesn't update is still a pretty darn big improvement over having to constantly scan for the locations we care about. Although if you're smart enough to look for certain unique patterns, even if the code is changed, finding those patterns will give you the new updated address, so it's not <em>impossible</em>.&nbsp;<a href="#fnref:3">↩</a></p><p id="fn:4" class="footnote-definition"><span>4</span><code>bool::then</code> is a pretty recent addition at the time of writing (1.50.0), so make sure you <code>rustup update</code> if it's erroring out!&nbsp;<a href="#fnref:4">↩</a></p><p id="fn:5" class="footnote-definition"><span>5</span> I wasn't sure if there would be some metadata before the module base address but within the region, so I went with the range check. What <em>is</em> important however is using <code>AllocationBase</code>, not <code>BaseAddress</code>. They're different, and this did bite me.&nbsp;<a href="#fnref:5">↩</a></p><p id="fn:6" class="footnote-definition"><span>6</span> As usual, I have no idea if this is how Cheat Engine is doing it, but it seems reasonable.&nbsp;<a href="#fnref:6">↩</a></p><p id="fn:6" class="footnote-definition"><span>6</span> But nothing's stopping you from implementing some heuristics to get the job done for you. If you run some algorithm in your head to find what the pointer value could be, you can program it in Rust as well, although I don't think it's worth the effort.&nbsp;<a href="#fnref:6">↩</a></p></article></main><footer><p> Share your thoughts! —
+<a href="mailto:totufals@hotmail.com"><img src="/img/mail.svg" alt="Mail"></a> </p><p class="abyss" onclick="egg()">Gaze into the abyss… Oh hi there!</p></footer><script>
+      const egg = () => {
+    const audio = document.createElement('audio')
+    audio.src = 'https://oriath.net/Audio/Dialogue/NPC/ShaperCombat/SH25b.dialogue.ogg'
+    audio.play()
+}
+    </script></body></html>

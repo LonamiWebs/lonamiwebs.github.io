@@ -1,0 +1,46 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="description" content="Official Lonami's website"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"><title>Lonami's Blog</title><link rel="stylesheet" type="text/css" href="/style.css"> 
+</head><body><nav><ul><li><a  href="/">lonami's&nbsp;site</a></li><li><a class=selected href="/blog">blog</a></li><li><a  href="/golb">golb</a></li></ul><div><a href="https://github.com/LonamiWebs"><img src="/img/github.svg" alt="github"></a><a href="/blog/atom.xml"><img src="/img/rss.svg" alt="rss"></a></div></nav><main><article><h1 class="title">My Blog</h1><p id="welcome" onclick="pls_stop()">Welcome to my blog!</p><p>Here I occasionally post new entries, mostly tech related. Perhaps it's tips for a new game I'm playing, perhaps it has something to do with FFI, or perhaps I'm fighting the borrow checker (just kidding, I'm over that. Mostly).</p><hr><script>
+    const WELCOME_EN = 'Welcome to my blog!'
+    const WELCOME_ES = '¡Bienvenido a mi blog!'
+    const APOLOGIES = "ok sorry i'll stop"
+    const REWRITE_DELAY = 5000
+    const CHAR_DELAY = 30
+    const welcome = document.getElementById('welcome')
+
+    let deleting = true
+    let english = false
+    let stopped = false
+
+    const pls_stop = () => {
+        stopped = true
+        welcome.innerHTML = APOLOGIES
+    }
+
+    const begin_rewrite = () => {
+        if (stopped) {
+            // now our visitor is angry :(
+        } else if (deleting) {
+            if (welcome.innerHTML == '…') {
+                deleting = false
+            } else {
+                welcome.innerHTML = welcome.innerHTML.slice(0, -1) || '…'
+            }
+            setTimeout(begin_rewrite, CHAR_DELAY)
+        } else {
+            let text = english ? WELCOME_EN : WELCOME_ES
+            welcome.innerHTML = text.slice(0, welcome.innerHTML.length + 1)
+            deleting = welcome.innerHTML.length == text.length
+            english ^= deleting
+            setTimeout(begin_rewrite, deleting ? REWRITE_DELAY : CHAR_DELAY)
+        }
+    }
+
+    setTimeout(begin_rewrite, REWRITE_DELAY)
+</script><ul><li><a href="/blog/inspecting-tls-traffic/">Downloading Minecraft modpacks without using adware launchers</a><span class="dim"> [mod network; 'windows, 'minecraft, 'python, 'tls]</span></li><li><a href="/blog/stalebots/">In defense of stale-bots</a><span class="dim"> [mod opensource; 'opensource, 'github, 'automation]</span></li><li><a href="/blog/woce-8/">Writing our own Cheat Engine: Multilevel pointers</a><span class="dim"> [mod sw; 'windows, 'rust, 'hacking]</span></li><li><a href="/blog/woce-7/">Writing our own Cheat Engine: Code Injection</a><span class="dim"> [mod sw; 'windows, 'rust, 'hacking]</span></li><li><a href="/blog/woce-6/">Writing our own Cheat Engine: Pointers</a><span class="dim"> [mod sw; 'windows, 'rust, 'hacking]</span></li><li><a href="/blog/woce-5/">Writing our own Cheat Engine: Code finder</a><span class="dim"> [mod sw; 'windows, 'rust, 'hacking]</span></li><li><a href="/blog/woce-4/">Writing our own Cheat Engine: Floating points</a><span class="dim"> [mod sw; 'windows, 'rust, 'hacking]</span></li><li><a href="/blog/woce-3/">Writing our own Cheat Engine: Unknown initial value</a><span class="dim"> [mod sw; 'windows, 'rust, 'hacking]</span></li><li><a href="/blog/woce-2/">Writing our own Cheat Engine: Exact Value scanning</a><span class="dim"> [mod sw; 'windows, 'rust, 'hacking]</span></li><li><a href="/blog/woce-1/">Writing our own Cheat Engine: Introduction</a><span class="dim"> [mod sw; 'windows, 'rust, 'hacking]</span></li><li><a href="/blog/university/">Data Mining, Warehousing and Information Retrieval</a><span class="dim"> [mod algos; 'series, 'bigdata, 'databases]</span></li><li><a href="/blog/new-computer/">My new computer</a><span class="dim"> [mod hw; 'showoff]</span></li><li><a href="/blog/tips-outpost/">Tips for Outpost</a><span class="dim"> [mod games; 'tips]</span></li><li><a href="/blog/ctypes-and-windows/">Python ctypes and Windows</a><span class="dim"> [mod sw; 'python, 'ffi, 'windows]</span></li><li><a href="/blog/pixel-dungeon/">Shattered Pixel Dungeon</a><span class="dim"> [mod games; 'tips]</span></li><li><a href="/blog/installing-nixos-2/">Installing NixOS, Take 2</a><span class="dim"> [mod sw; 'os, 'nixos]</span></li><li><a href="/blog/breaking-ror/">Breaking Risk of Rain</a><span class="dim"> [mod games; 'tips]</span></li><li><a href="/blog/world-edit/">WorldEdit Commands</a><span class="dim"> [mod games; 'minecraft, 'worldedit, 'tips]</span></li><li><a href="/blog/asyncio/">An Introduction to Asyncio</a><span class="dim"> [mod sw; 'python, 'asyncio]</span></li><li><a href="/blog/posts/">Atemporal Blog Posts</a><span class="dim"> [mod algos; 'algorithms, 'culture, 'debate, 'foodforthought, 'graphics, 'optimization]</span></li><li><a href="/blog/graphs/">Graphs</a><span class="dim"> [mod algos; 'graphs]</span></li><li><a href="/blog/installing-nixos/">Installing NixOS</a><span class="dim"> [mod sw; 'os, 'nixos]</span></li></ul></article></main><footer><p> Share your thoughts! —
+<a href="mailto:totufals@hotmail.com"><img src="/img/mail.svg" alt="Mail"></a> </p><p class="abyss" onclick="egg()">Gaze into the abyss… Oh hi there!</p></footer><script>
+      const egg = () => {
+    const audio = document.createElement('audio')
+    audio.src = 'https://oriath.net/Audio/Dialogue/NPC/ShaperCombat/SH25b.dialogue.ogg'
+    audio.play()
+}
+    </script></body></html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Stopwatch</title><link rel="shortcut icon" type="image/svg+xml" href="stopwatch.svg"><style>
+      body {
+    background-color: #000;
+    color: #eee;
+}
+.big {
+    font-size: 8em;
+    text-align: center;
+    margin-bottom: 0;
+}
+.smaller {
+    font-size: 0.2em;
+    margin-left: -1.5em;
+}
+.center {
+    margin: 1em auto;
+    width: 60%;
+}
+button {
+    border-radius: 0;
+    border: 0;
+    width: 46%;
+    height: 4em;
+}
+button {
+    font-size: 2em;
+    color: #fff;
+    transition: background-color 300ms;
+}
+button.green {
+    background-color: #373;
+}
+button.green:hover {
+    background-color: #595;
+}
+button.red {
+    background-color: #733;
+    float: right;
+}
+button.red:hover {
+    background-color: #955;
+}
+    </style></head><body><p class="big"><span id="counter">00:00:00</span><span id="counterms" class="smaller">.000</span></p><div class="center"><button id="toggle" class="green" type="button" onclick="toggleCounter()">Start</button><button type="button" class="red" onclick="resetCounter()">Reset</button></div><script>
+      const counter = document.getElementById("counter");
+const counterms = document.getElementById("counterms");
+const toggle = document.getElementById("toggle");
+
+let start = null;
+let paused = null;
+
+function renderCounter() {
+    if (start == null) {
+        counterms.innerHTML = ".000";
+        counter.innerHTML = "00:00:00";
+        return;
+    }
+
+    var t = (paused == null ? Date.now() : paused) - start;
+    var h = Math.floor(t / 3600000).toString().padStart(2, "0");
+    t %= 3600000;
+    var m = Math.floor(t / 60000).toString().padStart(2, "0");
+    t %= 60000;
+    var s = Math.floor(t / 1000).toString().padStart(2, "0");
+    t %= 1000;
+    var z = Math.floor(t).toString().padStart(3, "0");
+
+    counterms.innerHTML = `.${z}`;
+    counter.innerHTML = `${h}:${m}:${s}`
+}
+
+function updateCounter(timestamp) {
+    if (start != null && paused == null) {
+        renderCounter();
+        window.requestAnimationFrame(updateCounter);
+    }
+}
+
+function toggleCounter() {
+    const now = Date.now();
+    if (start != null && paused == null) {
+        paused = now;
+        toggle.innerHTML = "Start";
+        renderCounter();
+    } else {
+        if (start == null) {
+            start = now;
+        } else if (paused != null) {
+            start += now - paused;
+            paused = null;
+        }
+        toggle.innerHTML = "Stop";
+        updateCounter(0);
+    }
+}
+
+function resetCounter() {
+    start = null;
+    paused = null;
+    toggle.innerHTML = "Start";
+    renderCounter();
+}
+
+renderCounter();
+    </script></body></html>

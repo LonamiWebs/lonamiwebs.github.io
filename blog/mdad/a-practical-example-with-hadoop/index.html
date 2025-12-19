@@ -1,0 +1,97 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="description" content="Official Lonami's website"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"><title>A practical example with Hadoop | Lonami's Blog</title><link rel="stylesheet" type="text/css" href="/style.css"> 
+</head><body><nav><ul><li><a  href="/">lonami's&nbsp;site</a></li><li><a class=selected href="/blog">blog</a></li><li><a  href="/golb">golb</a></li></ul><div><a href="https://github.com/LonamiWebs"><img src="/img/github.svg" alt="github"></a><a href="/blog/atom.xml"><img src="/img/rss.svg" alt="rss"></a></div></nav><main><article><h1 class="title">A practical example with Hadoop</h1><div class="time"><p>2020-03-30</p><p>last updated 2020-04-18</p></div><p>In our <a href="/blog/mdad/introduction-to-hadoop-and-its-mapreduce/">previous Hadoop post</a>, we learnt what it is, how it originated, and how it works, from a theoretical standpoint. Here we will instead focus on a more practical example with Hadoop.</p><p>This post will reproduce the example on Chapter 2 of the book <a href="http://www.hadoopbook.com/">Hadoop: The Definitive Guide, Fourth Edition</a> (<a href="http://grut-computing.com/HadoopBook.pdf">pdf,</a><a href="http://www.hadoopbook.com/code.html">code</a>), that is, finding the maximum global-wide temperature for a given year.</p><h2 id="installation"><a href="#installation">Installation</a></h2><p>Before running any piece of software, its executable code must first be downloaded into our computers so that we can run it. Head over to <a href="http://hadoop.apache.org/releases.html">Apache Hadoop’s releases</a> and download the <a href="https://www.apache.org/dyn/closer.cgi/hadoop/common/hadoop-3.2.1/hadoop-3.2.1.tar.gz">latest binary version</a> at the time of writing (3.2.1).</p><p>We will be using the <a href="https://linuxmint.com/">Linux Mint</a> distribution because I love its simplicity, although the process shown here should work just fine on any similar Linux distribution such as <a href="https://ubuntu.com/">Ubuntu</a>.</p><p>Once the archive download is complete, extract it with any tool of your choice (graphical or using the terminal) and execute it. Make sure you have a version of Java installed, such as <a href="https://openjdk.java.net/">OpenJDK</a>.</p><p>Here are all the three steps in the command line:</p><pre>wget https://apache.brunneis.com/hadoop/common/hadoop-3.2.1/hadoop-3.2.1.tar.gz
+tar xf hadoop-3.2.1.tar.gz
+hadoop-3.2.1/bin/hadoop version
+</pre><p>We will be using the two example data files that they provide in <a href="https://github.com/tomwhite/hadoop-book/tree/master/input/ncdc/all">their GitHub repository</a>, although the full dataset is offered by the <a href="https://www.ncdc.noaa.gov/">National Climatic Data Center</a> (NCDC).</p><p>We will also unzip and concatenate both files into a single text file, to make it easier to work with. As a single command pipeline:</p><pre>curl https://raw.githubusercontent.com/tomwhite/hadoop-book/master/input/ncdc/all/190{1,2}.gz | gunzip &gt; 190x
+</pre><p>This should create a <code>190x</code> text file in the current directory, which will be our input data.</p><h2 id="processing-data"><a href="#processing-data">Processing data</a></h2><p>To take advantage of Hadoop, we have to design our code to work in the MapReduce model. Both the map and reduce phase work on key-value pairs as input and output, and both have a programmer-defined function.</p><p>We will use Java, because it’s a dependency that we already have anyway, so might as well.</p><p>Our map function needs to extract the year and air temperature, which will prepare the data for later use (finding the maximum temperature for each year). We will also drop bad records here (if the temperature is missing, suspect or erroneous).</p><p>Copy or reproduce the following code in a file called <code>MaxTempMapper.java</code>, using any text editor of your choice:</p><pre>import java.io.IOException;
+
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper;
+
+public class MaxTempMapper extends Mapper&lt;LongWritable, Text, Text, IntWritable&gt; {
+    private static final int TEMP_MISSING = 9999;
+    private static final String GOOD_QUALITY_RE = "[01459]";
+
+    @Override
+    public void map(LongWritable key, Text value, Context context)
+            throws IOException, InterruptedException {
+        String line = value.toString();
+        String year = line.substring(15, 19);
+        String temp = line.substring(87, 92).replaceAll("^\\+", "");
+        String quality = line.substring(92, 93);
+
+        int airTemperature = Integer.parseInt(temp);
+        if (airTemperature != TEMP_MISSING &amp;&amp; quality.matches(GOOD_QUALITY_RE)) {
+            context.write(new Text(year), new IntWritable(airTemperature));
+        }
+    }
+}
+</pre><p>Now, let’s create the <code>MaxTempReducer.java</code> file. Its job is to reduce the data from multiple values into just one. We do that by keeping the maximum out of all the values we receive:</p><pre>import java.io.IOException;
+import java.util.Iterator;
+
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Reducer;
+
+public class MaxTempReducer extends Reducer&lt;Text, IntWritable, Text, IntWritable&gt; {
+    @Override
+    public void reduce(Text key, Iterable&lt;IntWritable&gt; values, Context context)
+            throws IOException, InterruptedException {
+        Iterator&lt;IntWritable&gt; iter = values.iterator();
+        if (iter.hasNext()) {
+            int maxValue = iter.next().get();
+            while (iter.hasNext()) {
+                maxValue = Math.max(maxValue, iter.next().get());
+            }
+            context.write(key, new IntWritable(maxValue));
+        }
+    }
+}
+</pre><p>Except for some Java weirdness (…why can’t we just iterate over an <code>Iterator</code>? Or why can’t we just manually call <code>next()</code> on an <code>Iterable</code>?), our code is correct. There can’t be a maximum if there are no elements, and we want to avoid dummy values such as <code>Integer.MIN_VALUE</code>.</p><p>We can also take a moment to appreciate how absolutely tiny this code is, and it’s Java! Hadoop’s API is really awesome and lets us write such concise code to achieve what we need.</p><p>Last, let’s write the <code>main</code> method, or else we won’t be able to run it. In our new file <code>MaxTemp.java</code>:</p><pre>import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class MaxTemp {
+    public static void main(String[] args) throws Exception {
+        if (args.length != 2) {
+            System.err.println("usage: java MaxTemp &lt;input path&gt; &lt;output path&gt;");
+            System.exit(-1);
+        }
+
+        Job job = Job.getInstance();
+
+        job.setJobName("Max temperature");
+        job.setJarByClass(MaxTemp.class);
+        job.setMapperClass(MaxTempMapper.class);
+        job.setReducerClass(MaxTempReducer.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+        boolean result = job.waitForCompletion(true);
+
+        System.exit(result ? 0 : 1);
+    }
+}
+</pre><p>And compile by including the required <code>.jar</code> dependencies in Java’s classpath with the <code>-cp</code> switch:</p><pre>javac -cp "hadoop-3.2.1/share/hadoop/common/*:hadoop-3.2.1/share/hadoop/mapreduce/*" *.java
+</pre><p>At last, we can run it (also specifying the dependencies in the classpath, this one’s a mouthful):</p><pre>java -cp ".:hadoop-3.2.1/share/hadoop/common/*:hadoop-3.2.1/share/hadoop/common/lib/*:hadoop-3.2.1/share/hadoop/mapreduce/*:hadoop-3.2.1/share/hadoop/mapreduce/lib/*:hadoop-3.2.1/share/hadoop/yarn/*:hadoop-3.2.1/share/hadoop/yarn/lib/*:hadoop-3.2.1/share/hadoop/hdfs/*:hadoop-3.2.1/share/hadoop/hdfs/lib/*" MaxTemp 190x results
+</pre><p>Hooray! We should have a new <code>results/</code> folder along with the following files:</p><pre>$ ls results
+part-r-00000  _SUCCESS
+$ cat results/part-r-00000
+1901	317
+1902	244
+</pre><p>It worked! Now this example was obviously tiny, but hopefully enough to demonstrate how to get the basics running on real world data.</p></article></main><footer><p> Share your thoughts! —
+<a href="mailto:totufals@hotmail.com"><img src="/img/mail.svg" alt="Mail"></a> </p><p class="abyss" onclick="egg()">Gaze into the abyss… Oh hi there!</p></footer><script>
+      const egg = () => {
+    const audio = document.createElement('audio')
+    audio.src = 'https://oriath.net/Audio/Dialogue/NPC/ShaperCombat/SH25b.dialogue.ogg'
+    audio.play()
+}
+    </script></body></html>
