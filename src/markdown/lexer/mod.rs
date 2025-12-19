@@ -422,7 +422,7 @@ impl<'t> Tokens<'t> {
     }
 }
 
-pub fn lex(text: &[u8]) -> Tokens {
+pub fn lex(text: &[u8]) -> Tokens<'_> {
     Tokens {
         text,
         pos: 0,

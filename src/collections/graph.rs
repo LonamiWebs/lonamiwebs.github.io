@@ -36,7 +36,7 @@ impl<T> Graph<T> {
         }
     }
 
-    pub fn root(&self) -> NodeRef<T> {
+    pub fn root(&self) -> NodeRef<'_, T> {
         NodeRef {
             arena: self,
             index: 0,
@@ -130,7 +130,7 @@ impl<'a, T> NodeRef<'a, T> {
         }
     }
 
-    pub fn borrow(&self) -> Ref<T> {
+    pub fn borrow(&self) -> Ref<'_, T> {
         Ref::map(self.arena.nodes.borrow(), |nodes| &nodes[self.index].value)
     }
 
