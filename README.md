@@ -1,3 +1,7 @@
+Moved to https://codeberg.org/Lonami/lonami.dev. The GitHub repository may be deleted in the future.
+
+---
+
 # lonami.dev
 
 Source for [lonami.dev](https://lonami.dev)'s website.
